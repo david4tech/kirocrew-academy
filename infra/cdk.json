@@ -1,0 +1,25 @@
+{
+  "app": "npx tsx bin/app.ts",
+  "watch": {
+    "include": ["bin/**", "lib/**"],
+    "exclude": ["node_modules", "dist", "cdk.out"]
+  },
+  "context": {
+    "@aws-cdk/aws-lambda:recognizeLayerVersion": true,
+    "@aws-cdk/core:checkSecretUsage": true,
+    "@aws-cdk/core:target-partitions": ["aws", "aws-cn"],
+    "@aws-cdk-containers/ecs-service-extensions:enableDefaultLogDriver": true,
+    "@aws-cdk/aws-ec2:uniqueImdsv2TemplateName": true,
+    "@aws-cdk/aws-iam:minimizePolicies": true,
+    "@aws-cdk/aws-ecs:arnFormatIncludesClusterName": true,
+    "@aws-cdk/aws-rds:databaseProxyUniqueResourceName": true,
+    "@aws-cdk/aws-lambda:recognizeVersionProps": true,
+    "@aws-cdk/aws-lambda:recognizeVersionPropsFromModule": true,
+    "@aws-cdk/aws-cloudfront:useOriginAccessControl": true,
+    "@aws-cdk/aws-s3:keepNotificationInImportedBucket": false,
+    "@aws-cdk/aws-apigateway:disableCloudWatchRole": false,
+    "academy:stackPrefix": "Academy",
+    "academy:siteUrl": "http://localhost:5173",
+    "academy:githubOrgRepo": "david4tech/kirocrew-academy"
+  }
+}

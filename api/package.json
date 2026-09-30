@@ -1,0 +1,23 @@
+{
+  "name": "@kirocrew-academy/api",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "node scripts/build.mjs",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@kirocrew-academy/shared": "*",
+    "@aws-sdk/client-dynamodb": "3.1144.0",
+    "@aws-sdk/lib-dynamodb": "3.1144.0",
+    "zod": "4.1.12"
+  },
+  "devDependencies": {
+    "typescript": "5.9.3",
+    "vitest": "3.2.4",
+    "@types/aws-lambda": "8.10.164",
+    "esbuild": "0.28.2"
+  }
+}
