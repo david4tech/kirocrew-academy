@@ -1,0 +1,30 @@
+node_modules/
+dist/
+build/
+coverage/
+*.tsbuildinfo
+
+# CDK
+infra/cdk.out/
+cdk.out/
+.cdk.staging/
+
+# Generated content bundles
+web/src/generated/
+api/src/generated/
+
+# Local env and secrets
+.env
+.env.*
+!.env.example
+*.pem
+
+# Editor and OS
+.DS_Store
+.idea/
+.vscode/*
+!.vscode/extensions.json
+
+# Test artefacts
+playwright-report/
+test-results/

@@ -1,0 +1,297 @@
+{
+  "id": "w0",
+  "order": 99,
+  "title": "Reference World",
+  "subtitle": "Authoring template, not shipped to learners",
+  "lore": "A haunted sandbox where the ghost rehearses every kind of trial before it reaches the real worlds.",
+  "accent": "#8B5CF6",
+  "topics": [
+    {
+      "id": "w0.t1",
+      "title": "Sessions and Scope",
+      "summary": "How a KiroCrew turn is assembled, what a workspace holds, and which block decides where file search looks.",
+      "challenges": [
+        {
+          "id": "w0.t1.c1",
+          "worldId": "w0",
+          "topicId": "w0.t1",
+          "kind": "single-choice",
+          "difficulty": "easy",
+          "prompt": "A turn arrives with a [PROJECT] block. What does that block actually control?",
+          "options": [
+            { "id": "a", "text": "The default working directory and the scope of file search and @-mentions" },
+            { "id": "b", "text": "The sidebar folder the chat is filed under" },
+            { "id": "c", "text": "Which model the session runs on" },
+            { "id": "d", "text": "The memory store the session reads from" }
+          ],
+          "hints": [
+            { "tier": 1, "text": "Think about which block changes where your grep and glob calls land by default." },
+            { "tier": 2, "text": "One block is a filesystem scope, another is only a UI location. They are frequently confused." },
+            { "tier": 3, "text": "It is the block that also decides which project level steering files get loaded." }
+          ],
+          "explanation": "[PROJECT] sets the active project directory: the default working directory, the scope for file search and @-mention autocomplete, and the root for project level .kiro/steering files. [FOLDER] is only a sidebar location and is never a filesystem path.",
+          "docRef": "dashboard.md",
+          "targetSeconds": 30,
+          "solution": { "optionId": "a" }
+        },
+        {
+          "id": "w0.t1.c2",
+          "worldId": "w0",
+          "topicId": "w0.t1",
+          "kind": "multi-choice",
+          "difficulty": "medium",
+          "prompt": "Select every statement that is true about a KiroCrew workspace.",
+          "options": [
+            { "id": "a", "text": "It holds the knowledge base, preferences, project notes and daily history" },
+            { "id": "b", "text": "Lessons saved with learn_add apply across all workspaces, not just the current one" },
+            { "id": "c", "text": "Each workspace runs its own isolated model endpoint" },
+            { "id": "d", "text": "A workspace has a filesystem path on the host" },
+            { "id": "e", "text": "Switching workspace deletes the previous workspace's history" },
+            { "id": "f", "text": "A workspace is the same thing as a sidebar chat folder" }
+          ],
+          "hints": [
+            { "tier": 1, "text": "Two of these are about storage and scope, and both are true." },
+            { "tier": 2, "text": "Lessons are deliberately global so a correction survives a workspace switch." },
+            { "tier": 3, "text": "Pick the statement about what a workspace holds, and the one about learn_add crossing workspaces, plus the one about a path." }
+          ],
+          "explanation": "A workspace is a shared space with a real filesystem path holding the knowledge base, preferences, notes and daily history. Lessons from learn_add are deliberately cross workspace so a correction is not lost when the workspace changes. Models are not per workspace, history is not deleted, and a chat folder is only a sidebar grouping.",
+          "docRef": "configuration.md",
+          "targetSeconds": 60,
+          "solution": { "optionIds": ["a", "b", "d"] }
+        },
+        {
+          "id": "w0.t1.c3",
+          "worldId": "w0",
+          "topicId": "w0.t1",
+          "kind": "true-false",
+          "difficulty": "easy",
+          "prompt": "Decide whether the statement holds.",
+          "statement": "The [FOLDER] block in an injected turn names a directory on disk that you can read files from.",
+          "hints": [
+            { "tier": 1, "text": "One of [PROJECT] and [FOLDER] is a path. Only one." },
+            { "tier": 2, "text": "[FOLDER] relates to how the chat is organised in the sidebar." },
+            { "tier": 3, "text": "Treating [FOLDER] as a path would send your file reads somewhere that does not exist." }
+          ],
+          "explanation": "False. [FOLDER] is only a sidebar location for organising chats and is never a filesystem path. [PROJECT] is the block that names a real directory.",
+          "docRef": "dashboard.md",
+          "targetSeconds": 25,
+          "solution": { "value": false }
+        },
+        {
+          "id": "w0.t1.c4",
+          "worldId": "w0",
+          "topicId": "w0.t1",
+          "kind": "tool-name",
+          "difficulty": "medium",
+          "prompt": "You are walking a queue of unrelated tickets one at a time and carrying ticket N's context into ticket N+1 only costs tokens. Name the tool that gives the session a clean model context while leaving the visible transcript untouched.",
+          "hints": [
+            { "tier": 1, "text": "It drops the model's memory of the conversation, not the user's record of it." },
+            { "tier": 2, "text": "The tab stays open and earlier messages stay on disk and on screen." },
+            { "tier": 3, "text": "The name is two words joined by an underscore, and the first word is reset." }
+          ],
+          "explanation": "reset_conversation gives the calling session a fresh model context at the next turn boundary. The transcript is not touched, so the user keeps the record while the model starts clean. Anything you still need must be written somewhere durable first.",
+          "docRef": "session-control.md",
+          "targetSeconds": 45,
+          "solution": { "accept": ["reset_conversation", "@kirocrew-core/reset_conversation"], "normalizer": "tool" }
+        },
+        {
+          "id": "w0.t1.c5",
+          "worldId": "w0",
+          "topicId": "w0.t1",
+          "kind": "config-fill",
+          "difficulty": "medium",
+          "prompt": "Write the five field cron expression that fires at 09:00 on weekdays only, Monday through Friday.",
+          "starter": "",
+          "hints": [
+            { "tier": 1, "text": "The five fields are minute, hour, day of month, month, day of week." },
+            { "tier": 2, "text": "Day of week uses 0 for Sunday through 6 for Saturday, so weekdays are a range." },
+            { "tier": 3, "text": "Minute is 0, hour is 9, day of month and month are wildcards, and the last field is a range from 1 to 5." }
+          ],
+          "explanation": "0 9 * * 1-5 fires at minute 0 of hour 9 on any day of the month, any month, restricted to day of week 1 through 5. Remember that cron_expr is evaluated in the job's timezone field, falling back to the global config timezone and then UTC, so pass an IANA timezone when you mean a wall clock time.",
+          "docRef": "cron-and-scheduling.md",
+          "targetSeconds": 60,
+          "solution": { "accept": ["0 9 * * 1-5", "0 9 * * MON-FRI", "0 9 ? * 1-5"], "normalizer": "cron" }
+        },
+        {
+          "id": "w0.t1.c6",
+          "worldId": "w0",
+          "topicId": "w0.t1",
+          "kind": "sequence",
+          "difficulty": "hard",
+          "prompt": "Put the steps of arming a legacy monitor loop into the correct order.",
+          "items": [
+            { "id": "s1", "text": "Compose the recurring instruction with the checks, the allowed actions and the exit condition" },
+            { "id": "s2", "text": "Call monitor_start with positive max_cycles and max_runtime_secs" },
+            { "id": "s3", "text": "Report that monitoring was requested and end the turn" },
+            { "id": "s4", "text": "On a later turn, verify the loop is armed and the transcript notice was applied" },
+            { "id": "s5", "text": "When the exit condition is met, report the outcome and call autonudge_stop" }
+          ],
+          "hints": [
+            { "tier": 1, "text": "The instruction has to exist before the tool call that carries it." },
+            { "tier": 2, "text": "Arming is applied after the turn, so the acknowledgement cannot prove it worked." },
+            { "tier": 3, "text": "Verification is a later turn, and the stop call is last." }
+          ],
+          "explanation": "You write the instruction first, arm the loop with finite budgets, then end the turn because arming is applied after the turn completes and the acknowledgement alone proves nothing. Verification belongs to a later turn, and autonudge_stop closes the loop once the exit condition is genuinely met. Reaching max_cycles is a runaway backstop, not success.",
+          "docRef": "monitor-loops.md",
+          "targetSeconds": 90,
+          "solution": { "orderedItemIds": ["s1", "s2", "s3", "s4", "s5"] }
+        },
+        {
+          "id": "w0.t1.c7",
+          "worldId": "w0",
+          "topicId": "w0.t1",
+          "kind": "matching",
+          "difficulty": "medium",
+          "prompt": "Match each tool to the job it is actually for.",
+          "left": [
+            { "id": "l1", "text": "memory_recall" },
+            { "id": "l2", "text": "search_chat_history" },
+            { "id": "l3", "text": "learn_add" },
+            { "id": "l4", "text": "session_ledger_record" }
+          ],
+          "right": [
+            { "id": "r1", "text": "Semantic search over distilled facts and lessons in this session's memory store" },
+            { "id": "r2", "text": "Keyword search over raw past transcripts to recover exact wording" },
+            { "id": "r3", "text": "Persist a durable correction that changes behaviour in unrelated future sessions" },
+            { "id": "r4", "text": "Write this session's goal, phase and next step so they survive context compaction" },
+            { "id": "r5", "text": "Add a design document to the searchable knowledge library" }
+          ],
+          "hints": [
+            { "tier": 1, "text": "One pair is about meaning, another about exact words. They are not interchangeable." },
+            { "tier": 2, "text": "The ledger is about surviving compaction, not about user preferences." },
+            { "tier": 3, "text": "The unused right hand option describes knowledge_add_document." }
+          ],
+          "explanation": "memory_recall searches distilled memory by meaning, search_chat_history searches raw transcripts by keyword when you need the verbatim evidence, learn_add persists a durable correction across unrelated sessions, and session_ledger_record keeps long horizon state alive through compaction. Adding a document to the knowledge library is knowledge_add_document, which is why it has no pair here.",
+          "docRef": "memory-and-learning.md",
+          "targetSeconds": 90,
+          "solution": { "pairs": { "l1": "r1", "l2": "r2", "l3": "r3", "l4": "r4" } }
+        },
+        {
+          "id": "w0.t1.c8",
+          "worldId": "w0",
+          "topicId": "w0.t1",
+          "kind": "simulation",
+          "difficulty": "hard",
+          "scenario": "A user asks for a deterministic health digest that runs every morning at 07:00 America/Bogota, posts a summary, and should never show up as a chat session in the sidebar.",
+          "prompt": "Pick the tool and fill its arguments to satisfy the request with the cheapest possible wake.",
+          "toolPalette": [
+            { "id": "cron_add", "text": "cron_add" },
+            { "id": "monitor_start", "text": "monitor_start" },
+            { "id": "spawn_run", "text": "spawn_run" },
+            { "id": "wait", "text": "wait" },
+            { "id": "task_run", "text": "task_run" }
+          ],
+          "argSpecs": [
+            { "name": "cron_expr", "label": "cron_expr", "input": "text", "placeholder": "min hour dom month dow", "required": true },
+            { "name": "timezone", "label": "timezone", "input": "text", "placeholder": "IANA zone", "required": true },
+            { "name": "minimal_context", "label": "minimal_context", "input": "boolean", "required": true },
+            { "name": "persistent_session", "label": "persistent_session", "input": "boolean", "required": true },
+            { "name": "hide_in_chat", "label": "hide_in_chat", "input": "boolean", "required": true }
+          ],
+          "hints": [
+            { "tier": 1, "text": "Recurring wall clock work is a scheduled job, not a monitor loop and not a subagent." },
+            { "tier": 2, "text": "A polling or digest job wants the cheap wake profile, roughly 200 tokens instead of tens of thousands." },
+            { "tier": 3, "text": "Set minimal_context true, persistent_session false, hide_in_chat true, and pass the IANA zone explicitly rather than trusting the global default." }
+          ],
+          "explanation": "cron_add is the tool for recurring wall clock work. For a digest or polling job the cheap profile is minimal_context true (around 200 tokens per wake instead of 30k to 55k), persistent_session false so context does not grow without bound, and hide_in_chat true so the job stays out of the Chats sidebar while still delivering its result. Passing timezone explicitly matters because cron_expr otherwise falls back to the global config timezone and then UTC.",
+          "docRef": "cron-and-scheduling.md",
+          "targetSeconds": 150,
+          "solution": {
+            "toolId": "cron_add",
+            "args": {
+              "cron_expr": "0 7 * * *",
+              "timezone": "America/Bogota",
+              "minimal_context": true,
+              "persistent_session": false,
+              "hide_in_chat": true
+            },
+            "lenientArgs": { "cron_expr": "cron", "timezone": "text" }
+          }
+        },
+        {
+          "id": "w0.t1.c9",
+          "worldId": "w0",
+          "topicId": "w0.t1",
+          "kind": "debug-fix",
+          "difficulty": "hard",
+          "prompt": "This cron_add call is rejected by the tool. Rewrite the JSON arguments so the call is valid, keeping the same intent and changing nothing else.",
+          "brokenCall": "{\n  \"name\": \"Nightly backup check\",\n  \"message\": \"Check last night's backup job and report failures\",\n  \"cron_expr\": \"30 2 * * *\",\n  \"timezone\": \"America/Bogota\",\n  \"session\": \"slack\"\n}",
+          "language": "json",
+          "hints": [
+            { "tier": 1, "text": "One of these five keys is not part of the cron_add contract at all." },
+            { "tier": 2, "text": "Where a cron reports is controlled at delivery time, not by a field on the job definition." },
+            { "tier": 3, "text": "Remove the offending key entirely and leave the other four exactly as they are." }
+          ],
+          "explanation": "cron_add has no session field. Passing it is an invalid field error. By default the job reports in its originating thread, and a job that needs to notify elsewhere does so from inside its run with send_message, where session and channel_type are real parameters. The fix is to drop the key, not to rename it.",
+          "docRef": "cron-and-scheduling.md",
+          "targetSeconds": 120,
+          "solution": {
+            "accept": [
+              "{\"name\":\"Nightly backup check\",\"message\":\"Check last night's backup job and report failures\",\"cron_expr\":\"30 2 * * *\",\"timezone\":\"America/Bogota\"}"
+            ],
+            "normalizer": "json"
+          }
+        },
+        {
+          "id": "w0.t1.c10",
+          "worldId": "w0",
+          "topicId": "w0.t1",
+          "kind": "simulation",
+          "difficulty": "hard",
+          "boss": true,
+          "scenario": "A pull request is open and the user asks you to keep an eye on it until CI is green and review threads are resolved, then report back. Provider facts alone decide the whole objective.",
+          "prompt": "Boss trial: choose the cheapest correct watcher and configure it.",
+          "toolPalette": [
+            { "id": "monitor_watch", "text": "monitor_watch" },
+            { "id": "monitor_start", "text": "monitor_start" },
+            { "id": "wait", "text": "wait" },
+            { "id": "cron_add", "text": "cron_add" },
+            { "id": "register_hook", "text": "register_hook" }
+          ],
+          "argSpecs": [
+            {
+              "name": "kind",
+              "label": "kind",
+              "input": "select",
+              "required": true,
+              "options": [
+                { "id": "github_pull_request", "text": "github_pull_request" },
+                { "id": "gitlab_merge_request", "text": "gitlab_merge_request" },
+                { "id": "bitbucket_pull_request", "text": "bitbucket_pull_request" }
+              ]
+            },
+            {
+              "name": "objective",
+              "label": "objective",
+              "input": "select",
+              "required": true,
+              "options": [
+                { "id": "review_ready", "text": "review_ready" },
+                { "id": "ci_green", "text": "ci_green" },
+                { "id": "merged", "text": "merged" }
+              ]
+            },
+            { "name": "target", "label": "target", "input": "text", "placeholder": "full PR URL", "required": true }
+          ],
+          "hints": [
+            { "tier": 1, "text": "When typed provider facts decide the objective, the structured watcher is cheaper than a timer loop." },
+            { "tier": 2, "text": "The structured monitor probes without spending a model turn unless the fingerprint actually changed." },
+            { "tier": 3, "text": "There is exactly one supported objective value, and the target must be the canonical full pull request URL." }
+          ],
+          "explanation": "monitor_watch with kind github_pull_request and objective review_ready is the right call: lifecycle, checks, mergeability, review decision and review threads are all typed provider facts, so unchanged, pending and terminal probes cost no agent turn. monitor_start is the fallback for evidence the structured provider cannot see, such as generic advisory comments, and that path needs gate false. A bare wait and poll loop would burn turns for nothing.",
+          "docRef": "monitoring.md",
+          "targetSeconds": 180,
+          "solution": {
+            "toolId": "monitor_watch",
+            "args": {
+              "kind": "github_pull_request",
+              "objective": "review_ready",
+              "target": "https://github.com/david4tech/kirocrew-academy/pull/1"
+            },
+            "lenientArgs": { "target": "text" }
+          }
+        }
+      ]
+    }
+  ]
+}
