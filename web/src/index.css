@@ -1,0 +1,87 @@
+@import 'tailwindcss';
+
+/*
+ * Kiro purple theme, dark first. Every surface below pairs a background with a
+ * text colour so nothing renders unreadable. Tokens are exposed as CSS
+ * variables so Tailwind v4 utilities (bg-*, text-*, border-*) resolve them.
+ */
+@theme {
+  --color-kiro-50: #f5f3ff;
+  --color-kiro-100: #ede9fe;
+  --color-kiro-200: #ddd6fe;
+  --color-kiro-300: #c4b5fd;
+  --color-kiro-400: #a78bfa;
+  --color-kiro-500: #8b5cf6;
+  --color-kiro-600: #7c3aed;
+  --color-kiro-700: #6d28d9;
+  --color-kiro-800: #5b21b6;
+  --color-kiro-900: #4c1d95;
+  --color-kiro-950: #2e1065;
+
+  --color-bg: #14091f;
+  --color-bg-raised: #1e0f30;
+  --color-bg-panel: #241539;
+  --color-bg-inset: #0d0616;
+
+  --color-text: #f4f1fb;
+  --color-text-muted: #b9aed3;
+  --color-text-faint: #7d6f9c;
+
+  --color-accent: #8b5cf6;
+  --color-accent-strong: #7c3aed;
+  --color-accent-deep: #6d28d9;
+
+  --color-success: #34d399;
+  --color-success-bg: #052e21;
+  --color-warning: #fbbf24;
+  --color-warning-bg: #3a2905;
+  --color-danger: #f87171;
+  --color-danger-bg: #3a0d0d;
+
+  --color-border: #382454;
+  --color-border-strong: #4c2f70;
+
+  --font-sans: 'Inter', 'Segoe UI', system-ui, -apple-system, sans-serif;
+  --font-mono: 'JetBrains Mono', 'Fira Code', ui-monospace, SFMono-Regular, Menlo, monospace;
+
+  --shadow-glow: 0 0 40px -8px rgb(139 92 246 / 0.45);
+}
+
+html,
+body,
+#root {
+  height: 100%;
+}
+
+body {
+  background-color: var(--color-bg);
+  color: var(--color-text);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Visible focus ring on every interactive element, never suppressed. */
+:focus-visible {
+  outline: 2px solid var(--color-kiro-400);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+::selection {
+  background-color: var(--color-kiro-600);
+  color: var(--color-text);
+}
+
+.scrollbar-kiro {
+  scrollbar-color: var(--color-kiro-700) var(--color-bg-inset);
+}
+
+@keyframes ghost-float {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-6px);
+  }
+}

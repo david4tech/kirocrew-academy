@@ -56,8 +56,11 @@ function toPublicWorld(world) {
     topics: world.topics.map((topic) => ({
       ...topic,
       challenges: topic.challenges.map((challenge) => {
-        const { solution, hints, ...rest } = challenge;
+        // The explanation names the answer, so it is served by the API only
+        // after an attempt is graded, never shipped to the client up front.
+        const { solution, hints, explanation, ...rest } = challenge;
         void solution;
+        void explanation;
         return { ...rest, hintTiers: hints.length };
       }),
     })),
@@ -157,10 +160,15 @@ mkdirSync(apiOut, { recursive: true });
 writeFileSync(join(webOut, 'content.public.json'), `${JSON.stringify(publicManifest, null, 2)}\n`);
 writeFileSync(join(apiOut, 'content.full.json'), `${JSON.stringify(fullManifest, null, 2)}\n`);
 
-// A leaked solution in the public bundle is the one failure mode worth asserting.
+// A leaked answer in the public bundle is the one failure mode worth asserting.
+// explanation counts: it states the answer in prose, so shipping it would let a
+// player read every solution from DevTools without ever calling the API.
 const publicText = readFileSync(join(webOut, 'content.public.json'), 'utf8');
-if (/"solution"\s*:/.test(publicText) || /"hints"\s*:/.test(publicText)) {
-  console.error('FAIL public bundle contains solution or hint data');
+const leaked = ['solution', 'hints', 'explanation'].filter((key) =>
+  new RegExp(`"${key}"\\s*:`).test(publicText),
+);
+if (leaked.length > 0) {
+  console.error(`FAIL public bundle contains answer data: ${leaked.join(', ')}`);
   process.exit(1);
 }
 

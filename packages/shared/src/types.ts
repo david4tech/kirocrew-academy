@@ -231,7 +231,7 @@ export type Challenge =
 
 /** Everything the client is allowed to see: the authored challenge minus its solution. */
 export type PublicChallenge = {
-  [K in Challenge as K['kind']]: Omit<K, 'solution' | 'hints'> & {
+  [K in Challenge as K['kind']]: Omit<K, 'solution' | 'hints' | 'explanation'> & {
     /** Client only learns how many tiers exist, never their text. */
     hintTiers: number;
   };

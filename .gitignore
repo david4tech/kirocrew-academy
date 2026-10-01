@@ -28,3 +28,6 @@ api/src/generated/
 # Test artefacts
 playwright-report/
 test-results/
+
+# Local agent session settings, not project config
+.kiro/

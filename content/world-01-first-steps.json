@@ -1,0 +1,1408 @@
+{
+  "id": "w1",
+  "order": 1,
+  "title": "First Steps",
+  "subtitle": "The dashboard, sessions, workspaces and the shape of a turn",
+  "lore": "Every ghost has to learn to haunt one house before it can haunt a street. This is that house: the dashboard, a chat tab, a workspace and the anatomy of a single turn.",
+  "accent": "#8B5CF6",
+  "topics": [
+    {
+      "id": "w1.t1",
+      "title": "The Dashboard and Chat Sessions",
+      "summary": "The web dashboard at localhost:5476, its pages, and how chat tabs run parallel sessions with fork, edit-and-resend and per-session memory mode.",
+      "challenges": [
+        {
+          "id": "w1.t1.c1",
+          "worldId": "w1",
+          "topicId": "w1.t1",
+          "kind": "single-choice",
+          "difficulty": "easy",
+          "prompt": "Where does the Kiro Crew web dashboard serve by default?",
+          "options": [
+            { "id": "a", "text": "http://localhost:5476" },
+            { "id": "b", "text": "http://localhost:3000" },
+            { "id": "c", "text": "http://localhost:8080" },
+            { "id": "d", "text": "http://localhost:5476 only after you disable token authentication" }
+          ],
+          "hints": [
+            { "tier": 1, "text": "It is a React single page app served by the gateway on a fixed port." },
+            { "tier": 2, "text": "The port is also the one an SSH tunnel forwards in the remote-access instructions." },
+            { "tier": 3, "text": "The default is 5476, and loopback requests still need token authentication." }
+          ],
+          "explanation": "The dashboard is a React SPA at http://localhost:5476 (or your configured dashboard.url). Loopback requests are not exempt from token authentication, so opening the port alone is not enough: you authenticate through a dashboard link first.",
+          "docRef": "dashboard.md",
+          "targetSeconds": 25,
+          "solution": { "optionId": "a" }
+        },
+        {
+          "id": "w1.t1.c2",
+          "worldId": "w1",
+          "topicId": "w1.t1",
+          "kind": "true-false",
+          "difficulty": "easy",
+          "prompt": "Decide whether the statement holds.",
+          "statement": "Each chat tab in the dashboard runs its own agent session in parallel with the others.",
+          "hints": [
+            { "tier": 1, "text": "Think about what happens when you open a second tab while the first is mid-turn." },
+            { "tier": 2, "text": "The Chat page is described as multi-session parallel chat." },
+            { "tier": 3, "text": "Tabs do not share one session: each is independent." }
+          ],
+          "explanation": "True. The Chat page runs multiple tabs, and each tab runs its own agent session in parallel. That is why you can pick or switch the agent per tab and fork a session into a new tab with its context carried over.",
+          "docRef": "dashboard.md",
+          "targetSeconds": 25,
+          "solution": { "value": true }
+        },
+        {
+          "id": "w1.t1.c3",
+          "worldId": "w1",
+          "topicId": "w1.t1",
+          "kind": "tool-name",
+          "difficulty": "easy",
+          "prompt": "From Slack, you want a fresh, IP-pinned, single-use link that opens the remote dashboard. What do you type?",
+          "hints": [
+            { "tier": 1, "text": "It is a Slack command prefixed with an exclamation mark, not an MCP tool." },
+            { "tier": 2, "text": "The command's name is the same word as the thing it opens." },
+            { "tier": 3, "text": "It is !dashboard, which returns an HMAC-signed link valid for five minutes." }
+          ],
+          "explanation": "Typing !dashboard in Slack returns an HMAC-SHA256-signed, IP-pinned, single-use link that is valid for five minutes and establishes a session cookie for up to 20 hours. It is the sanctioned remote-access path.",
+          "docRef": "dashboard.md",
+          "targetSeconds": 40,
+          "solution": { "accept": ["!dashboard", "dashboard"], "normalizer": "tool" }
+        },
+        {
+          "id": "w1.t1.c4",
+          "worldId": "w1",
+          "topicId": "w1.t1",
+          "kind": "multi-choice",
+          "difficulty": "medium",
+          "prompt": "Select every capability the Chat page actually offers.",
+          "options": [
+            { "id": "a", "text": "Fork a session into a new tab with full context carried over" },
+            { "id": "b", "text": "Edit and resend a previous user message with history preserved" },
+            { "id": "c", "text": "Choose a per-session memory mode: persistent, incognito or temporary" },
+            { "id": "d", "text": "Organize sessions into sidebar folders" },
+            { "id": "e", "text": "Assign each session its own dedicated model endpoint that other tabs cannot use" },
+            { "id": "f", "text": "Permanently delete the transcript of any other user in the workspace" }
+          ],
+          "hints": [
+            { "tier": 1, "text": "Four of these are listed features of the Chat page; two are inventions." },
+            { "tier": 2, "text": "Memory mode is a real per-session choice, and forking and edit-and-resend are real." },
+            { "tier": 3, "text": "Sessions do not own private model endpoints, and there is no cross-user transcript delete on the Chat page." }
+          ],
+          "explanation": "Fork, edit-and-resend, per-session memory mode and sidebar folders are all real Chat features. A session does not own a private model endpoint, and the Chat page has no cross-user permanent-delete control.",
+          "docRef": "dashboard.md",
+          "targetSeconds": 60,
+          "solution": { "optionIds": ["a", "b", "c", "d"] }
+        },
+        {
+          "id": "w1.t1.c5",
+          "worldId": "w1",
+          "topicId": "w1.t1",
+          "kind": "config-fill",
+          "difficulty": "medium",
+          "prompt": "You want to reach the dashboard from a remote dev desktop where it binds to localhost. Complete the SSH command that forwards the default port. Fill in the port mapping after -NL.",
+          "starter": "ssh -NL ",
+          "hints": [
+            { "tier": 1, "text": "The mapping is localport:localhost:remoteport, and both ports are the dashboard default." },
+            { "tier": 2, "text": "The dashboard default port appears on both sides of the tunnel." },
+            { "tier": 3, "text": "It is 5476:localhost:5476 followed by the host." }
+          ],
+          "explanation": "ssh -NL 5476:localhost:5476 <host> tunnels the dashboard port to your machine, then you open localhost:5476. On remote dev desktops the dashboard binds to localhost by default, so the tunnel is required.",
+          "docRef": "dashboard.md",
+          "targetSeconds": 60,
+          "roleVariants": {
+            "devops-sre": {
+              "scenario": "You are on a jump host and the gateway runs on a bastion-fronted build box that binds the dashboard to localhost.",
+              "prompt": "Write the ssh port-forward that lets you open the dashboard locally on its default port."
+            },
+            "platform": {
+              "scenario": "A shared platform runner hosts the gateway and exposes nothing but SSH.",
+              "prompt": "Write the ssh port-forward that lets you open the dashboard locally on its default port."
+            }
+          },
+          "solution": { "accept": ["5476:localhost:5476", "ssh -NL 5476:localhost:5476", "5476:127.0.0.1:5476"], "normalizer": "text" }
+        },
+        {
+          "id": "w1.t1.c6",
+          "worldId": "w1",
+          "topicId": "w1.t1",
+          "kind": "sequence",
+          "difficulty": "medium",
+          "prompt": "Order the steps for reaching a remote gateway's dashboard from Slack using the sanctioned link.",
+          "items": [
+            { "id": "s1", "text": "Type !dashboard in Slack" },
+            { "id": "s2", "text": "Receive the HMAC-signed, IP-pinned, single-use link" },
+            { "id": "s3", "text": "Open the link within its five minute validity window" },
+            { "id": "s4", "text": "Work in the dashboard on the session cookie it established" }
+          ],
+          "hints": [
+            { "tier": 1, "text": "You have to ask for the link before you can open it." },
+            { "tier": 2, "text": "The link is single-use and expires quickly, so opening it comes right after receiving it." },
+            { "tier": 3, "text": "The cookie is established only once you have opened the valid link." }
+          ],
+          "explanation": "You request the link with !dashboard, receive the signed single-use link, open it inside the five minute window, and then work on the session cookie it sets (valid up to 20 hours). The link itself is single-use and IP-pinned.",
+          "docRef": "dashboard.md",
+          "targetSeconds": 70,
+          "roleVariants": {
+            "security": {
+              "scenario": "You are reviewing how remote dashboard access is granted and want to confirm the link cannot be replayed.",
+              "prompt": "Order the steps of the sanctioned Slack link flow."
+            },
+            "eng-manager": {
+              "scenario": "You are documenting for the team how to reach the dashboard when working away from the host.",
+              "prompt": "Order the steps of the sanctioned Slack link flow."
+            }
+          },
+          "solution": { "orderedItemIds": ["s1", "s2", "s3", "s4"] }
+        },
+        {
+          "id": "w1.t1.c7",
+          "worldId": "w1",
+          "topicId": "w1.t1",
+          "kind": "matching",
+          "difficulty": "medium",
+          "prompt": "Match each dashboard route to what it opens.",
+          "left": [
+            { "id": "l1", "text": "/chat" },
+            { "id": "l2", "text": "/schedule" },
+            { "id": "l3", "text": "/capabilities" },
+            { "id": "l4", "text": "/hooks" }
+          ],
+          "right": [
+            { "id": "r1", "text": "Multi-session parallel chat with tabs and history" },
+            { "id": "r2", "text": "Create and manage cron jobs in list, calendar and execution views" },
+            { "id": "r3", "text": "Crews, agent templates, MCP connections, skills, knowledge, steering, hooks and prompts" },
+            { "id": "r4", "text": "Create, edit, test, enable and delete chat lifecycle hooks" },
+            { "id": "r5", "text": "The live gateway log stream with level selection" }
+          ],
+          "hints": [
+            { "tier": 1, "text": "One right-hand entry describes /logs and has no match here." },
+            { "tier": 2, "text": "/agents, /connections and /knowledge all redirect into one of these pages." },
+            { "tier": 3, "text": "/capabilities is the tabbed hub that /agents, /connections and /knowledge redirect to." }
+          ],
+          "explanation": "/chat is parallel chat, /schedule manages cron jobs, /capabilities is the tabbed hub for crews, templates, connections, skills, knowledge, steering, hooks and prompts (and is where /agents, /connections and /knowledge redirect), and /hooks manages chat lifecycle hooks. The unused option describes /logs.",
+          "docRef": "dashboard.md",
+          "targetSeconds": 80,
+          "solution": { "pairs": { "l1": "r1", "l2": "r2", "l3": "r3", "l4": "r4" } }
+        },
+        {
+          "id": "w1.t1.c8",
+          "worldId": "w1",
+          "topicId": "w1.t1",
+          "kind": "simulation",
+          "difficulty": "hard",
+          "scenario": "You are working through a queue of unrelated support tickets in one chat tab. Ticket N's context is worthless to ticket N plus one and only costs tokens, but you want to keep the visible transcript intact for the record.",
+          "prompt": "Pick the tool that gives this session a clean model context without touching the transcript.",
+          "toolPalette": [
+            { "id": "reset_conversation", "text": "reset_conversation" },
+            { "id": "session_close", "text": "session_close" },
+            { "id": "session_stop", "text": "session_stop" },
+            { "id": "reset_forget", "text": "memory forget" }
+          ],
+          "argSpecs": [
+            { "name": "keeps_transcript", "label": "Does the transcript stay visible?", "input": "boolean", "required": true }
+          ],
+          "hints": [
+            { "tier": 1, "text": "You want to drop the model's memory of the conversation, not the user's record of it." },
+            { "tier": 2, "text": "Closing the tab or stopping the turn is not what you want: the tab should stay open and idle for the next ticket." },
+            { "tier": 3, "text": "reset_conversation clears the model context at the next turn boundary and leaves the transcript untouched." }
+          ],
+          "explanation": "reset_conversation gives the calling session a fresh model context while the transcript stays visible and on disk. session_close archives the tab and session_stop only cancels the running turn, neither of which is what a context reset needs. Record anything durable before resetting, because the model forgets it.",
+          "docRef": "session-control.md",
+          "targetSeconds": 120,
+          "roleVariants": {
+            "backend": {
+              "scenario": "You are triaging a backlog of unrelated bug reports one at a time in a single tab, and carrying one report's stack traces into the next only wastes context.",
+              "prompt": "Pick the tool that clears the model context but leaves the transcript in place."
+            },
+            "qa": {
+              "scenario": "You are walking a list of independent flaky-test investigations in one tab, and each one should start from a clean slate without losing the written record.",
+              "prompt": "Pick the tool that clears the model context but leaves the transcript in place."
+            }
+          },
+          "solution": { "toolId": "reset_conversation", "args": { "keeps_transcript": true } }
+        },
+        {
+          "id": "w1.t1.c9",
+          "worldId": "w1",
+          "topicId": "w1.t1",
+          "kind": "debug-fix",
+          "difficulty": "hard",
+          "prompt": "A teammate claims this is how you reach the dashboard remotely. The reasoning is wrong. Rewrite the JSON note so both claims are correct, changing only the two boolean values.",
+          "brokenCall": "{\n  \"loopback_requests_skip_auth\": true,\n  \"slack_dashboard_link_is_reusable\": true\n}",
+          "language": "json",
+          "hints": [
+            { "tier": 1, "text": "Both claims overstate how permissive access is." },
+            { "tier": 2, "text": "Loopback still authenticates, and the Slack link is not meant to be used more than once." },
+            { "tier": 3, "text": "Both values should be false." }
+          ],
+          "explanation": "Loopback requests are not exempt from token authentication, and the !dashboard link is single-use, so both booleans are false. Overstating either one is how people end up assuming an unauthenticated dashboard is safe to expose.",
+          "docRef": "dashboard.md",
+          "targetSeconds": 110,
+          "roleVariants": {
+            "security": {
+              "scenario": "You are auditing a runbook that a colleague wrote about dashboard access and you spot two overly optimistic security claims.",
+              "prompt": "Correct the two boolean values so the note matches how access actually works."
+            },
+            "platform": {
+              "scenario": "You are hardening how your team reaches a shared gateway and you find this note in the wiki.",
+              "prompt": "Correct the two boolean values so the note matches how access actually works."
+            }
+          },
+          "solution": {
+            "accept": [
+              "{\"loopback_requests_skip_auth\":false,\"slack_dashboard_link_is_reusable\":false}"
+            ],
+            "normalizer": "json"
+          }
+        },
+        {
+          "id": "w1.t1.c10",
+          "worldId": "w1",
+          "topicId": "w1.t1",
+          "kind": "single-choice",
+          "difficulty": "hard",
+          "prompt": "You closed a chat tab with the tab's close control, then realize you need the conversation back. What is true?",
+          "options": [
+            { "id": "a", "text": "The conversation is archived to history and can be reopened from the collapsible history sidebar" },
+            { "id": "b", "text": "The conversation is permanently deleted and cannot be recovered" },
+            { "id": "c", "text": "Closing a tab only pauses the current turn and the tab stays open and idle" },
+            { "id": "d", "text": "The conversation moves to another workspace automatically" }
+          ],
+          "hints": [
+            { "tier": 1, "text": "Closing a tab is not the same as cancelling a turn." },
+            { "tier": 2, "text": "Closed sessions still appear somewhere in the UI." },
+            { "tier": 3, "text": "They land in the history sidebar and a click restores the full conversation." }
+          ],
+          "explanation": "Closed sessions appear in the collapsible history sidebar and clicking a history item restores the full conversation. Cancelling the in-flight turn is a different action (session_stop), and nothing is permanently deleted by closing a tab.",
+          "docRef": "dashboard.md",
+          "targetSeconds": 90,
+          "solution": { "optionId": "a" }
+        }
+      ]
+    },
+    {
+      "id": "w1.t2",
+      "title": "Workspaces versus Sidebar Folders",
+      "summary": "What a workspace holds, that it is a real filesystem path, that markdown memory is workspace-scoped while lessons are global, and how a workspace differs from a sidebar chat folder.",
+      "challenges": [
+        {
+          "id": "w1.t2.c1",
+          "worldId": "w1",
+          "topicId": "w1.t2",
+          "kind": "single-choice",
+          "difficulty": "easy",
+          "prompt": "Which statement best describes a Kiro Crew workspace?",
+          "options": [
+            { "id": "a", "text": "A shared space with a real filesystem path that holds the knowledge base, preferences, project notes and daily history" },
+            { "id": "b", "text": "A grouping of chat tabs in the sidebar with no path on disk" },
+            { "id": "c", "text": "A single markdown file listing your open tasks" },
+            { "id": "d", "text": "A per-tab colour used for visual organization" }
+          ],
+          "hints": [
+            { "tier": 1, "text": "One of these is a real directory on the host; the others are UI or files." },
+            { "tier": 2, "text": "Think about where preferences.md and history live." },
+            { "tier": 3, "text": "A workspace is a real path holding knowledge, preferences, notes and history." }
+          ],
+          "explanation": "A workspace is a shared space with a real filesystem path that holds the knowledge base, preferences, project notes and daily history. A sidebar folder, by contrast, is only a visual grouping with no path.",
+          "docRef": "configuration.md",
+          "targetSeconds": 30,
+          "solution": { "optionId": "a" }
+        },
+        {
+          "id": "w1.t2.c2",
+          "worldId": "w1",
+          "topicId": "w1.t2",
+          "kind": "true-false",
+          "difficulty": "easy",
+          "prompt": "Decide whether the statement holds.",
+          "statement": "A sidebar chat folder is the same thing as a workspace.",
+          "hints": [
+            { "tier": 1, "text": "Only one of the two has a path on disk." },
+            { "tier": 2, "text": "A folder organizes chats visually; a workspace stores memory and knowledge." },
+            { "tier": 3, "text": "They are different: a folder is a sidebar grouping, a workspace is a storage boundary." }
+          ],
+          "explanation": "False. A sidebar folder is only a visual grouping of chats. A workspace is a real filesystem path that scopes markdown memory and holds the knowledge base, preferences, notes and history.",
+          "docRef": "memory-and-learning.md",
+          "targetSeconds": 25,
+          "solution": { "value": false }
+        },
+        {
+          "id": "w1.t2.c3",
+          "worldId": "w1",
+          "topicId": "w1.t2",
+          "kind": "tool-name",
+          "difficulty": "medium",
+          "prompt": "You want to file the current chat session into a named sidebar folder, writing only this session's own placement and nothing else. Which session-control tool do you call?",
+          "hints": [
+            { "tier": 1, "text": "It writes only the caller's placement, which is why it is safe where the broader move tool is withheld." },
+            { "tier": 2, "text": "The verb name says it files the caller itself." },
+            { "tier": 3, "text": "It is chat_folder_file_self." }
+          ],
+          "explanation": "chat_folder_file_self files this session (the caller) into a folder and writes only its own placement. chat_folder_move_session files a different session, which is why file_self is the safer verb to grant.",
+          "docRef": "session-control.md",
+          "targetSeconds": 45,
+          "solution": { "accept": ["chat_folder_file_self", "@kirocrew-dashboard/chat_folder_file_self"], "normalizer": "tool" }
+        },
+        {
+          "id": "w1.t2.c4",
+          "worldId": "w1",
+          "topicId": "w1.t2",
+          "kind": "multi-choice",
+          "difficulty": "medium",
+          "prompt": "Select every true statement about workspaces and lessons.",
+          "options": [
+            { "id": "a", "text": "Markdown memory (preferences, projects, daily history) is stored per workspace" },
+            { "id": "b", "text": "Lessons saved with learn_add are global across all workspaces by default" },
+            { "id": "c", "text": "A lesson can be restricted to one repository tree with an optional repo_scope" },
+            { "id": "d", "text": "Every lesson is scoped to the workspace it was created in and never travels" },
+            { "id": "e", "text": "Switching workspace deletes the previous workspace's history" }
+          ],
+          "hints": [
+            { "tier": 1, "text": "Memory files are per workspace, but lessons are deliberately different." },
+            { "tier": 2, "text": "A correction is meant to survive a workspace switch unless you scope it." },
+            { "tier": 3, "text": "Pick the per-workspace memory statement, the global-lessons statement, and the repo_scope statement." }
+          ],
+          "explanation": "Markdown memory is workspace-scoped, but lessons are global by default so a correction is not lost when the workspace changes, and repo_scope can narrow a lesson to one project tree. Lessons are not workspace-bound by default, and switching workspace does not delete history.",
+          "docRef": "memory-and-learning.md",
+          "targetSeconds": 70,
+          "solution": { "optionIds": ["a", "b", "c"] }
+        },
+        {
+          "id": "w1.t2.c5",
+          "worldId": "w1",
+          "topicId": "w1.t2",
+          "kind": "config-fill",
+          "difficulty": "medium",
+          "prompt": "You want to override the workspace root for one gateway instance without appending any subdirectory. Which environment variable do you set? Write just the variable name.",
+          "starter": "",
+          "hints": [
+            { "tier": 1, "text": "It is an environment variable in the KIROCREW_ family." },
+            { "tier": 2, "text": "It names the workspace root and is used as-is." },
+            { "tier": 3, "text": "It is KIROCREW_WORKSPACE." }
+          ],
+          "explanation": "KIROCREW_WORKSPACE overrides the workspace root and is used as-is with no subdirectory appended, falling back to the saved workspace_dir or a platform default. KIROCREW_PROJECT_DIR is a different override for the agent-config and skills project directory.",
+          "docRef": "configuration.md",
+          "targetSeconds": 55,
+          "roleVariants": {
+            "devops-sre": {
+              "scenario": "You run a dev gateway alongside production and need its workspace pointed at an isolated directory.",
+              "prompt": "Name the environment variable that overrides the workspace root as-is."
+            },
+            "platform": {
+              "scenario": "You are scripting a throwaway instance and must pin its workspace root explicitly.",
+              "prompt": "Name the environment variable that overrides the workspace root as-is."
+            }
+          },
+          "solution": { "accept": ["KIROCREW_WORKSPACE"], "normalizer": "text" }
+        },
+        {
+          "id": "w1.t2.c6",
+          "worldId": "w1",
+          "topicId": "w1.t2",
+          "kind": "sequence",
+          "difficulty": "medium",
+          "prompt": "A lesson you save is meant to apply everywhere unless scoped. Order the reasoning from most general to most specific for where a learn_add lesson applies.",
+          "items": [
+            { "id": "s1", "text": "By default the lesson is global and applies across all workspaces" },
+            { "id": "s2", "text": "Adding a repo_scope path fragment restricts it to sessions inside that repository tree" },
+            { "id": "s3", "text": "Outside that repository tree the scoped lesson is withheld" }
+          ],
+          "hints": [
+            { "tier": 1, "text": "Start with the broadest reach and narrow from there." },
+            { "tier": 2, "text": "repo_scope is what turns a global lesson into a project-specific one." },
+            { "tier": 3, "text": "Global first, then the repo_scope narrowing, then the consequence outside the tree." }
+          ],
+          "explanation": "A lesson is global by default, repo_scope narrows it to a repository tree, and outside that tree it is withheld. This is why an unscoped correction survives a workspace switch while a scoped one stays put.",
+          "docRef": "memory-and-learning.md",
+          "targetSeconds": 70,
+          "roleVariants": {
+            "eng-manager": {
+              "scenario": "You are explaining to a new hire why a rule they set on one repo showed up everywhere.",
+              "prompt": "Order the reach of a learn_add lesson from most general to most specific."
+            },
+            "backend": {
+              "scenario": "You want a linting preference to apply only inside one service repo, not across all your work.",
+              "prompt": "Order the reach of a learn_add lesson from most general to most specific."
+            }
+          },
+          "solution": { "orderedItemIds": ["s1", "s2", "s3"] }
+        },
+        {
+          "id": "w1.t2.c7",
+          "worldId": "w1",
+          "topicId": "w1.t2",
+          "kind": "matching",
+          "difficulty": "medium",
+          "prompt": "Match each item to where it is stored or scoped.",
+          "left": [
+            { "id": "l1", "text": "preferences.md and projects.md" },
+            { "id": "l2", "text": "A lesson with no repo_scope" },
+            { "id": "l3", "text": "A sidebar chat folder" },
+            { "id": "l4", "text": "The knowledge base" }
+          ],
+          "right": [
+            { "id": "r1", "text": "Stored per workspace, under the workspace directory" },
+            { "id": "r2", "text": "Global across all workspaces" },
+            { "id": "r3", "text": "A sidebar-only grouping with no filesystem path" },
+            { "id": "r4", "text": "Held inside the workspace" },
+            { "id": "r5", "text": "Stored only in the browser's local cache" }
+          ],
+          "hints": [
+            { "tier": 1, "text": "One right-hand option (browser cache) matches nothing." },
+            { "tier": 2, "text": "Markdown memory files and the knowledge base both live in the workspace." },
+            { "tier": 3, "text": "An unscoped lesson is global, and a chat folder has no path." }
+          ],
+          "explanation": "Markdown memory files are stored per workspace, the knowledge base is held inside the workspace, an unscoped lesson is global, and a sidebar folder is a path-less grouping. Nothing here lives only in the browser cache.",
+          "docRef": "memory-and-learning.md",
+          "targetSeconds": 80,
+          "solution": { "pairs": { "l1": "r1", "l2": "r2", "l3": "r3", "l4": "r4" } }
+        },
+        {
+          "id": "w1.t2.c8",
+          "worldId": "w1",
+          "topicId": "w1.t2",
+          "kind": "simulation",
+          "difficulty": "hard",
+          "scenario": "You want your open sessions for one goal grouped under a single heading in the sidebar. You are about to file this session and then spin up workers under it. First, file yourself into a folder named Incident Bridge.",
+          "prompt": "Pick the tool and set the folder so only this session's placement is written.",
+          "toolPalette": [
+            { "id": "chat_folder_file_self", "text": "chat_folder_file_self" },
+            { "id": "chat_folder_move_session", "text": "chat_folder_move_session" },
+            { "id": "chat_folder_create", "text": "chat_folder_create" },
+            { "id": "session_create", "text": "session_create" }
+          ],
+          "argSpecs": [
+            { "name": "folder", "label": "folder", "input": "text", "placeholder": "folder name or path", "required": true }
+          ],
+          "hints": [
+            { "tier": 1, "text": "You want to place the caller, not another session." },
+            { "tier": 2, "text": "The tool that writes only its own placement is the safe one for a conductor to start with." },
+            { "tier": 3, "text": "chat_folder_file_self with folder set to Incident Bridge." }
+          ],
+          "explanation": "chat_folder_file_self files the caller into the folder and writes only its own placement, which is exactly what a conductor does first before creating workers with folder set to the same heading. chat_folder_move_session moves a different session, and chat_folder_create only makes a folder without filing anyone.",
+          "docRef": "session-control.md",
+          "targetSeconds": 130,
+          "roleVariants": {
+            "devops-sre": {
+              "scenario": "You are opening an incident bridge and want your session plus its workers to sit under one sidebar heading.",
+              "prompt": "File this session into a folder named Incident Bridge, writing only its own placement."
+            },
+            "eng-manager": {
+              "scenario": "You are coordinating a release and want every related session grouped under one heading for the team to follow.",
+              "prompt": "File this session into a folder named Incident Bridge, writing only its own placement."
+            }
+          },
+          "solution": { "toolId": "chat_folder_file_self", "args": { "folder": "Incident Bridge" }, "lenientArgs": { "folder": "text" } }
+        },
+        {
+          "id": "w1.t2.c9",
+          "worldId": "w1",
+          "topicId": "w1.t2",
+          "kind": "debug-fix",
+          "difficulty": "hard",
+          "prompt": "This note about where things live is wrong in one place. Markdown memory is not global. Fix the JSON so each claim is accurate, changing only what is false.",
+          "brokenCall": "{\n  \"markdown_memory_scope\": \"global\",\n  \"unscoped_lesson_scope\": \"global\",\n  \"sidebar_folder_has_path\": false\n}",
+          "language": "json",
+          "hints": [
+            { "tier": 1, "text": "Two of these three are already correct." },
+            { "tier": 2, "text": "Lessons are global, but markdown memory is not." },
+            { "tier": 3, "text": "markdown_memory_scope should be workspace; leave the other two." }
+          ],
+          "explanation": "Markdown memory (preferences, projects, history) is workspace-scoped, not global. Unscoped lessons are global and a sidebar folder has no path, so only markdown_memory_scope needs to change to workspace.",
+          "docRef": "memory-and-learning.md",
+          "targetSeconds": 110,
+          "roleVariants": {
+            "data": {
+              "scenario": "You are documenting how your data workspace stores its context and you spot an inaccurate scope claim.",
+              "prompt": "Fix the one false scope value so the note is accurate."
+            },
+            "cloud-architect": {
+              "scenario": "You are writing an onboarding page about Kiro Crew storage boundaries and need the scopes exactly right.",
+              "prompt": "Fix the one false scope value so the note is accurate."
+            }
+          },
+          "solution": {
+            "accept": [
+              "{\"markdown_memory_scope\":\"workspace\",\"unscoped_lesson_scope\":\"global\",\"sidebar_folder_has_path\":false}"
+            ],
+            "normalizer": "json"
+          }
+        },
+        {
+          "id": "w1.t2.c10",
+          "worldId": "w1",
+          "topicId": "w1.t2",
+          "kind": "single-choice",
+          "difficulty": "hard",
+          "prompt": "You moved a session into a sidebar folder. What did that change about the session?",
+          "options": [
+            { "id": "a", "text": "Only its sidebar placement: its transcript, model and any running turn are untouched" },
+            { "id": "b", "text": "Its workspace, so it now reads a different memory store" },
+            { "id": "c", "text": "Its project directory, so file search now looks elsewhere" },
+            { "id": "d", "text": "Its memory mode, switching it to incognito" }
+          ],
+          "hints": [
+            { "tier": 1, "text": "A folder is a UI grouping, so ask what a UI grouping can change." },
+            { "tier": 2, "text": "Folder moves are metadata only." },
+            { "tier": 3, "text": "The session keeps its transcript, model and running turn; only placement changes." }
+          ],
+          "explanation": "Folder moves are metadata only: the session keeps its transcript, its model and any running turn. A folder is not a workspace and not a project directory, so it changes neither the memory store nor the file-search scope.",
+          "docRef": "session-control.md",
+          "targetSeconds": 85,
+          "solution": { "optionId": "a" }
+        }
+      ]
+    },
+    {
+      "id": "w1.t3",
+      "title": "Project Scope and the [PROJECT] Block",
+      "summary": "The [PROJECT] block as the active project directory: the default working directory, the scope of file search and @-mentions, and the root for project level steering.",
+      "challenges": [
+        {
+          "id": "w1.t3.c1",
+          "worldId": "w1",
+          "topicId": "w1.t3",
+          "kind": "single-choice",
+          "difficulty": "easy",
+          "prompt": "A turn arrives with a [PROJECT] block. What does that block control?",
+          "options": [
+            { "id": "a", "text": "The default working directory and the scope of file search and @-mentions" },
+            { "id": "b", "text": "The sidebar folder the chat is filed under" },
+            { "id": "c", "text": "Which model the session runs on" },
+            { "id": "d", "text": "The memory store the session reads from" }
+          ],
+          "hints": [
+            { "tier": 1, "text": "It is the block that decides where your file reads land by default." },
+            { "tier": 2, "text": "It also decides which project level steering files load." },
+            { "tier": 3, "text": "It is the active project directory: working dir plus file-search and mention scope." }
+          ],
+          "explanation": "[PROJECT] sets the active project directory: the default working directory, the scope for file search and @-mention autocomplete, and the root for project level .kiro/steering files. It is a filesystem scope, not a UI location.",
+          "docRef": "dashboard.md",
+          "targetSeconds": 30,
+          "solution": { "optionId": "a" }
+        },
+        {
+          "id": "w1.t3.c2",
+          "worldId": "w1",
+          "topicId": "w1.t3",
+          "kind": "true-false",
+          "difficulty": "easy",
+          "prompt": "Decide whether the statement holds.",
+          "statement": "A workspace-scoped steering file needs a project bound to the chat slot to be available.",
+          "hints": [
+            { "tier": 1, "text": "Workspace steering lives under a project directory." },
+            { "tier": 2, "text": "With no resolvable project, the Steering files tab offers only the global root." },
+            { "tier": 3, "text": "Creating a workspace document with no project is refused." }
+          ],
+          "explanation": "True. A workspace steering file lives under <project>/.kiro/steering, so it needs a project bound to the chat slot. With no resolvable project the tab offers only the global root and refuses a workspace document with steering_workspace_unavailable.",
+          "docRef": "steering-and-hooks.md",
+          "targetSeconds": 30,
+          "solution": { "value": true }
+        },
+        {
+          "id": "w1.t3.c3",
+          "worldId": "w1",
+          "topicId": "w1.t3",
+          "kind": "tool-name",
+          "difficulty": "medium",
+          "prompt": "From the CLI or an environment variable, you want to override the project directory that scopes agent config and skills. Name the environment variable.",
+          "hints": [
+            { "tier": 1, "text": "It is a KIROCREW environment variable, not the workspace one." },
+            { "tier": 2, "text": "It overrides the agent-config and skills project directory." },
+            { "tier": 3, "text": "It is KIROCREW_PROJECT_DIR." }
+          ],
+          "explanation": "KIROCREW_PROJECT_DIR overrides the agent-config and skills project directory (auto-detected otherwise). It is distinct from KIROCREW_WORKSPACE, which overrides the workspace root.",
+          "docRef": "configuration.md",
+          "targetSeconds": 45,
+          "solution": { "accept": ["KIROCREW_PROJECT_DIR"], "normalizer": "tool" }
+        },
+        {
+          "id": "w1.t3.c4",
+          "worldId": "w1",
+          "topicId": "w1.t3",
+          "kind": "multi-choice",
+          "difficulty": "medium",
+          "prompt": "Which of these does the active project directory govern?",
+          "options": [
+            { "id": "a", "text": "The default working directory for the session" },
+            { "id": "b", "text": "The scope of file search and @-mention autocomplete" },
+            { "id": "c", "text": "The root for project level .kiro/steering files" },
+            { "id": "d", "text": "Which agent template is selected for the session" },
+            { "id": "e", "text": "The colour of the session tab" }
+          ],
+          "hints": [
+            { "tier": 1, "text": "Three of these are filesystem-scope concerns tied to the project." },
+            { "tier": 2, "text": "Agent selection and tab colour are decided elsewhere." },
+            { "tier": 3, "text": "Working dir, file-search scope and project steering root are the three." }
+          ],
+          "explanation": "The project directory governs the default working directory, the file-search and @-mention scope, and the root for project level steering. Agent selection and tab colour are unrelated to it.",
+          "docRef": "dashboard.md",
+          "targetSeconds": 60,
+          "solution": { "optionIds": ["a", "b", "c"] }
+        },
+        {
+          "id": "w1.t3.c5",
+          "worldId": "w1",
+          "topicId": "w1.t3",
+          "kind": "config-fill",
+          "difficulty": "medium",
+          "prompt": "You want a workspace steering file to load for sessions whose project is this repo. Write the glob path, relative to the project root, where such files must live.",
+          "starter": "",
+          "hints": [
+            { "tier": 1, "text": "It sits under a hidden .kiro directory in the project." },
+            { "tier": 2, "text": "It is a recursive glob over markdown files." },
+            { "tier": 3, "text": "It is .kiro/steering/**/*.md under the project root." }
+          ],
+          "explanation": "Workspace steering files live at <project>/.kiro/steering/**/*.md and load for sessions whose project directory is that project. The global equivalent is ~/.kiro/steering/**/*.md, which loads for every session.",
+          "docRef": "steering-and-hooks.md",
+          "targetSeconds": 60,
+          "roleVariants": {
+            "platform": {
+              "scenario": "You are standardizing where each service repo keeps its agent conventions.",
+              "prompt": "Write the project-relative glob path where workspace steering files must live."
+            },
+            "backend": {
+              "scenario": "You want your service's API conventions loaded automatically for any session working in this repo.",
+              "prompt": "Write the project-relative glob path where workspace steering files must live."
+            }
+          },
+          "solution": { "accept": [".kiro/steering/**/*.md", "/.kiro/steering/**/*.md"], "normalizer": "text" }
+        },
+        {
+          "id": "w1.t3.c6",
+          "worldId": "w1",
+          "topicId": "w1.t3",
+          "kind": "sequence",
+          "difficulty": "medium",
+          "prompt": "Order what happens when a session's project directory is set, from cause to effect.",
+          "items": [
+            { "id": "s1", "text": "The [PROJECT] block names the active project directory" },
+            { "id": "s2", "text": "The session subprocess runs with that directory as its working directory" },
+            { "id": "s3", "text": "File search and @-mentions scope to that directory" },
+            { "id": "s4", "text": "Project level .kiro/steering files under it are loaded" }
+          ],
+          "hints": [
+            { "tier": 1, "text": "The block naming the directory comes first." },
+            { "tier": 2, "text": "The working directory is what makes the rest resolve." },
+            { "tier": 3, "text": "Naming, then working directory, then scoped search, then project steering." }
+          ],
+          "explanation": "The [PROJECT] block names the directory, the subprocess runs with it as the working directory, file search and mentions scope to it, and project steering under it loads. All of these follow from the one project binding.",
+          "docRef": "steering-and-hooks.md",
+          "targetSeconds": 70,
+          "roleVariants": {
+            "cloud-architect": {
+              "scenario": "You are diagramming how a session resolves files so a new team understands scoping.",
+              "prompt": "Order project scoping from the block to its effects."
+            },
+            "qa": {
+              "scenario": "You are debugging why a test file could not be found by @-mention and want the causal chain.",
+              "prompt": "Order project scoping from the block to its effects."
+            }
+          },
+          "solution": { "orderedItemIds": ["s1", "s2", "s3", "s4"] }
+        },
+        {
+          "id": "w1.t3.c7",
+          "worldId": "w1",
+          "topicId": "w1.t3",
+          "kind": "matching",
+          "difficulty": "medium",
+          "prompt": "Match each block or scope to what it actually is.",
+          "left": [
+            { "id": "l1", "text": "[PROJECT]" },
+            { "id": "l2", "text": "[FOLDER]" },
+            { "id": "l3", "text": "Global steering root" },
+            { "id": "l4", "text": "Workspace steering root" }
+          ],
+          "right": [
+            { "id": "r1", "text": "A real directory: working dir plus file-search and steering scope" },
+            { "id": "r2", "text": "A sidebar location only, never a filesystem path" },
+            { "id": "r3", "text": "~/.kiro/steering/**/*.md, loaded for every session" },
+            { "id": "r4", "text": "<project>/.kiro/steering/**/*.md, loaded for sessions in that project" },
+            { "id": "r5", "text": "The browser tab title" }
+          ],
+          "hints": [
+            { "tier": 1, "text": "One right-hand option is a distractor with no match." },
+            { "tier": 2, "text": "[PROJECT] is a path; [FOLDER] is not." },
+            { "tier": 3, "text": "The global root is under home, the workspace root is under the project." }
+          ],
+          "explanation": "[PROJECT] is a real directory, [FOLDER] is a sidebar location only, the global steering root is ~/.kiro/steering loaded for every session, and the workspace root is <project>/.kiro/steering loaded for sessions in that project. The browser tab title is a distractor.",
+          "docRef": "steering-and-hooks.md",
+          "targetSeconds": 80,
+          "solution": { "pairs": { "l1": "r1", "l2": "r2", "l3": "r3", "l4": "r4" } }
+        },
+        {
+          "id": "w1.t3.c8",
+          "worldId": "w1",
+          "topicId": "w1.t3",
+          "kind": "simulation",
+          "difficulty": "hard",
+          "scenario": "A skill scaffolded a new working tree and you want this chat slot to work against it: file search, @-mentions and project steering should all point at the new directory.",
+          "prompt": "Pick the tool and set its argument to retarget the session's project directory.",
+          "toolPalette": [
+            { "id": "set_project", "text": "set_project" },
+            { "id": "chat_folder_file_self", "text": "chat_folder_file_self" },
+            { "id": "reset_conversation", "text": "reset_conversation" },
+            { "id": "session_create", "text": "session_create" }
+          ],
+          "argSpecs": [
+            { "name": "path", "label": "path", "input": "text", "placeholder": "absolute project path", "required": true }
+          ],
+          "hints": [
+            { "tier": 1, "text": "Filing into a folder would only change the sidebar, not the file scope." },
+            { "tier": 2, "text": "You want the tool that sets the project directory for the slot." },
+            { "tier": 3, "text": "set_project with an absolute path to the new working tree." }
+          ],
+          "explanation": "set_project retargets the slot's project directory, which is what scopes file search, @-mentions, the [PROJECT] line and project level steering. A folder move is sidebar-only and reset_conversation only clears context, so neither changes where files resolve.",
+          "docRef": "dashboard.md",
+          "targetSeconds": 130,
+          "roleVariants": {
+            "backend": {
+              "scenario": "You just cloned a service into a new directory and want this session working against it, not the old checkout.",
+              "prompt": "Retarget the session's project directory to the new absolute path."
+            },
+            "platform": {
+              "scenario": "A scaffolding skill created a fresh module tree and this slot must now search and steer against it.",
+              "prompt": "Retarget the session's project directory to the new absolute path."
+            }
+          },
+          "solution": { "toolId": "set_project", "args": { "path": "/Users/you/workspace/new-tree" }, "lenientArgs": { "path": "text" } }
+        },
+        {
+          "id": "w1.t3.c9",
+          "worldId": "w1",
+          "topicId": "w1.t3",
+          "kind": "debug-fix",
+          "difficulty": "hard",
+          "prompt": "A teammate confused the two blocks in this note. Fix the JSON so each block maps to what it really is, changing only the wrong values.",
+          "brokenCall": "{\n  \"PROJECT_is\": \"a sidebar grouping\",\n  \"FOLDER_is\": \"a filesystem path you can read files from\"\n}",
+          "language": "json",
+          "hints": [
+            { "tier": 1, "text": "The two descriptions are swapped." },
+            { "tier": 2, "text": "[PROJECT] is the path; [FOLDER] is the sidebar grouping." },
+            { "tier": 3, "text": "Swap the two string values." }
+          ],
+          "explanation": "[PROJECT] is a filesystem path (working dir, file-search and steering scope) and [FOLDER] is a sidebar grouping with no path. Treating [FOLDER] as a path would send file reads somewhere that does not exist.",
+          "docRef": "dashboard.md",
+          "targetSeconds": 110,
+          "roleVariants": {
+            "qa": {
+              "scenario": "You are reviewing a teammate's notes on session scoping and find the two blocks described backwards.",
+              "prompt": "Correct the two descriptions so each block maps to what it really is."
+            },
+            "eng-manager": {
+              "scenario": "You are editing onboarding docs and spot the [PROJECT] and [FOLDER] descriptions swapped.",
+              "prompt": "Correct the two descriptions so each block maps to what it really is."
+            }
+          },
+          "solution": {
+            "accept": [
+              "{\"PROJECT_is\":\"a filesystem path you can read files from\",\"FOLDER_is\":\"a sidebar grouping\"}"
+            ],
+            "normalizer": "json"
+          }
+        },
+        {
+          "id": "w1.t3.c10",
+          "worldId": "w1",
+          "topicId": "w1.t3",
+          "kind": "single-choice",
+          "difficulty": "hard",
+          "prompt": "The chat slot has no resolvable project. What happens when you open the Steering files tab?",
+          "options": [
+            { "id": "a", "text": "Only the global root is offered, and creating a workspace document is refused" },
+            { "id": "b", "text": "Both roots are offered as usual" },
+            { "id": "c", "text": "The tab shows nothing at all" },
+            { "id": "d", "text": "A workspace root is invented under your home directory" }
+          ],
+          "hints": [
+            { "tier": 1, "text": "A workspace document needs a project directory to live under." },
+            { "tier": 2, "text": "Without a project there is no workspace root to write into." },
+            { "tier": 3, "text": "The tab offers only the global root and refuses a workspace document." }
+          ],
+          "explanation": "With no resolvable project, the Steering files tab offers only the global root and refuses creating a workspace document with steering_workspace_unavailable. A workspace steering file requires a project bound to the slot.",
+          "docRef": "steering-and-hooks.md",
+          "targetSeconds": 85,
+          "solution": { "optionId": "a" }
+        }
+      ]
+    },
+    {
+      "id": "w1.t4",
+      "title": "Steering Files and Agent Configuration",
+      "summary": "Steering file inclusion modes, where global and workspace steering live, that steering outranks memory, and how agent specs are defined, switched and resolved (JSON wins over a markdown sibling).",
+      "challenges": [
+        {
+          "id": "w1.t4.c1",
+          "worldId": "w1",
+          "topicId": "w1.t4",
+          "kind": "single-choice",
+          "difficulty": "easy",
+          "prompt": "What is the default agent configuration Kiro Crew installs?",
+          "options": [
+            { "id": "a", "text": "kirocrew, at ~/.kiro/agents/kirocrew.json" },
+            { "id": "b", "text": "default, at ~/.kiro/crew/default.json" },
+            { "id": "c", "text": "code-reviewer, at ~/.kiro/agents/code-reviewer.json" },
+            { "id": "d", "text": "There is no default: you must author one" }
+          ],
+          "hints": [
+            { "tier": 1, "text": "The default agent shares its name with the product." },
+            { "tier": 2, "text": "It is generated into ~/.kiro/agents." },
+            { "tier": 3, "text": "It is kirocrew.json." }
+          ],
+          "explanation": "The default agent is kirocrew, generated at ~/.kiro/agents/kirocrew.json. Custom agents are added alongside it as JSON or markdown files.",
+          "docRef": "agents.md",
+          "targetSeconds": 25,
+          "solution": { "optionId": "a" }
+        },
+        {
+          "id": "w1.t4.c2",
+          "worldId": "w1",
+          "topicId": "w1.t4",
+          "kind": "true-false",
+          "difficulty": "easy",
+          "prompt": "Decide whether the statement holds.",
+          "statement": "A steering file with no inclusion field in its front matter is treated as inclusion: always.",
+          "hints": [
+            { "tier": 1, "text": "There is a default when the field is absent." },
+            { "tier": 2, "text": "An absent or misspelled inclusion reads as one specific mode." },
+            { "tier": 3, "text": "It reads as always." }
+          ],
+          "explanation": "True. An absent or misspelled inclusion reads as always. The four modes are always, fileMatch, manual and auto, and fileMatch additionally needs a fileMatchPattern or it is refused on save.",
+          "docRef": "steering-and-hooks.md",
+          "targetSeconds": 25,
+          "solution": { "value": true }
+        },
+        {
+          "id": "w1.t4.c3",
+          "worldId": "w1",
+          "topicId": "w1.t4",
+          "kind": "tool-name",
+          "difficulty": "easy",
+          "prompt": "In the dashboard chat, you want to switch every session back to the default agent. What command do you type?",
+          "hints": [
+            { "tier": 1, "text": "It is an exclamation-mark command, and it turns the override off." },
+            { "tier": 2, "text": "The command is !agent with a keyword meaning back to default." },
+            { "tier": 3, "text": "It is !agent off." }
+          ],
+          "explanation": "!agent off switches back to the default kirocrew agent globally. !agent <name> switches to a custom agent, and Slack has a per-thread !ta variant.",
+          "docRef": "agents.md",
+          "targetSeconds": 35,
+          "solution": { "accept": ["!agent off", "agent off"], "normalizer": "tool" }
+        },
+        {
+          "id": "w1.t4.c4",
+          "worldId": "w1",
+          "topicId": "w1.t4",
+          "kind": "multi-choice",
+          "difficulty": "medium",
+          "prompt": "Select every true statement about how agent specs are resolved.",
+          "options": [
+            { "id": "a", "text": "When a name.json and name.md sit side by side, the JSON wins in Kiro Crew and the markdown is not read" },
+            { "id": "b", "text": "kiro-cli on the kiro backend loads JSON specs only, not markdown" },
+            { "id": "c", "text": "A markdown agent must open with a --- fence and close the front matter with a --- line" },
+            { "id": "d", "text": "Deleting an agent template file breaks every crew bound to that name irreversibly" },
+            { "id": "e", "text": "Markdown agent files are editable in place by Kiro Crew's Template pane" }
+          ],
+          "hints": [
+            { "tier": 1, "text": "Three of these are documented behaviors; two are false." },
+            { "tier": 2, "text": "A missing template falls back to the default spec rather than breaking the crew." },
+            { "tier": 3, "text": "Markdown specs are read-only to Kiro Crew, and JSON wins over a markdown sibling." }
+          ],
+          "explanation": "JSON wins over a markdown sibling in Kiro Crew, kiro-cli on the kiro backend loads JSON only, and a markdown agent needs the --- front matter fence. A deleted template falls back to the default spec (the crew keeps running), and markdown specs are read-only to Kiro Crew's editor.",
+          "docRef": "agents.md",
+          "targetSeconds": 75,
+          "solution": { "optionIds": ["a", "b", "c"] }
+        },
+        {
+          "id": "w1.t4.c5",
+          "worldId": "w1",
+          "topicId": "w1.t4",
+          "kind": "config-fill",
+          "difficulty": "medium",
+          "prompt": "You are writing a steering file that should load only when the session touches TypeScript files. Its front matter sets inclusion: fileMatch. Write the front matter key that supplies the glob it matches on.",
+          "starter": "",
+          "hints": [
+            { "tier": 1, "text": "fileMatch is meaningless without the pattern it matches." },
+            { "tier": 2, "text": "The key names a match pattern." },
+            { "tier": 3, "text": "It is fileMatchPattern." }
+          ],
+          "explanation": "fileMatchPattern supplies the glob that inclusion: fileMatch matches on. A fileMatch document with no fileMatchPattern is refused on save, because it could never match.",
+          "docRef": "steering-and-hooks.md",
+          "targetSeconds": 55,
+          "roleVariants": {
+            "backend": {
+              "scenario": "You want a steering doc that only applies while editing Python modules in this repo.",
+              "prompt": "Name the front matter key that supplies the glob for inclusion: fileMatch."
+            },
+            "qa": {
+              "scenario": "You want test conventions loaded only when a session opens files under the tests directory.",
+              "prompt": "Name the front matter key that supplies the glob for inclusion: fileMatch."
+            }
+          },
+          "solution": { "accept": ["fileMatchPattern"], "normalizer": "text" }
+        },
+        {
+          "id": "w1.t4.c6",
+          "worldId": "w1",
+          "topicId": "w1.t4",
+          "kind": "sequence",
+          "difficulty": "medium",
+          "prompt": "Kiro Crew assembles a session's context in a fixed order where an earlier layer outranks a later one. Order these layers as they are injected, earliest first.",
+          "items": [
+            { "id": "s1", "text": "Steering resources" },
+            { "id": "s2", "text": "Thread history" },
+            { "id": "s3", "text": "Memory" },
+            { "id": "s4", "text": "Lessons" }
+          ],
+          "hints": [
+            { "tier": 1, "text": "The layer that outranks the others is injected first." },
+            { "tier": 2, "text": "Steering is meant to be followed even where a stored memory disagrees." },
+            { "tier": 3, "text": "Steering, then thread history, then memory, then lessons." }
+          ],
+          "explanation": "Steering resources are injected before thread history, before memory, and before lessons, and the stated convention is that an earlier layer outranks a later one. That is why a steering file outranks a conflicting stored memory.",
+          "docRef": "steering-and-hooks.md",
+          "targetSeconds": 70,
+          "roleVariants": {
+            "eng-manager": {
+              "scenario": "You are explaining why a project convention in steering beats a habit the agent picked up in memory.",
+              "prompt": "Order the context layers by injection, earliest first."
+            },
+            "cloud-architect": {
+              "scenario": "You are documenting the precedence of instructions for a team standardizing on steering files.",
+              "prompt": "Order the context layers by injection, earliest first."
+            }
+          },
+          "solution": { "orderedItemIds": ["s1", "s2", "s3", "s4"] }
+        },
+        {
+          "id": "w1.t4.c7",
+          "worldId": "w1",
+          "topicId": "w1.t4",
+          "kind": "matching",
+          "difficulty": "medium",
+          "prompt": "Match each steering inclusion mode to its behavior.",
+          "left": [
+            { "id": "l1", "text": "always" },
+            { "id": "l2", "text": "fileMatch" },
+            { "id": "l3", "text": "manual" },
+            { "id": "l4", "text": "auto" }
+          ],
+          "right": [
+            { "id": "r1", "text": "Loaded for the session by default, the mode absent front matter falls back to" },
+            { "id": "r2", "text": "Loaded when the session touches files matching a required glob pattern" },
+            { "id": "r3", "text": "Cannot be brought into a turn over ACP at all" },
+            { "id": "r4", "text": "Surfaced through an on-demand index the model can pull from" },
+            { "id": "r5", "text": "Runs a shell command before every tool call" }
+          ],
+          "hints": [
+            { "tier": 1, "text": "One right-hand option describes a hook, not a steering mode." },
+            { "tier": 2, "text": "The one row every measurement agrees on is manual." },
+            { "tier": 3, "text": "always is the default fallback, fileMatch needs a glob, manual is unreachable over ACP." }
+          ],
+          "explanation": "always is the default that an absent inclusion falls back to, fileMatch needs a glob pattern, manual cannot be brought into a turn over ACP, and auto is surfaced through an on-demand index. Running a shell command before a tool call is a PreToolUse hook, not a steering mode.",
+          "docRef": "steering-and-hooks.md",
+          "targetSeconds": 85,
+          "solution": { "pairs": { "l1": "r1", "l2": "r2", "l3": "r3", "l4": "r4" } }
+        },
+        {
+          "id": "w1.t4.c8",
+          "worldId": "w1",
+          "topicId": "w1.t4",
+          "kind": "simulation",
+          "difficulty": "hard",
+          "scenario": "You want a short standing rule that every session follows without you retyping it: use pytest.raises rather than a bare try and except. It belongs in your personal habits, not one project.",
+          "prompt": "Pick where this rule belongs and set the scope argument.",
+          "toolPalette": [
+            { "id": "global_steering", "text": "global steering file" },
+            { "id": "workspace_steering", "text": "workspace steering file" },
+            { "id": "learn_add", "text": "learn_add" },
+            { "id": "saved_prompt", "text": "saved prompt" }
+          ],
+          "argSpecs": [
+            { "name": "scope", "label": "scope", "input": "select", "required": true, "options": [
+              { "id": "global", "text": "global (~/.kiro/steering)" },
+              { "id": "workspace", "text": "workspace (<project>/.kiro/steering)" }
+            ] },
+            { "name": "inclusion", "label": "inclusion", "input": "select", "required": true, "options": [
+              { "id": "always", "text": "always" },
+              { "id": "manual", "text": "manual" }
+            ] }
+          ],
+          "hints": [
+            { "tier": 1, "text": "A rule that should hold in every session, not on request, is steering rather than a saved prompt." },
+            { "tier": 2, "text": "A personal habit that travels everywhere belongs in the global root." },
+            { "tier": 3, "text": "Global steering with inclusion always, since manual cannot be brought into a turn over ACP." }
+          ],
+          "explanation": "A standing rule for every session is steering, not a saved prompt (which you reach for on demand). A personal habit belongs in the global root so it travels to every project, and inclusion always is the mode that reliably reaches a session, because manual cannot be brought into a turn over ACP.",
+          "docRef": "steering-and-hooks.md",
+          "targetSeconds": 140,
+          "roleVariants": {
+            "qa": {
+              "scenario": "You always want assertions to name the expected exception type, in every session you run.",
+              "prompt": "Choose where this standing habit belongs and set its scope and inclusion."
+            },
+            "security": {
+              "scenario": "You want a personal rule to never paste secrets into a prompt, applied in every session regardless of project.",
+              "prompt": "Choose where this standing habit belongs and set its scope and inclusion."
+            }
+          },
+          "solution": { "toolId": "global_steering", "args": { "scope": "global", "inclusion": "always" } }
+        },
+        {
+          "id": "w1.t4.c9",
+          "worldId": "w1",
+          "topicId": "w1.t4",
+          "kind": "debug-fix",
+          "difficulty": "hard",
+          "prompt": "This markdown steering front matter is refused on save. Fix it, keeping the same intent (load only for Terraform files), by adding the one missing key.",
+          "brokenCall": "---\ninclusion: fileMatch\nname: tf-conventions\n---",
+          "language": "text",
+          "hints": [
+            { "tier": 1, "text": "fileMatch alone cannot decide when to load." },
+            { "tier": 2, "text": "It needs the glob it matches on." },
+            { "tier": 3, "text": "Add fileMatchPattern with a glob like *.tf." }
+          ],
+          "explanation": "A fileMatch document with no fileMatchPattern is refused on save because it could never match. Adding fileMatchPattern: '*.tf' gives it the glob it needs.",
+          "docRef": "steering-and-hooks.md",
+          "targetSeconds": 120,
+          "roleVariants": {
+            "devops-sre": {
+              "scenario": "You wrote a steering doc for your Terraform conventions and the save was rejected.",
+              "prompt": "Add the missing front matter key so the fileMatch steering saves."
+            },
+            "platform": {
+              "scenario": "Your infra steering doc will not save because its inclusion mode is incomplete.",
+              "prompt": "Add the missing front matter key so the fileMatch steering saves."
+            }
+          },
+          "solution": {
+            "accept": [
+              "---\ninclusion: fileMatch\nfileMatchPattern: \"*.tf\"\nname: tf-conventions\n---",
+              "---\ninclusion: fileMatch\nname: tf-conventions\nfileMatchPattern: \"*.tf\"\n---",
+              "---\ninclusion: fileMatch\nfileMatchPattern: '*.tf'\nname: tf-conventions\n---"
+            ],
+            "normalizer": "text"
+          }
+        },
+        {
+          "id": "w1.t4.c10",
+          "worldId": "w1",
+          "topicId": "w1.t4",
+          "kind": "debug-fix",
+          "difficulty": "hard",
+          "boss": true,
+          "scenario": "You authored a custom agent as ~/.kiro/agents/reviewer.json and your session refuses to start on the kiro-cli backend, naming a markdown file. You also kept a reviewer.md sibling as a backup.",
+          "prompt": "Boss trial: this agent JSON has two real problems that stop it working. Rewrite it so it loads on the kiro backend and resolves cleanly, changing only what is wrong.",
+          "brokenCall": "{\n  \"name\": \"reviewer\",\n  \"model\": \"claude-opus\",\n  \"prompt\": \"file:///path/to/prompt.md\",\n  \"tools\": [\"fs_read\", \"grep\", \"glob\", \"@kirocrew-core\"],\n  \"allowedTools\": [\"fs_read\", \"grep\", \"glob\"],\n  \"backend\": \"kas\"\n}",
+          "language": "json",
+          "hints": [
+            { "tier": 1, "text": "One field does not belong in an agent spec, and one file on disk is shadowing this one." },
+            { "tier": 2, "text": "The backend is not an agent-spec field, and a JSON and markdown pair for one name is the same agent twice." },
+            { "tier": 3, "text": "Remove the invalid backend key; the JSON already wins over the .md sibling, so the fix is the spec itself. Keep name, model, prompt, tools and allowedTools." }
+          ],
+          "explanation": "An agent spec has no backend field: the ACP backend is set by agent.acp_backend in config, not per spec, so the stray key is invalid. kiro-cli on the kiro backend loads JSON specs, so a valid reviewer.json is exactly what lets the session start. The reviewer.md sibling is shadowed by the JSON in Kiro Crew (the gateway log warns which file is shadowed), so keeping one file per name is the clean state. The corrected spec drops the backend key and keeps name, model, prompt, tools and allowedTools.",
+          "docRef": "agents.md",
+          "targetSeconds": 180,
+          "roleVariants": {
+            "backend": {
+              "scenario": "Your reviewer agent will not start for a service repo and the error names a markdown file you forgot you kept.",
+              "prompt": "Fix the agent JSON so it loads on the kiro backend and resolves without a shadowed sibling."
+            },
+            "eng-manager": {
+              "scenario": "A shared review agent your team relies on stopped starting after someone added a stray field and a backup file.",
+              "prompt": "Fix the agent JSON so it loads on the kiro backend and resolves without a shadowed sibling."
+            }
+          },
+          "solution": {
+            "accept": [
+              "{\"name\":\"reviewer\",\"model\":\"claude-opus\",\"prompt\":\"file:///path/to/prompt.md\",\"tools\":[\"fs_read\",\"grep\",\"glob\",\"@kirocrew-core\"],\"allowedTools\":[\"fs_read\",\"grep\",\"glob\"]}"
+            ],
+            "normalizer": "json"
+          }
+        }
+      ]
+    },
+    {
+      "id": "w1.t5",
+      "title": "Anatomy of a Turn",
+      "summary": "What the [CURRENT DATE] line provides, what the timezone setting drives, the fixed order in which injected context layers arrive, and what surviving a turn boundary or compaction depends on.",
+      "challenges": [
+        {
+          "id": "w1.t5.c1",
+          "worldId": "w1",
+          "topicId": "w1.t5",
+          "kind": "single-choice",
+          "difficulty": "easy",
+          "prompt": "What does the [CURRENT DATE] line injected into every LLM prompt give the agent?",
+          "options": [
+            { "id": "a", "text": "An unambiguous today, so date reasoning is correct even on a host whose clock is UTC" },
+            { "id": "b", "text": "The list of tools available this turn" },
+            { "id": "c", "text": "The active project directory" },
+            { "id": "d", "text": "The memory store the session is bound to" }
+          ],
+          "hints": [
+            { "tier": 1, "text": "It exists so the model does not have to guess what day it is." },
+            { "tier": 2, "text": "It is tied to the configured timezone." },
+            { "tier": 3, "text": "It fixes what today means, which matters when the system clock is UTC." }
+          ],
+          "explanation": "The [CURRENT DATE] line is injected into every LLM prompt so today is not ambiguous on a host whose system clock is UTC. It is driven by the timezone setting, not by tools, project scope or memory.",
+          "docRef": "configuration.md",
+          "targetSeconds": 30,
+          "solution": { "optionId": "a" }
+        },
+        {
+          "id": "w1.t5.c2",
+          "worldId": "w1",
+          "topicId": "w1.t5",
+          "kind": "true-false",
+          "difficulty": "easy",
+          "prompt": "Decide whether the statement holds.",
+          "statement": "Steering resources are injected after your thread history, so a stored memory outranks a steering file.",
+          "hints": [
+            { "tier": 1, "text": "Recall the fixed order in which context layers arrive." },
+            { "tier": 2, "text": "An earlier layer outranks a later one." },
+            { "tier": 3, "text": "Steering is injected before history and memory, so it outranks memory." }
+          ],
+          "explanation": "False. Steering resources are injected before thread history, before memory, and before lessons, and an earlier layer outranks a later one. So where a steering file and a stored memory disagree, the steering file is the one the agent should follow.",
+          "docRef": "steering-and-hooks.md",
+          "targetSeconds": 30,
+          "solution": { "value": false }
+        },
+        {
+          "id": "w1.t5.c3",
+          "worldId": "w1",
+          "topicId": "w1.t5",
+          "kind": "tool-name",
+          "difficulty": "easy",
+          "prompt": "You need this session to survive context compaction with its goal, phase and next step intact. Which tool writes that durable state?",
+          "hints": [
+            { "tier": 1, "text": "It records the session's goal, phase and next step to a durable ledger." },
+            { "tier": 2, "text": "The name is two words joined by an underscore and mentions a ledger." },
+            { "tier": 3, "text": "It is session_ledger_record." }
+          ],
+          "explanation": "session_ledger_record writes the session's goal, phase, next step and tried approaches to a durable ledger that survives context compaction. On resume you read it with session_ledger_read rather than re-deriving state from memory.",
+          "docRef": "session-ledger.md",
+          "targetSeconds": 40,
+          "solution": { "accept": ["session_ledger_record", "@kirocrew-core/session_ledger_record"], "normalizer": "tool" }
+        },
+        {
+          "id": "w1.t5.c4",
+          "worldId": "w1",
+          "topicId": "w1.t5",
+          "kind": "multi-choice",
+          "difficulty": "medium",
+          "prompt": "The global timezone setting affects which of the following?",
+          "options": [
+            { "id": "a", "text": "The [CURRENT DATE] line injected into every LLM prompt" },
+            { "id": "b", "text": "Cron schedule display in the CLI and the Slack Home Tab" },
+            { "id": "c", "text": "skip_dates evaluation for cron jobs" },
+            { "id": "d", "text": "The scope of file search for a session" },
+            { "id": "e", "text": "Which agent template a session boots from" }
+          ],
+          "hints": [
+            { "tier": 1, "text": "The timezone key affects three specific things." },
+            { "tier": 2, "text": "All three are about dates and schedules, not file scope or agents." },
+            { "tier": 3, "text": "The [CURRENT DATE] line, cron display, and skip_dates evaluation." }
+          ],
+          "explanation": "The timezone key affects the [CURRENT DATE] line, cron schedule display, and skip_dates evaluation for cron jobs. It has nothing to do with file-search scope or agent selection. A per-job timezone on a cron overrides the global value.",
+          "docRef": "configuration.md",
+          "targetSeconds": 65,
+          "solution": { "optionIds": ["a", "b", "c"] }
+        },
+        {
+          "id": "w1.t5.c5",
+          "worldId": "w1",
+          "topicId": "w1.t5",
+          "kind": "config-fill",
+          "difficulty": "medium",
+          "prompt": "Your host clock is UTC but you work in Bogota, and [CURRENT DATE] keeps showing the wrong local date. Write the IANA timezone value you would set for the timezone config key.",
+          "starter": "",
+          "hints": [
+            { "tier": 1, "text": "It is an IANA zone name, region slash city." },
+            { "tier": 2, "text": "The city is the Colombian capital." },
+            { "tier": 3, "text": "It is America/Bogota." }
+          ],
+          "explanation": "Setting timezone to America/Bogota makes the [CURRENT DATE] line reflect your local date rather than falling back to UTC. The timezone key takes an IANA name and defaults to empty, which falls back to UTC.",
+          "docRef": "configuration.md",
+          "targetSeconds": 55,
+          "roleVariants": {
+            "devops-sre": {
+              "scenario": "Your gateway runs on a UTC build box and your morning cron summaries are dated a day off.",
+              "prompt": "Write the IANA timezone value that fixes the [CURRENT DATE] line for Bogota."
+            },
+            "data": {
+              "scenario": "Your daily report job stamps the wrong calendar day because the host clock is UTC.",
+              "prompt": "Write the IANA timezone value that fixes the [CURRENT DATE] line for Bogota."
+            }
+          },
+          "solution": { "accept": ["America/Bogota"], "normalizer": "text" }
+        },
+        {
+          "id": "w1.t5.c6",
+          "worldId": "w1",
+          "topicId": "w1.t5",
+          "kind": "sequence",
+          "difficulty": "medium",
+          "prompt": "Order the injected context layers of a turn as they arrive, from the layer that outranks the rest to the one that yields to them.",
+          "items": [
+            { "id": "s1", "text": "Steering resources" },
+            { "id": "s2", "text": "Thread history" },
+            { "id": "s3", "text": "Memory" },
+            { "id": "s4", "text": "Lessons" }
+          ],
+          "hints": [
+            { "tier": 1, "text": "The highest-ranked layer is injected first." },
+            { "tier": 2, "text": "Standing rules come before recalled context." },
+            { "tier": 3, "text": "Steering, then thread history, then memory, then lessons." }
+          ],
+          "explanation": "The fixed assembly order is steering, then thread history, then memory, then lessons, and an earlier layer outranks a later one. This ordering is why steering is the layer the agent is meant to follow when layers disagree.",
+          "docRef": "steering-and-hooks.md",
+          "targetSeconds": 70,
+          "roleVariants": {
+            "eng-manager": {
+              "scenario": "You are teaching the team why a written convention beats an inferred preference.",
+              "prompt": "Order the injected context layers from highest ranked to lowest."
+            },
+            "security": {
+              "scenario": "You want to know which layer a safety rule must live in to reliably override a learned habit.",
+              "prompt": "Order the injected context layers from highest ranked to lowest."
+            }
+          },
+          "solution": { "orderedItemIds": ["s1", "s2", "s3", "s4"] }
+        },
+        {
+          "id": "w1.t5.c7",
+          "worldId": "w1",
+          "topicId": "w1.t5",
+          "kind": "matching",
+          "difficulty": "medium",
+          "prompt": "Match each injected layer to what it carries into the turn.",
+          "left": [
+            { "id": "l1", "text": "[CURRENT DATE]" },
+            { "id": "l2", "text": "Steering resources" },
+            { "id": "l3", "text": "preferences.md" },
+            { "id": "l4", "text": "Lessons" }
+          ],
+          "right": [
+            { "id": "r1", "text": "Today's date, timezone aware, so date reasoning is unambiguous" },
+            { "id": "r2", "text": "Standing project and personal rules loaded before you type" },
+            { "id": "r3", "text": "Consolidated personal preferences the agent learned about you" },
+            { "id": "r4", "text": "Durable corrections that change behavior in future sessions" },
+            { "id": "r5", "text": "The list of MCP servers that failed to start" }
+          ],
+          "hints": [
+            { "tier": 1, "text": "One right-hand option is a distractor about failed servers." },
+            { "tier": 2, "text": "Steering is standing rules; lessons are corrections." },
+            { "tier": 3, "text": "[CURRENT DATE] is the date, preferences.md is consolidated preferences." }
+          ],
+          "explanation": "[CURRENT DATE] carries a timezone-aware today, steering carries standing rules, preferences.md carries consolidated personal preferences, and lessons carry durable corrections. The failed-server list is a distractor and is not one of these context layers.",
+          "docRef": "memory-and-learning.md",
+          "targetSeconds": 85,
+          "solution": { "pairs": { "l1": "r1", "l2": "r2", "l3": "r3", "l4": "r4" } }
+        },
+        {
+          "id": "w1.t5.c8",
+          "worldId": "w1",
+          "topicId": "w1.t5",
+          "kind": "simulation",
+          "difficulty": "hard",
+          "scenario": "You are ninety minutes into a multi-step migration and the context may compact before you finish. A cold resume must know the goal, the phase you are in, and the concrete next step.",
+          "prompt": "Pick the tool and set its fields so the workstream survives compaction.",
+          "toolPalette": [
+            { "id": "session_ledger_record", "text": "session_ledger_record" },
+            { "id": "memory_recall", "text": "memory_recall" },
+            { "id": "learn_add", "text": "learn_add" },
+            { "id": "reset_conversation", "text": "reset_conversation" }
+          ],
+          "argSpecs": [
+            { "name": "phase", "label": "phase", "input": "text", "placeholder": "e.g. implementing", "required": true },
+            { "name": "next", "label": "next", "input": "text", "placeholder": "concrete next step", "required": true },
+            { "name": "event_kind", "label": "event_kind", "input": "select", "required": true, "options": [
+              { "id": "progress", "text": "progress" },
+              { "id": "decision", "text": "decision" },
+              { "id": "blocked", "text": "blocked" }
+            ] }
+          ],
+          "hints": [
+            { "tier": 1, "text": "memory_recall reads and learn_add saves a correction; neither preserves this task's live state." },
+            { "tier": 2, "text": "You want the durable per-session ledger, not a reset." },
+            { "tier": 3, "text": "session_ledger_record with a phase, a concrete next step, and an event_kind of progress." }
+          ],
+          "explanation": "session_ledger_record writes the goal, phase, next step and event to a durable ledger that survives compaction and monitor-loop cycles. memory_recall only reads, learn_add saves a cross-session correction, and reset_conversation would discard the very context you are trying to preserve. Write next as an intent, not a status word.",
+          "docRef": "session-ledger.md",
+          "targetSeconds": 150,
+          "roleVariants": {
+            "devops-sre": {
+              "scenario": "You are mid-way through a long, multi-step production migration and want a cold resume to pick up exactly where you left off.",
+              "prompt": "Record the durable state so the workstream survives a context compaction."
+            },
+            "cloud-architect": {
+              "scenario": "You are partway through a lengthy landing-zone build and the session may compact before it is done.",
+              "prompt": "Record the durable state so the workstream survives a context compaction."
+            }
+          },
+          "solution": { "toolId": "session_ledger_record", "args": { "phase": "implementing", "next": "apply the migration to the staging database and verify row counts", "event_kind": "progress" }, "lenientArgs": { "phase": "text", "next": "text" } }
+        },
+        {
+          "id": "w1.t5.c9",
+          "worldId": "w1",
+          "topicId": "w1.t5",
+          "kind": "debug-fix",
+          "difficulty": "hard",
+          "prompt": "This config leaves the [CURRENT DATE] line falling back to UTC on a host whose clock is UTC, which is not what the user wants. Fix the timezone value so today reflects US Eastern, changing only that value.",
+          "brokenCall": "{\n  \"timezone\": \"\"\n}",
+          "language": "json",
+          "hints": [
+            { "tier": 1, "text": "An empty timezone falls back to UTC." },
+            { "tier": 2, "text": "You need an IANA zone name for US Eastern." },
+            { "tier": 3, "text": "Use America/New_York." }
+          ],
+          "explanation": "The timezone key defaults to empty, which falls back to UTC. Setting it to an IANA name such as America/New_York fixes the [CURRENT DATE] line, cron display and skip_dates evaluation to that zone.",
+          "docRef": "configuration.md",
+          "targetSeconds": 100,
+          "roleVariants": {
+            "data": {
+              "scenario": "Your daily digest cron and its date stamps are all in UTC, but your team reports in US Eastern.",
+              "prompt": "Set the timezone value so dates reflect US Eastern."
+            },
+            "eng-manager": {
+              "scenario": "Your team's scheduled summaries are dated in UTC and you want them local to the New York office.",
+              "prompt": "Set the timezone value so dates reflect US Eastern."
+            }
+          },
+          "solution": {
+            "accept": [
+              "{\"timezone\":\"America/New_York\"}"
+            ],
+            "normalizer": "json"
+          }
+        },
+        {
+          "id": "w1.t5.c10",
+          "worldId": "w1",
+          "topicId": "w1.t5",
+          "kind": "single-choice",
+          "difficulty": "hard",
+          "prompt": "You call reset_conversation to context-switch to an unrelated task. What is true immediately afterward?",
+          "options": [
+            { "id": "a", "text": "The model starts with a clean context, but the transcript stays visible, so anything you still need must be written somewhere durable first" },
+            { "id": "b", "text": "The transcript is erased along with the model's memory of the conversation" },
+            { "id": "c", "text": "The tab closes and archives to history" },
+            { "id": "d", "text": "The session's memory store is wiped" }
+          ],
+          "hints": [
+            { "tier": 1, "text": "It drops the model's memory, not the user's record." },
+            { "tier": 2, "text": "The tab stays open and the transcript remains on disk and on screen." },
+            { "tier": 3, "text": "Persist anything you still need before resetting, because the model forgets it." }
+          ],
+          "explanation": "reset_conversation gives the calling session a fresh model context at the next turn boundary while the transcript stays visible and on disk. It does not close the tab or wipe the memory store, so anything the model still needs must be recorded durably before the reset.",
+          "docRef": "session-control.md",
+          "targetSeconds": 90,
+          "solution": { "optionId": "a" }
+        }
+      ]
+    }
+  ]
+}
