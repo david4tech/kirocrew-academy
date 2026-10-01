@@ -5,7 +5,7 @@ import type { ProgressSnapshot } from '@kirocrew-academy/shared';
 import { LoadingGhost } from '../components/LoadingGhost';
 import { KiroGhost } from '../components/KiroGhost';
 import { api, ApiClientError } from '../lib/api';
-import { findWorld } from '../lib/content';
+import { findWorldSummary } from '../lib/content';
 
 export function TopicListPage() {
   const { worldId } = useParams<{ worldId: string }>();
@@ -33,7 +33,7 @@ export function TopicListPage() {
 
   if (!worldId) return <Navigate to="/map" replace />;
 
-  const world = findWorld(worldId);
+  const world = findWorldSummary(worldId);
   if (!world) return <Navigate to="/map" replace />;
 
   if (loading) return <LoadingGhost label="Opening the topic list..." />;
@@ -69,7 +69,7 @@ export function TopicListPage() {
           const unlocked = tp?.unlocked ?? false;
           const complete = tp?.complete ?? false;
           const masteredCount = tp?.masteredCount ?? 0;
-          const total = tp?.total ?? topic.challenges.length;
+          const total = tp?.total ?? topic.challengeCount;
 
           const body = (
             <div

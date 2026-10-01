@@ -5,7 +5,7 @@ import { xpToNextRank } from '@kirocrew-academy/shared';
 import { KiroGhost } from '../components/KiroGhost';
 import { LoadingGhost } from '../components/LoadingGhost';
 import { api, ApiClientError } from '../lib/api';
-import { content } from '../lib/content';
+import { contentIndex } from '../lib/content';
 import { useAcademyStore } from '../store/academyStore';
 
 export function ProgressPage() {
@@ -85,7 +85,7 @@ export function ProgressPage() {
       <section aria-label="Mastery per world" className="flex flex-col gap-3">
         <h2 className="text-lg font-bold text-text">Mastery per world</h2>
         {worlds.map((wp) => {
-          const world = content.worlds.find((w) => w.id === wp.worldId);
+          const world = contentIndex.worlds.find((w) => w.id === wp.worldId);
           const pct = Math.round(wp.masteryPct * 100);
           return (
             <div key={wp.worldId} className="rounded-xl border border-border bg-bg-raised p-4">

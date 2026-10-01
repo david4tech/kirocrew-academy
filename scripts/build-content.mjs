@@ -9,8 +9,8 @@
  * Exits non-zero on the first invalid pack so CI blocks a broken challenge.
  */
 
-import { readFileSync, readdirSync, mkdirSync, writeFileSync, existsSync } from 'node:fs';
-import { join, dirname, resolve } from 'node:path';
+import { readFileSync, readdirSync, mkdirSync, writeFileSync, existsSync, rmSync, statSync } from 'node:fs';
+import { join, dirname, resolve, basename } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const here = dirname(fileURLToPath(import.meta.url));
@@ -153,23 +153,57 @@ const manifestMeta = {
 const publicManifest = { ...manifestMeta, worlds: worlds.map(toPublicWorld) };
 const fullManifest = { ...manifestMeta, worlds };
 
+// The index carries titles, lore and counts only. Shipping the whole tree in the
+// entry chunk made every player download all seven worlds, including the six
+// still locked, so challenges live in one lazily imported file per world.
+const contentIndex = {
+  ...manifestMeta,
+  worlds: publicManifest.worlds.map((world) => ({
+    ...world,
+    topics: world.topics.map(({ challenges, ...topic }) => ({
+      ...topic,
+      challengeCount: challenges.length,
+    })),
+  })),
+};
+
 const webOut = join(root, 'web/src/generated');
 const apiOut = join(root, 'api/src/generated');
 mkdirSync(webOut, { recursive: true });
 mkdirSync(apiOut, { recursive: true });
-writeFileSync(join(webOut, 'content.public.json'), `${JSON.stringify(publicManifest, null, 2)}\n`);
+const worldsOut = join(webOut, 'worlds');
+mkdirSync(worldsOut, { recursive: true });
+for (const entry of readdirSync(worldsOut)) {
+  if (entry.endsWith('.json')) rmSync(join(worldsOut, entry));
+}
+writeFileSync(join(webOut, 'content.index.json'), `${JSON.stringify(contentIndex, null, 2)}\n`);
+for (const world of publicManifest.worlds) {
+  writeFileSync(join(worldsOut, `${world.id}.json`), `${JSON.stringify(world, null, 2)}\n`);
+}
 writeFileSync(join(apiOut, 'content.full.json'), `${JSON.stringify(fullManifest, null, 2)}\n`);
 
-// A leaked answer in the public bundle is the one failure mode worth asserting.
+// A leaked answer in the client files is the one failure mode worth asserting.
 // explanation counts: it states the answer in prose, so shipping it would let a
 // player read every solution from DevTools without ever calling the API.
-const publicText = readFileSync(join(webOut, 'content.public.json'), 'utf8');
-const leaked = ['solution', 'hints', 'explanation'].filter((key) =>
-  new RegExp(`"${key}"\\s*:`).test(publicText),
-);
-if (leaked.length > 0) {
-  console.error(`FAIL public bundle contains answer data: ${leaked.join(', ')}`);
+const clientFiles = [
+  join(webOut, 'content.index.json'),
+  ...publicManifest.worlds.map((w) => join(worldsOut, `${w.id}.json`)),
+];
+const leaked = new Set();
+for (const file of clientFiles) {
+  const text = readFileSync(file, 'utf8');
+  for (const key of ['solution', 'hints', 'explanation']) {
+    if (new RegExp(`"${key}"\\s*:`).test(text)) leaked.add(`${key} in ${basename(file)}`);
+  }
+}
+if (leaked.size > 0) {
+  console.error(`FAIL client content contains answer data: ${[...leaked].join(', ')}`);
   process.exit(1);
 }
 
-console.log(`\nwrote ${join('web/src/generated', 'content.public.json')} and ${join('api/src/generated', 'content.full.json')}`);
+const indexKb = Math.round(statSync(join(webOut, 'content.index.json')).size / 1024);
+console.log(
+  `\nwrote web/src/generated/content.index.json (${indexKb} kB eager) ` +
+    `plus ${publicManifest.worlds.length} lazy world file(s) in web/src/generated/worlds/, ` +
+    `and api/src/generated/content.full.json`,
+);

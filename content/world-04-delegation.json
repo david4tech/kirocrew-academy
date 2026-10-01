@@ -1,0 +1,1410 @@
+{
+  "id": "w4",
+  "order": 4,
+  "title": "Delegation",
+  "subtitle": "Spawning subagents, scoping their context, reusing runs and respecting limits",
+  "lore": "A single ghost can only haunt one room at a time. To haunt the whole house at once you summon lesser spirits, each with its own task, and you learn when to send one and when to do the work yourself. This world is about summoning well.",
+  "accent": "#5B21B6",
+  "topics": [
+    {
+      "id": "w4.t1",
+      "title": "spawn_run versus spawn_sub_agents",
+      "summary": "Background spawn_run that returns a dispatch receipt and streams completion events, versus blocking spawn_sub_agents that collects results, when ending the turn is correct, and why a receipt is not completion.",
+      "challenges": [
+        {
+          "id": "w4.t1.c1",
+          "worldId": "w4",
+          "topicId": "w4.t1",
+          "kind": "single-choice",
+          "difficulty": "easy",
+          "prompt": "What does spawn_run do with respect to the calling turn?",
+          "options": [
+            { "id": "a", "text": "Returns immediately with a dispatch receipt; results arrive later as completion events" },
+            { "id": "b", "text": "Blocks the turn until every subagent finishes, then returns their collected results" },
+            { "id": "c", "text": "Runs the task inline in the current session with no separate subagent" },
+            { "id": "d", "text": "Opens a new dashboard tab the user must drive manually" }
+          ],
+          "hints": [
+            { "tier": 1, "text": "Think about whether the parent keeps running or waits." },
+            { "tier": 2, "text": "One of the two spawn tools is background and one blocks; this is the background one." },
+            { "tier": 3, "text": "It returns right away; the results come back as [Subagent completion event] messages." }
+          ],
+          "explanation": "spawn_run returns immediately and the results arrive later as [Subagent completion event] messages injected into the parent conversation. spawn_sub_agents is the blocking variant that collects and returns results in one call.",
+          "docRef": "subagents.md",
+          "targetSeconds": 30,
+          "solution": { "optionId": "a" }
+        },
+        {
+          "id": "w4.t1.c2",
+          "worldId": "w4",
+          "topicId": "w4.t1",
+          "kind": "true-false",
+          "difficulty": "easy",
+          "prompt": "Decide whether the statement holds.",
+          "statement": "A spawn_run dispatch receipt means the delegated task has completed.",
+          "hints": [
+            { "tier": 1, "text": "A receipt confirms the request was accepted, not that work is done." },
+            { "tier": 2, "text": "The actual result comes back separately." },
+            { "tier": 3, "text": "Completion arrives as a later completion event, so the receipt is not completion." }
+          ],
+          "explanation": "False. The receipt only acknowledges that the spawn was dispatched. The outcome arrives later as a [Subagent completion event], and you must validate those results before declaring the task done.",
+          "docRef": "subagents.md",
+          "targetSeconds": 25,
+          "solution": { "value": false }
+        },
+        {
+          "id": "w4.t1.c3",
+          "worldId": "w4",
+          "topicId": "w4.t1",
+          "kind": "tool-name",
+          "difficulty": "easy",
+          "prompt": "You want to delegate three independent searches that run in the background while you keep working, with results injected back as completion events. Which MCP tool do you call?",
+          "hints": [
+            { "tier": 1, "text": "It is the background spawn tool, not the blocking one." },
+            { "tier": 2, "text": "Its name is the spawn verb for running tasks." },
+            { "tier": 3, "text": "It is spawn_run." }
+          ],
+          "explanation": "spawn_run dispatches background subagents and returns immediately; it takes a tasks array for parallel work. spawn_sub_agents would block the turn until they all finish instead.",
+          "docRef": "subagents.md",
+          "targetSeconds": 35,
+          "solution": { "accept": ["spawn_run", "@kirocrew-core/spawn_run"], "normalizer": "tool" }
+        },
+        {
+          "id": "w4.t1.c4",
+          "worldId": "w4",
+          "topicId": "w4.t1",
+          "kind": "multi-choice",
+          "difficulty": "medium",
+          "prompt": "Select every true statement about spawn_run versus spawn_sub_agents.",
+          "options": [
+            { "id": "a", "text": "spawn_run returns immediately and results arrive as completion events" },
+            { "id": "b", "text": "spawn_sub_agents blocks and returns the collected results in one call" },
+            { "id": "c", "text": "spawn_sub_agents takes an agents array of {agent_or_mode, prompt} objects" },
+            { "id": "d", "text": "spawn_sub_agents can support parent-child parallel work the same as spawn_run" },
+            { "id": "e", "text": "A blocking spawn_sub_agents call collects for at most 2 hours regardless of the per-task timeout" }
+          ],
+          "hints": [
+            { "tier": 1, "text": "Four statements are accurate; one claims parent_parallel works on the blocking tool." },
+            { "tier": 2, "text": "The blocking tool cannot leave the parent free to do separate work." },
+            { "tier": 3, "text": "Everything is true except the claim that spawn_sub_agents supports parent-child parallel work." }
+          ],
+          "explanation": "spawn_run is background and returns completion events, spawn_sub_agents blocks and returns collected results, takes an agents array of {agent_or_mode, prompt}, and caps its blocking wait at 2 hours. The one false claim is that spawn_sub_agents can do parent-child parallel work: the docs state blocking spawn_sub_agents cannot support parent_parallel.",
+          "docRef": "subagents.md",
+          "targetSeconds": 75,
+          "solution": { "optionIds": ["a", "b", "c", "e"] }
+        },
+        {
+          "id": "w4.t1.c5",
+          "worldId": "w4",
+          "topicId": "w4.t1",
+          "kind": "config-fill",
+          "difficulty": "medium",
+          "prompt": "You are calling spawn_run with several independent tasks at once. Write the exact parameter name that takes the array of task descriptions for parallel execution.",
+          "starter": "",
+          "hints": [
+            { "tier": 1, "text": "The singular form runs one task; you want the plural." },
+            { "tier": 2, "text": "It is the array counterpart of task." },
+            { "tier": 3, "text": "It is tasks." }
+          ],
+          "explanation": "The tasks parameter takes an array of task descriptions for parallel execution, while task takes a single description. agents / agent name the agent(s) correspondingly.",
+          "docRef": "subagents.md",
+          "targetSeconds": 50,
+          "roleVariants": {
+            "qa": {
+              "scenario": "You want three independent flaky-test investigations dispatched in one background call.",
+              "prompt": "Name the spawn_run parameter that takes the array of task descriptions."
+            },
+            "data": {
+              "scenario": "You want to validate three independent partitions of a dataset in parallel subagents.",
+              "prompt": "Name the spawn_run parameter that takes the array of task descriptions."
+            }
+          },
+          "solution": { "accept": ["tasks"], "normalizer": "text" }
+        },
+        {
+          "id": "w4.t1.c6",
+          "worldId": "w4",
+          "topicId": "w4.t1",
+          "kind": "sequence",
+          "difficulty": "medium",
+          "prompt": "Order the lifecycle of a background spawn_run from dispatch to a reported result.",
+          "items": [
+            { "id": "s1", "text": "Call spawn_run and receive a dispatch receipt" },
+            { "id": "s2", "text": "The subagent runs in its own session with full tool access" },
+            { "id": "s3", "text": "A [Subagent completion event] is injected into the parent conversation" },
+            { "id": "s4", "text": "You validate the result against artifacts and tests before reporting success" }
+          ],
+          "hints": [
+            { "tier": 1, "text": "The receipt comes before any work is done." },
+            { "tier": 2, "text": "Validation is the last step, not the first." },
+            { "tier": 3, "text": "Dispatch, run, completion event, then validate." }
+          ],
+          "explanation": "You dispatch with spawn_run and get a receipt, the subagent runs independently, its completion event is injected back, and only then do you validate the actual outputs before reporting success. The receipt itself proves nothing about the result.",
+          "docRef": "subagents.md",
+          "targetSeconds": 70,
+          "roleVariants": {
+            "eng-manager": {
+              "scenario": "You are explaining to the team why a dispatched background task is not the same as a finished one.",
+              "prompt": "Order the background spawn lifecycle from dispatch to a validated result."
+            },
+            "backend": {
+              "scenario": "You are tracing why your orchestrator reported success before the worker had actually written its output.",
+              "prompt": "Order the background spawn lifecycle from dispatch to a validated result."
+            }
+          },
+          "solution": { "orderedItemIds": ["s1", "s2", "s3", "s4"] }
+        },
+        {
+          "id": "w4.t1.c7",
+          "worldId": "w4",
+          "topicId": "w4.t1",
+          "kind": "matching",
+          "difficulty": "medium",
+          "prompt": "Match each spawn tool to what it does.",
+          "left": [
+            { "id": "l1", "text": "spawn_run" },
+            { "id": "l2", "text": "spawn_sub_agents" },
+            { "id": "l3", "text": "spawn_list" },
+            { "id": "l4", "text": "spawn_status" }
+          ],
+          "right": [
+            { "id": "r1", "text": "Background fan-out that returns a receipt and streams completion events" },
+            { "id": "r2", "text": "Blocking fan-out that returns the collected results in one call" },
+            { "id": "r3", "text": "Lists running and completed subagents" },
+            { "id": "r4", "text": "Reads a completed run's retained transcript by agent id, with paging" },
+            { "id": "r5", "text": "Cancels a running subagent and discards its output" }
+          ],
+          "hints": [
+            { "tier": 1, "text": "One right-hand entry describes a cancel that is not one of these tools." },
+            { "tier": 2, "text": "One of spawn_run and spawn_sub_agents blocks and one does not." },
+            { "tier": 3, "text": "spawn_run is background, spawn_sub_agents blocks, spawn_list lists, spawn_status reads a transcript." }
+          ],
+          "explanation": "spawn_run is background fan-out, spawn_sub_agents is blocking fan-out, spawn_list lists running and completed subagents, and spawn_status reads a completed run's retained transcript. None of these cancels a run and discards output, so that option is a distractor.",
+          "docRef": "subagents.md",
+          "targetSeconds": 85,
+          "solution": { "pairs": { "l1": "r1", "l2": "r2", "l3": "r3", "l4": "r4" } }
+        },
+        {
+          "id": "w4.t1.c8",
+          "worldId": "w4",
+          "topicId": "w4.t1",
+          "kind": "simulation",
+          "difficulty": "medium",
+          "scenario": "You have three independent packages to review and nothing else to do until the reviews come back. You want the results collected and returned in one call so you can synthesize them immediately, rather than ending your turn and waiting for events.",
+          "prompt": "Pick the spawn tool that blocks and returns the collected results.",
+          "toolPalette": [
+            { "id": "spawn_sub_agents", "text": "spawn_sub_agents" },
+            { "id": "spawn_run", "text": "spawn_run" },
+            { "id": "spawn_continue", "text": "spawn_continue" },
+            { "id": "spawn_status", "text": "spawn_status" }
+          ],
+          "argSpecs": [
+            { "name": "blocks_until_done", "label": "Does it block until the subagents finish?", "input": "boolean", "required": true }
+          ],
+          "hints": [
+            { "tier": 1, "text": "You want results in the same turn, not later as events." },
+            { "tier": 2, "text": "The background tool would make you end the turn and wait." },
+            { "tier": 3, "text": "spawn_sub_agents blocks and returns the collected results." }
+          ],
+          "explanation": "spawn_sub_agents blocks the turn and returns the collected results, which is right when the parent has no separate work and wants to synthesize immediately. spawn_run is background and would hand you a receipt, forcing you to end the turn and wait for completion events.",
+          "docRef": "subagents.md",
+          "targetSeconds": 110,
+          "roleVariants": {
+            "cloud-architect": {
+              "scenario": "You need three design options evaluated in parallel and want all verdicts back in one call to compare them.",
+              "prompt": "Pick the spawn tool that blocks and returns the collected results."
+            },
+            "security": {
+              "scenario": "You want three dependency manifests scanned at once and the findings returned together for a single risk writeup.",
+              "prompt": "Pick the spawn tool that blocks and returns the collected results."
+            }
+          },
+          "solution": { "toolId": "spawn_sub_agents", "args": { "blocks_until_done": true } }
+        },
+        {
+          "id": "w4.t1.c9",
+          "worldId": "w4",
+          "topicId": "w4.t1",
+          "kind": "debug-fix",
+          "difficulty": "hard",
+          "scenario": "An orchestration script dispatched a background worker and reported the task done the instant the call returned.",
+          "prompt": "This note states the wrong rule about a background dispatch. Fix the JSON so both claims are accurate, changing only the two values.",
+          "brokenCall": "{\n  \"spawn_run_blocks_until_done\": true,\n  \"receipt_means_task_complete\": true\n}",
+          "language": "json",
+          "hints": [
+            { "tier": 1, "text": "Both claims describe spawn_run as more final than it is." },
+            { "tier": 2, "text": "spawn_run returns immediately, and a receipt is only an acknowledgement." },
+            { "tier": 3, "text": "Both values should be false." }
+          ],
+          "explanation": "spawn_run does not block: it returns a dispatch receipt immediately, and that receipt does not mean the task is complete. The result arrives later as a completion event, so both booleans are false. Treating a receipt as completion is how orchestrators report success before the work exists.",
+          "docRef": "subagents.md",
+          "targetSeconds": 120,
+          "roleVariants": {
+            "devops-sre": {
+              "scenario": "Your pipeline marks a deploy step green the moment it fires a background subagent, before the worker has done anything.",
+              "prompt": "Correct the two booleans so the note matches how a background dispatch actually behaves."
+            },
+            "backend": {
+              "scenario": "A teammate's handler treats the spawn_run return value as the finished result and ships it downstream.",
+              "prompt": "Correct the two booleans so the note matches how a background dispatch actually behaves."
+            }
+          },
+          "solution": {
+            "accept": [
+              "{\"spawn_run_blocks_until_done\":false,\"receipt_means_task_complete\":false}"
+            ],
+            "normalizer": "json"
+          }
+        },
+        {
+          "id": "w4.t1.c10",
+          "worldId": "w4",
+          "topicId": "w4.t1",
+          "kind": "single-choice",
+          "difficulty": "hard",
+          "prompt": "You dispatched a background spawn_run and have no useful independent work to do while it runs. What is the correct move?",
+          "options": [
+            { "id": "a", "text": "End your turn and let the completion event wake you; do not repeat the child's task to stay busy" },
+            { "id": "b", "text": "Re-run the same task yourself in parallel so it finishes faster" },
+            { "id": "c", "text": "Poll spawn_status in a tight loop until the result is ready" },
+            { "id": "d", "text": "Immediately report the task complete based on the dispatch receipt" }
+          ],
+          "hints": [
+            { "tier": 1, "text": "Duplicating the child's work wastes tokens and risks conflicting output." },
+            { "tier": 2, "text": "The runtime wakes you when the result is ready." },
+            { "tier": 3, "text": "End the turn and wait for the completion event; do not repeat the task." }
+          ],
+          "explanation": "When no useful independent work remains, you wait through the completion events and end your turn rather than repeating the child's task to stay busy. The result is injected back automatically; duplicating the work or reporting from the receipt both lead to wrong or conflicting outcomes.",
+          "docRef": "subagents.md",
+          "targetSeconds": 90,
+          "solution": { "optionId": "a" }
+        }
+      ]
+    },
+    {
+      "id": "w4.t2",
+      "title": "The Solo Gate: solo_reason and solo_details",
+      "summary": "The five solo_reason values, which require solo_details, that parent_parallel needs asynchronous spawn_run, and that an unexplained equivalent-worker solo call is refused without spawning.",
+      "challenges": [
+        {
+          "id": "w4.t2.c1",
+          "worldId": "w4",
+          "topicId": "w4.t2",
+          "kind": "single-choice",
+          "difficulty": "easy",
+          "prompt": "Why does spawn_run require a solo_reason when you delegate a single task to an equivalent worker?",
+          "options": [
+            { "id": "a", "text": "To force a justification; an unexplained equivalent-worker solo call is refused without spawning" },
+            { "id": "b", "text": "To pick which upstream LLM provider account the worker uses" },
+            { "id": "c", "text": "To set the subagent's memory store" },
+            { "id": "d", "text": "To name the sidebar folder the run is filed under" }
+          ],
+          "hints": [
+            { "tier": 1, "text": "The gate exists to stop pointless delegation." },
+            { "tier": 2, "text": "Doing the work yourself is the default; delegation needs a real benefit." },
+            { "tier": 3, "text": "An unexplained equivalent solo spawn is refused without spawning." }
+          ],
+          "explanation": "The solo gate forces you to state a real benefit before delegating a single equivalent-worker task. An unexplained equivalent-worker solo call is refused without spawning: you do the work directly or give a genuine reason. It is not about providers, memory or folders.",
+          "docRef": "subagents.md",
+          "targetSeconds": 30,
+          "solution": { "optionId": "a" }
+        },
+        {
+          "id": "w4.t2.c2",
+          "worldId": "w4",
+          "topicId": "w4.t2",
+          "kind": "true-false",
+          "difficulty": "easy",
+          "prompt": "Decide whether the statement holds.",
+          "statement": "A long task, idle subagent slots, or a different model name alone is a sufficient reason to delegate.",
+          "hints": [
+            { "tier": 1, "text": "The docs explicitly list what is not a reason." },
+            { "tier": 2, "text": "Capacity and task length do not themselves prove value." },
+            { "tier": 3, "text": "None of those alone justifies a spawn." }
+          ],
+          "explanation": "False. A long task, empty slots or a different model name alone is explicitly not a reason to delegate. Delegation needs separate ready parallel work, a large input to distill, independent verification value, a specialist capability, or an explicit user request.",
+          "docRef": "subagents.md",
+          "targetSeconds": 25,
+          "solution": { "value": false }
+        },
+        {
+          "id": "w4.t2.c3",
+          "worldId": "w4",
+          "topicId": "w4.t2",
+          "kind": "tool-name",
+          "difficulty": "medium",
+          "prompt": "You want to check host memory and CPU headroom, and the sub-agent cap currently in force, before launching a wide fan-out. Which MCP tool do you call?",
+          "hints": [
+            { "tier": 1, "text": "It is advisory and read-only; it reserves nothing." },
+            { "tier": 2, "text": "Its name is about the status of host resources." },
+            { "tier": 3, "text": "It is resource_status." }
+          ],
+          "explanation": "resource_status reports available memory, CPU load, an advisory posture, and the sub-agent cap actually in force versus your configured max. It is advisory only and does not reserve capacity.",
+          "docRef": "subagents.md",
+          "targetSeconds": 45,
+          "solution": { "accept": ["resource_status", "@kirocrew-core/resource_status"], "normalizer": "tool" }
+        },
+        {
+          "id": "w4.t2.c4",
+          "worldId": "w4",
+          "topicId": "w4.t2",
+          "kind": "multi-choice",
+          "difficulty": "medium",
+          "prompt": "Which solo_reason values require solo_details to be supplied?",
+          "options": [
+            { "id": "a", "text": "parent_parallel" },
+            { "id": "b", "text": "specialist" },
+            { "id": "c", "text": "user_requested" },
+            { "id": "d", "text": "bulk_data" },
+            { "id": "e", "text": "fresh_context" }
+          ],
+          "hints": [
+            { "tier": 1, "text": "Three of the five require details; two existing payloads keep working without them." },
+            { "tier": 2, "text": "The ones that describe separate work, a capability, or quote the user need details." },
+            { "tier": 3, "text": "parent_parallel, specialist and user_requested require details." }
+          ],
+          "explanation": "parent_parallel, specialist and user_requested require solo_details (your separate work, the needed capability, or the quoted user request). bulk_data and fresh_context are the existing payloads that keep working without required details.",
+          "docRef": "subagents.md",
+          "targetSeconds": 70,
+          "solution": { "optionIds": ["a", "b", "c"] }
+        },
+        {
+          "id": "w4.t2.c5",
+          "worldId": "w4",
+          "topicId": "w4.t2",
+          "kind": "config-fill",
+          "difficulty": "medium",
+          "prompt": "A large build log would flood your own context and you only need the distilled result. Write the exact solo_reason value for distilling a substantial input in a subagent.",
+          "starter": "",
+          "hints": [
+            { "tier": 1, "text": "It is the reason about substantial inputs, not about a capability." },
+            { "tier": 2, "text": "Two words joined by an underscore, naming the kind of input." },
+            { "tier": 3, "text": "It is bulk_data." }
+          ],
+          "explanation": "bulk_data is the solo_reason for a step that would flood your context with a huge log or wide search where only the distilled result is needed. It does not require solo_details, unlike specialist or user_requested.",
+          "docRef": "subagents.md",
+          "targetSeconds": 55,
+          "roleVariants": {
+            "devops-sre": {
+              "scenario": "A multi-megabyte CI log needs its failures distilled without pulling the whole thing into your context.",
+              "prompt": "Write the solo_reason value for distilling a substantial input in a subagent."
+            },
+            "data": {
+              "scenario": "A wide table scan returns far too much to read directly and you only want the summary.",
+              "prompt": "Write the solo_reason value for distilling a substantial input in a subagent."
+            }
+          },
+          "solution": { "accept": ["bulk_data"], "normalizer": "text" }
+        },
+        {
+          "id": "w4.t2.c6",
+          "worldId": "w4",
+          "topicId": "w4.t2",
+          "kind": "sequence",
+          "difficulty": "medium",
+          "prompt": "Order the decision for a single-task delegation, from the default to the justified spawn.",
+          "items": [
+            { "id": "s1", "text": "Default: do the focused work directly rather than delegating" },
+            { "id": "s2", "text": "Identify a genuine benefit: parallel work, distillation, verification, specialist, or user request" },
+            { "id": "s3", "text": "Pick the matching solo_reason and supply solo_details where required" },
+            { "id": "s4", "text": "Call spawn_run; an unjustified equivalent call would be refused without spawning" }
+          ],
+          "hints": [
+            { "tier": 1, "text": "The default is to not delegate at all." },
+            { "tier": 2, "text": "You justify before you call, not after." },
+            { "tier": 3, "text": "Direct work, then the benefit, then reason and details, then the gated call." }
+          ],
+          "explanation": "You default to doing the work yourself, identify a real benefit only if one exists, choose the matching solo_reason with details where required, and then call spawn_run. An unexplained equivalent-worker call is refused without spawning, so the justification is what lets the call through.",
+          "docRef": "subagents.md",
+          "targetSeconds": 70,
+          "roleVariants": {
+            "eng-manager": {
+              "scenario": "You are coaching an agent that delegates reflexively instead of doing the work itself.",
+              "prompt": "Order the single-task delegation decision from default to a justified spawn."
+            },
+            "platform": {
+              "scenario": "You are codifying when a platform automation is allowed to fan out versus act directly.",
+              "prompt": "Order the single-task delegation decision from default to a justified spawn."
+            }
+          },
+          "solution": { "orderedItemIds": ["s1", "s2", "s3", "s4"] }
+        },
+        {
+          "id": "w4.t2.c7",
+          "worldId": "w4",
+          "topicId": "w4.t2",
+          "kind": "matching",
+          "difficulty": "medium",
+          "prompt": "Match each solo_reason to the situation it names.",
+          "left": [
+            { "id": "l1", "text": "parent_parallel" },
+            { "id": "l2", "text": "bulk_data" },
+            { "id": "l3", "text": "fresh_context" },
+            { "id": "l4", "text": "specialist" }
+          ],
+          "right": [
+            { "id": "r1", "text": "The parent keeps a separate ready workstream running at the same time" },
+            { "id": "r2", "text": "A huge input would flood your context and only the distilled result is needed" },
+            { "id": "r3", "text": "The result would be wrong if the run saw this session's context, e.g. a blind review" },
+            { "id": "r4", "text": "A needed capability or independent verification the parent cannot provide" },
+            { "id": "r5", "text": "The host simply has idle subagent slots to fill" }
+          ],
+          "hints": [
+            { "tier": 1, "text": "One right-hand option describes idle capacity, which is not a reason." },
+            { "tier": 2, "text": "fresh_context is about a blind, context-free result." },
+            { "tier": 3, "text": "parent_parallel is separate work, bulk_data is distillation, fresh_context is a blind result, specialist is a capability." }
+          ],
+          "explanation": "parent_parallel means the parent has separate ready work, bulk_data distills a huge input, fresh_context produces a blind context-free result, and specialist needs a capability or independent verification. Idle slots are explicitly not a reason to delegate.",
+          "docRef": "subagents.md",
+          "targetSeconds": 85,
+          "solution": { "pairs": { "l1": "r1", "l2": "r2", "l3": "r3", "l4": "r4" } }
+        },
+        {
+          "id": "w4.t2.c8",
+          "worldId": "w4",
+          "topicId": "w4.t2",
+          "kind": "simulation",
+          "difficulty": "hard",
+          "scenario": "You will implement backend validation in server.py yourself this turn. In parallel you want a worker to update docs/api.md to the finalized API, owning only that file, and return the diff. The docs inputs are final and disjoint from your code.",
+          "prompt": "Dispatch the worker with the correct solo_reason and a details string that names your separate work and the disjoint ownership.",
+          "toolPalette": [
+            { "id": "spawn_run", "text": "spawn_run" },
+            { "id": "spawn_sub_agents", "text": "spawn_sub_agents" },
+            { "id": "spawn_continue", "text": "spawn_continue" }
+          ],
+          "argSpecs": [
+            { "name": "solo_reason", "label": "solo_reason", "input": "select", "required": true, "options": [
+              { "id": "parent_parallel", "text": "parent_parallel" },
+              { "id": "bulk_data", "text": "bulk_data" },
+              { "id": "specialist", "text": "specialist" },
+              { "id": "user_requested", "text": "user_requested" }
+            ] },
+            { "name": "solo_details", "label": "solo_details", "input": "text", "placeholder": "your separate work and the disjoint ownership", "required": true }
+          ],
+          "hints": [
+            { "tier": 1, "text": "You are keeping a separate workstream alive while the child runs." },
+            { "tier": 2, "text": "parent_parallel is the reason, and it needs the async background tool." },
+            { "tier": 3, "text": "spawn_run with solo_reason=parent_parallel and details describing your server.py work and the docs-only ownership." }
+          ],
+          "explanation": "parent_parallel is the right reason because you retain a separate ready workstream (server.py) while the child owns docs/api.md. It requires asynchronous spawn_run (the blocking spawn_sub_agents cannot support parent-child parallel work) and requires solo_details naming your work and the disjoint ownership.",
+          "docRef": "subagents.md",
+          "targetSeconds": 150,
+          "solution": { "toolId": "spawn_run", "args": { "solo_reason": "parent_parallel", "solo_details": "I implement backend validation in server.py; the worker owns docs/api.md only and the inputs are finalized and disjoint" }, "lenientArgs": { "solo_details": "text" } }
+        },
+        {
+          "id": "w4.t2.c9",
+          "worldId": "w4",
+          "topicId": "w4.t2",
+          "kind": "debug-fix",
+          "difficulty": "hard",
+          "scenario": "A call claims parent_parallel but supplies no details and no actual separate parent work.",
+          "prompt": "This spawn_run call is refused by the solo gate. The parent genuinely has no separate workstream and no large input, so the honest fix is to not delegate. Rewrite the call so it does the work directly instead, by setting delegate to false.",
+          "brokenCall": "{\n  \"solo_reason\": \"parent_parallel\",\n  \"solo_details\": \"\",\n  \"delegate\": true\n}",
+          "language": "json",
+          "hints": [
+            { "tier": 1, "text": "parent_parallel with no separate work and empty details is exactly what the gate refuses." },
+            { "tier": 2, "text": "Inventing a task to pass the gate is explicitly forbidden; the honest answer is to do it yourself." },
+            { "tier": 3, "text": "Set delegate to false and drop the pretextual reason." }
+          ],
+          "explanation": "An unexplained equivalent-worker solo call is refused without spawning, and the docs say not to invent tasks or swap models to bypass the gate. With no separate parent work and no large input, the correct action is to do the work directly, so delegate becomes false.",
+          "docRef": "subagents.md",
+          "targetSeconds": 130,
+          "roleVariants": {
+            "backend": {
+              "scenario": "You caught yourself about to spawn a worker for a small refactor just because a slot was free.",
+              "prompt": "Rewrite the call so the work is done directly instead of pretextually delegated."
+            },
+            "security": {
+              "scenario": "An automation tries to justify a spawn it does not need by claiming parallel work it does not have.",
+              "prompt": "Rewrite the call so the work is done directly instead of pretextually delegated."
+            }
+          },
+          "solution": {
+            "accept": [
+              "{\"solo_reason\":\"parent_parallel\",\"solo_details\":\"\",\"delegate\":false}",
+              "{\"delegate\":false}"
+            ],
+            "normalizer": "json"
+          }
+        },
+        {
+          "id": "w4.t2.c10",
+          "worldId": "w4",
+          "topicId": "w4.t2",
+          "kind": "single-choice",
+          "difficulty": "hard",
+          "prompt": "You pass solo_reason=user_requested. What must solo_details contain, and what weight does the runtime give it?",
+          "options": [
+            { "id": "a", "text": "The user's explicit request, quoted; it is retained as a model claim, not verified authorization" },
+            { "id": "b", "text": "A signed token proving the user authorized the spawn" },
+            { "id": "c", "text": "Nothing; user_requested never needs details" },
+            { "id": "d", "text": "The provider account id the worker should bill against" }
+          ],
+          "hints": [
+            { "tier": 1, "text": "user_requested is one of the reasons that requires details." },
+            { "tier": 2, "text": "The detail is the user's own words." },
+            { "tier": 3, "text": "Quote the user's request; the runtime treats it as a claim, not proof." }
+          ],
+          "explanation": "user_requested requires solo_details quoting the user's explicit request. The reason and details are retained in the run record as model claims, not verified authorization or a permission override, so quoting is required but it does not grant real authority.",
+          "docRef": "subagents.md",
+          "targetSeconds": 90,
+          "solution": { "optionId": "a" }
+        }
+      ]
+    },
+    {
+      "id": "w4.t3",
+      "title": "Context Scoping for Subagents",
+      "summary": "The include_memory, include_lessons and include_project switches, that all default to true, and which to disable for a fully specified fan-out so a worker is not loaded with context it does not need.",
+      "challenges": [
+        {
+          "id": "w4.t3.c1",
+          "worldId": "w4",
+          "topicId": "w4.t3",
+          "kind": "single-choice",
+          "difficulty": "easy",
+          "prompt": "What is the default value of include_memory, include_lessons and include_project on a spawn?",
+          "options": [
+            { "id": "a", "text": "true: each context group is inherited unless you switch it off" },
+            { "id": "b", "text": "false: a subagent starts with no inherited context by default" },
+            { "id": "c", "text": "true for memory only; the other two default to false" },
+            { "id": "d", "text": "They have no default and must be set explicitly" }
+          ],
+          "hints": [
+            { "tier": 1, "text": "The switches turn a group off, which implies the group is on to begin with." },
+            { "tier": 2, "text": "The docs describe them as booleans defaulting to one value." },
+            { "tier": 3, "text": "All three default to true and are switched off when you set false." }
+          ],
+          "explanation": "include_memory, include_lessons and include_project are booleans that default to true, each switching off a context group the subagent would otherwise inherit. You set one to false to withhold that group.",
+          "docRef": "subagents.md",
+          "targetSeconds": 30,
+          "solution": { "optionId": "a" }
+        },
+        {
+          "id": "w4.t3.c2",
+          "worldId": "w4",
+          "topicId": "w4.t3",
+          "kind": "true-false",
+          "difficulty": "easy",
+          "prompt": "Decide whether the statement holds.",
+          "statement": "You should keep include_lessons on whenever the subagent writes code, edits files, runs git, or pushes.",
+          "hints": [
+            { "tier": 1, "text": "Lessons carry the user's learned corrections." },
+            { "tier": 2, "text": "A writer without lessons can repeat a mistake the user already corrected." },
+            { "tier": 3, "text": "Keep lessons on for any writing subagent." }
+          ],
+          "explanation": "True. include_lessons should stay on whenever the subagent writes code, edits files, runs git or pushes, because the user's learned corrections live there and a worker without them repeats corrected mistakes. Turning it off is for pure read-and-report tasks.",
+          "docRef": "subagents.md",
+          "targetSeconds": 25,
+          "solution": { "value": true }
+        },
+        {
+          "id": "w4.t3.c3",
+          "worldId": "w4",
+          "topicId": "w4.t3",
+          "kind": "tool-name",
+          "difficulty": "medium",
+          "prompt": "You want to dispatch a background worker whose task is fully specified by the text you wrote, with no inherited memory. Which spawn tool takes the include_memory switch to turn that off?",
+          "hints": [
+            { "tier": 1, "text": "It is the background dispatch tool, which accepts the include_ switches." },
+            { "tier": 2, "text": "The same tool that takes task and tasks." },
+            { "tier": 3, "text": "It is spawn_run." }
+          ],
+          "explanation": "spawn_run accepts include_memory, include_lessons and include_project. Setting include_memory to false withholds the parent's memory from a worker whose task is fully specified by the task text. spawn_continue, by contrast, inherits scope and does not accept these switches.",
+          "docRef": "subagents.md",
+          "targetSeconds": 45,
+          "solution": { "accept": ["spawn_run", "@kirocrew-core/spawn_run"], "normalizer": "tool" }
+        },
+        {
+          "id": "w4.t3.c4",
+          "worldId": "w4",
+          "topicId": "w4.t3",
+          "kind": "multi-choice",
+          "difficulty": "medium",
+          "prompt": "For a fully specified parallel fan-out (read these files, run this command, summarize this log), which context switches are reasonable to set to false?",
+          "options": [
+            { "id": "a", "text": "include_memory, because the task text fully specifies the work" },
+            { "id": "b", "text": "include_project, when the work is outside the active project tree" },
+            { "id": "c", "text": "include_lessons, when the subagent only reads and reports" },
+            { "id": "d", "text": "include_memory, even though the worker will push commits to a shared repo" },
+            { "id": "e", "text": "include_lessons, even though the worker edits files and runs git" }
+          ],
+          "hints": [
+            { "tier": 1, "text": "Three of these match the documented guidance; two contradict it." },
+            { "tier": 2, "text": "Lessons stay on for any writer; project stays on only when the work is in the tree." },
+            { "tier": 3, "text": "Memory off for a specified task, project off when outside the tree, lessons off for read-only." }
+          ],
+          "explanation": "For a fully specified task you can set include_memory false, set include_project false when the work is outside the project tree, and set include_lessons false when the subagent only reads and reports. You should not drop lessons for a worker that edits files or runs git, which is the case the two false options describe.",
+          "docRef": "subagents.md",
+          "targetSeconds": 75,
+          "solution": { "optionIds": ["a", "b", "c"] }
+        },
+        {
+          "id": "w4.t3.c5",
+          "worldId": "w4",
+          "topicId": "w4.t3",
+          "kind": "config-fill",
+          "difficulty": "medium",
+          "prompt": "A subagent's job is pure web research outside the active project tree. Write the exact switch name you would set to false so it does not inherit the project context.",
+          "starter": "",
+          "hints": [
+            { "tier": 1, "text": "It is one of the three include_ switches." },
+            { "tier": 2, "text": "It names the project context group." },
+            { "tier": 3, "text": "It is include_project." }
+          ],
+          "explanation": "include_project set to false withholds the active project tree context, which is right for web research, a different repo, or pure reasoning. It defaults to true like the other two switches.",
+          "docRef": "subagents.md",
+          "targetSeconds": 50,
+          "roleVariants": {
+            "data": {
+              "scenario": "A worker is scraping public pricing pages that have nothing to do with the current repo.",
+              "prompt": "Write the switch you set to false so the worker skips the project context."
+            },
+            "cloud-architect": {
+              "scenario": "A worker is researching a vendor's quotas on the open web, unrelated to the checked-out project.",
+              "prompt": "Write the switch you set to false so the worker skips the project context."
+            }
+          },
+          "solution": { "accept": ["include_project"], "normalizer": "text" }
+        },
+        {
+          "id": "w4.t3.c6",
+          "worldId": "w4",
+          "topicId": "w4.t3",
+          "kind": "sequence",
+          "difficulty": "medium",
+          "prompt": "You are scoping a fully specified read-only fan-out worker. Order the context decisions from the one most clearly dropped to the one you must keep.",
+          "items": [
+            { "id": "s1", "text": "include_memory: false, the task text fully specifies the work" },
+            { "id": "s2", "text": "include_project: false, the work is outside the project tree" },
+            { "id": "s3", "text": "include_lessons: false, it only reads and reports" },
+            { "id": "s4", "text": "Keep lessons on instead the moment the task starts writing or running git" }
+          ],
+          "hints": [
+            { "tier": 1, "text": "Memory is the normal first drop for a specified fan-out." },
+            { "tier": 2, "text": "Lessons are the last thing you drop, and only for read-only." },
+            { "tier": 3, "text": "Memory, then project when outside the tree, then lessons for read-only, then reverse lessons if it writes." }
+          ],
+          "explanation": "For a specified fan-out you drop memory first, drop project when the work is outside the tree, and drop lessons only for a pure read-and-report task. The moment the worker writes files or runs git, lessons must go back on so it does not repeat corrected mistakes.",
+          "docRef": "subagents.md",
+          "targetSeconds": 75,
+          "roleVariants": {
+            "platform": {
+              "scenario": "You are standardizing the context profile your platform uses for cheap read-only fan-out workers.",
+              "prompt": "Order the context decisions from most clearly dropped to the one you must keep."
+            },
+            "qa": {
+              "scenario": "You are tuning a batch of log-scanning workers to run lean without losing correctness.",
+              "prompt": "Order the context decisions from most clearly dropped to the one you must keep."
+            }
+          },
+          "solution": { "orderedItemIds": ["s1", "s2", "s3", "s4"] }
+        },
+        {
+          "id": "w4.t3.c7",
+          "worldId": "w4",
+          "topicId": "w4.t3",
+          "kind": "matching",
+          "difficulty": "medium",
+          "prompt": "Match each context switch to when you would set it to false.",
+          "left": [
+            { "id": "l1", "text": "include_memory=false" },
+            { "id": "l2", "text": "include_project=false" },
+            { "id": "l3", "text": "include_lessons=false" },
+            { "id": "l4", "text": "All three left at true" }
+          ],
+          "right": [
+            { "id": "r1", "text": "The task is fully specified by the text you wrote" },
+            { "id": "r2", "text": "The work is outside the active project tree, e.g. web research" },
+            { "id": "r3", "text": "The subagent purely reads and reports, never writing" },
+            { "id": "r4", "text": "An open-ended task touching the user's own work that may write code" },
+            { "id": "r5", "text": "You want to pin the subagent to a specific provider account" }
+          ],
+          "hints": [
+            { "tier": 1, "text": "One right-hand option is about provider accounts and matches nothing." },
+            { "tier": 2, "text": "Lessons off is only for read-only workers." },
+            { "tier": 3, "text": "Memory off for specified text, project off outside the tree, lessons off for read-only, all on for open-ended writers." }
+          ],
+          "explanation": "You drop memory when the task text is self-contained, drop project when the work is outside the tree, and drop lessons only for a read-only worker. An open-ended writing task keeps all three on. Pinning a provider account is unrelated to these switches.",
+          "docRef": "subagents.md",
+          "targetSeconds": 85,
+          "solution": { "pairs": { "l1": "r1", "l2": "r2", "l3": "r3", "l4": "r4" } }
+        },
+        {
+          "id": "w4.t3.c8",
+          "worldId": "w4",
+          "topicId": "w4.t3",
+          "kind": "simulation",
+          "difficulty": "hard",
+          "scenario": "You are dispatching a worker whose entire job is: read /tmp/build.log, count the test failures, and return the count. The task text names the file and the exact output. Nothing about the user's history, project tree or past corrections is needed.",
+          "prompt": "Dispatch this lean read-only worker with the three context groups it does not need switched off.",
+          "toolPalette": [
+            { "id": "spawn_run", "text": "spawn_run" },
+            { "id": "spawn_continue", "text": "spawn_continue" },
+            { "id": "spawn_sub_agents", "text": "spawn_sub_agents" }
+          ],
+          "argSpecs": [
+            { "name": "include_memory", "label": "include_memory", "input": "boolean", "required": true },
+            { "name": "include_lessons", "label": "include_lessons", "input": "boolean", "required": true },
+            { "name": "include_project", "label": "include_project", "input": "boolean", "required": true }
+          ],
+          "hints": [
+            { "tier": 1, "text": "The task is fully specified and read-only, so all three groups can go." },
+            { "tier": 2, "text": "spawn_continue inherits scope and would not accept these switches." },
+            { "tier": 3, "text": "spawn_run with include_memory, include_lessons and include_project all false." }
+          ],
+          "explanation": "spawn_run accepts the three include_ switches. For a fully specified, read-only, out-of-tree task you can set all three to false: memory because the text is self-contained, lessons because it only reads and reports, and project because the log is outside the tree. spawn_continue inherits scope and does not take these switches at all.",
+          "docRef": "subagents.md",
+          "targetSeconds": 150,
+          "roleVariants": {
+            "devops-sre": {
+              "scenario": "A worker only needs to tail a log file and count ERROR lines, nothing about the repo or your history.",
+              "prompt": "Dispatch the lean read-only worker with the three context groups it does not need switched off."
+            },
+            "qa": {
+              "scenario": "A worker only parses a JUnit XML file and returns the failure count, needing no project or memory context.",
+              "prompt": "Dispatch the lean read-only worker with the three context groups it does not need switched off."
+            }
+          },
+          "solution": { "toolId": "spawn_run", "args": { "include_memory": false, "include_lessons": false, "include_project": false } }
+        },
+        {
+          "id": "w4.t3.c9",
+          "worldId": "w4",
+          "topicId": "w4.t3",
+          "kind": "debug-fix",
+          "difficulty": "hard",
+          "scenario": "A worker's job is to apply a refactor and git commit it, but someone copied a lean read-only context profile onto it.",
+          "prompt": "This writing worker will repeat a mistake the user already corrected because it has no lessons. Fix the JSON so a code-writing worker keeps its lessons, changing only the one value that is wrong.",
+          "brokenCall": "{\n  \"include_memory\": false,\n  \"include_lessons\": false,\n  \"include_project\": true\n}",
+          "language": "json",
+          "hints": [
+            { "tier": 1, "text": "One of these is wrong for a worker that edits files and runs git." },
+            { "tier": 2, "text": "Lessons carry the user's corrections and must stay on for writers." },
+            { "tier": 3, "text": "Set include_lessons back to true; leave the other two." }
+          ],
+          "explanation": "A worker that writes code and runs git must keep include_lessons on, because the user's learned corrections live there and a writer without them repeats corrected mistakes. include_memory false is fine for a specified task and include_project true is correct for in-tree work, so only include_lessons needs to change to true.",
+          "docRef": "subagents.md",
+          "targetSeconds": 125,
+          "roleVariants": {
+            "backend": {
+              "scenario": "A code-fix worker keeps reintroducing a pattern your team banned, because its context profile dropped lessons.",
+              "prompt": "Fix the one switch so the code-writing worker keeps its lessons."
+            },
+            "security": {
+              "scenario": "A worker that edits config and commits it ignores a security correction the user already made, having no lessons.",
+              "prompt": "Fix the one switch so the writing worker keeps its lessons."
+            }
+          },
+          "solution": {
+            "accept": [
+              "{\"include_memory\":false,\"include_lessons\":true,\"include_project\":true}"
+            ],
+            "normalizer": "json"
+          }
+        },
+        {
+          "id": "w4.t3.c10",
+          "worldId": "w4",
+          "topicId": "w4.t3",
+          "kind": "single-choice",
+          "difficulty": "hard",
+          "prompt": "A subagent needs exactly one fact from your memory to do its job. What is the recommended way to give it that fact?",
+          "options": [
+            { "id": "a", "text": "Put the fact in the task text and leave include_memory false" },
+            { "id": "b", "text": "Turn include_memory back on so it inherits the whole memory store" },
+            { "id": "c", "text": "Set include_lessons true instead, since the fact is a correction" },
+            { "id": "d", "text": "Call memory_recall inside the subagent to fetch everything" }
+          ],
+          "hints": [
+            { "tier": 1, "text": "You do not need the whole store for one fact." },
+            { "tier": 2, "text": "The task text is the cheapest place to carry a single fact." },
+            { "tier": 3, "text": "Write the fact into the task and keep memory off." }
+          ],
+          "explanation": "If the subagent needs one fact from your memory, put that fact in the task text and keep include_memory false, rather than turning the whole memory group back on. Inheriting everything for a single fact is wasteful when the task is otherwise fully specified.",
+          "docRef": "subagents.md",
+          "targetSeconds": 90,
+          "solution": { "optionId": "a" }
+        }
+      ]
+    },
+    {
+      "id": "w4.t4",
+      "title": "Reusing Runs: continue, steer, status, release",
+      "summary": "spawn_continue into a completed run, spawn_steer with interrupt versus follow_up on a running run, spawn_status to read a transcript, spawn_release to end a conversation, and the typed failures conversation_busy, conversation_gone and not_found.",
+      "challenges": [
+        {
+          "id": "w4.t4.c1",
+          "worldId": "w4",
+          "topicId": "w4.t4",
+          "kind": "single-choice",
+          "difficulty": "easy",
+          "prompt": "What does spawn_continue do?",
+          "options": [
+            { "id": "a", "text": "Dispatches a follow-up turn into a completed run's conversation, which resumes with its accumulated context" },
+            { "id": "b", "text": "Injects a message into a subagent's currently running turn" },
+            { "id": "c", "text": "Cancels a running subagent and keeps its transcript" },
+            { "id": "d", "text": "Lists every running and completed subagent" }
+          ],
+          "hints": [
+            { "tier": 1, "text": "It is about picking a finished run back up, not interrupting a live one." },
+            { "tier": 2, "text": "The run resumes with the context it already built." },
+            { "tier": 3, "text": "It dispatches a follow-up task into a completed run's conversation." }
+          ],
+          "explanation": "spawn_continue dispatches a follow-up task into a completed run's conversation, so the subagent resumes with its full accumulated context and you do not re-explain. Injecting into a live turn is spawn_steer; listing runs is spawn_list.",
+          "docRef": "subagents.md",
+          "targetSeconds": 30,
+          "solution": { "optionId": "a" }
+        },
+        {
+          "id": "w4.t4.c2",
+          "worldId": "w4",
+          "topicId": "w4.t4",
+          "kind": "true-false",
+          "difficulty": "easy",
+          "prompt": "Decide whether the statement holds.",
+          "statement": "spawn_steer with mode follow_up interrupts the subagent's current turn immediately.",
+          "hints": [
+            { "tier": 1, "text": "The two modes differ in exactly this timing." },
+            { "tier": 2, "text": "follow_up waits; interrupt is the one that cuts in." },
+            { "tier": 3, "text": "follow_up is delivered after the current turn completes, so it does not interrupt." }
+          ],
+          "explanation": "False. mode interrupt injects into the running turn now; mode follow_up queues the message and delivers it as a continuation after the current turn completes. follow_up is for a correction that can wait.",
+          "docRef": "subagents.md",
+          "targetSeconds": 30,
+          "solution": { "value": false }
+        },
+        {
+          "id": "w4.t4.c3",
+          "worldId": "w4",
+          "topicId": "w4.t4",
+          "kind": "tool-name",
+          "difficulty": "medium",
+          "prompt": "A continuable run is finished and you no longer need it. You want to end its conversation so it can no longer be continued. Which MCP tool do you call?",
+          "hints": [
+            { "tier": 1, "text": "It is the spawn tool whose verb means to let go." },
+            { "tier": 2, "text": "It ends a continuable conversation." },
+            { "tier": 3, "text": "It is spawn_release." }
+          ],
+          "explanation": "spawn_release ends a continuable conversation (identified by its conversation id) so it can no longer be continued. Idle continuable conversations also expire automatically after several hours.",
+          "docRef": "subagents.md",
+          "targetSeconds": 45,
+          "solution": { "accept": ["spawn_release", "@kirocrew-core/spawn_release"], "normalizer": "tool" }
+        },
+        {
+          "id": "w4.t4.c4",
+          "worldId": "w4",
+          "topicId": "w4.t4",
+          "kind": "multi-choice",
+          "difficulty": "medium",
+          "prompt": "Select every true statement about reusing and reading subagent runs.",
+          "options": [
+            { "id": "a", "text": "spawn_continue inherits the run's context scope, so it does not accept the include_ switches" },
+            { "id": "b", "text": "spawn_steer takes an agent_id and a message, with mode interrupt or follow_up" },
+            { "id": "c", "text": "spawn_status reads a completed run's retained transcript by agent id, with paging and grep" },
+            { "id": "d", "text": "The retained result.txt is kept forever after delivery" },
+            { "id": "e", "text": "spawn_release re-runs the whole conversation from the start" }
+          ],
+          "hints": [
+            { "tier": 1, "text": "Three statements are accurate; two misstate retention and release." },
+            { "tier": 2, "text": "The transcript is kept for a grace window, not forever." },
+            { "tier": 3, "text": "continue inherits scope, steer takes agent_id plus mode, status reads a transcript; retention is bounded and release only ends the conversation." }
+          ],
+          "explanation": "spawn_continue inherits scope (no include_ switches), spawn_steer takes agent_id, message and a mode of interrupt or follow_up, and spawn_status reads the retained transcript with paging and grep. The result.txt is retained only for a grace window (default 1 hour) before the reaper prunes it, and spawn_release ends the conversation rather than re-running it.",
+          "docRef": "subagents.md",
+          "targetSeconds": 75,
+          "solution": { "optionIds": ["a", "b", "c"] }
+        },
+        {
+          "id": "w4.t4.c5",
+          "worldId": "w4",
+          "topicId": "w4.t4",
+          "kind": "config-fill",
+          "difficulty": "medium",
+          "prompt": "You want to course-correct a subagent whose turn is still executing, cutting into it right now rather than waiting for the turn to end. Write the exact spawn_steer mode value for that.",
+          "starter": "",
+          "hints": [
+            { "tier": 1, "text": "There are two modes; you want the one that cuts in now." },
+            { "tier": 2, "text": "The other mode is follow_up, which waits." },
+            { "tier": 3, "text": "It is interrupt." }
+          ],
+          "explanation": "mode interrupt injects the message into the running turn now, which is the default. mode follow_up instead queues it until the current turn completes, for a correction that can wait.",
+          "docRef": "subagents.md",
+          "targetSeconds": 50,
+          "roleVariants": {
+            "devops-sre": {
+              "scenario": "A worker is about to apply a change to the wrong cluster and you must redirect it mid-turn.",
+              "prompt": "Write the spawn_steer mode that cuts into the running turn now."
+            },
+            "backend": {
+              "scenario": "A worker started down a wrong implementation path and you need to correct it before it writes more.",
+              "prompt": "Write the spawn_steer mode that cuts into the running turn now."
+            }
+          },
+          "solution": { "accept": ["interrupt"], "normalizer": "text" }
+        },
+        {
+          "id": "w4.t4.c6",
+          "worldId": "w4",
+          "topicId": "w4.t4",
+          "kind": "sequence",
+          "difficulty": "medium",
+          "prompt": "Order the lifecycle of a continuable (keep=true) run from dispatch to teardown.",
+          "items": [
+            { "id": "s1", "text": "spawn_run with keep=true dispatches a continuable run" },
+            { "id": "s2", "text": "The run completes and its conversation is retained" },
+            { "id": "s3", "text": "spawn_continue dispatches a follow-up turn into that conversation" },
+            { "id": "s4", "text": "spawn_release ends the conversation when the workstream is done" }
+          ],
+          "hints": [
+            { "tier": 1, "text": "keep=true at dispatch is what makes the run continuable." },
+            { "tier": 2, "text": "You can only continue a completed run." },
+            { "tier": 3, "text": "Dispatch with keep, complete, continue, then release." }
+          ],
+          "explanation": "spawn_run with keep=true makes the run continuable, it completes and its conversation is retained, spawn_continue dispatches follow-up turns into it, and spawn_release ends the conversation when you are done. Idle conversations also expire on their own after several hours.",
+          "docRef": "subagents.md",
+          "targetSeconds": 70,
+          "roleVariants": {
+            "eng-manager": {
+              "scenario": "You are documenting how a long-lived delegation workstream is kept alive and then closed.",
+              "prompt": "Order the continuable run lifecycle from dispatch to teardown."
+            },
+            "platform": {
+              "scenario": "You are building an automation that reuses one worker conversation across several follow-ups.",
+              "prompt": "Order the continuable run lifecycle from dispatch to teardown."
+            }
+          },
+          "solution": { "orderedItemIds": ["s1", "s2", "s3", "s4"] }
+        },
+        {
+          "id": "w4.t4.c7",
+          "worldId": "w4",
+          "topicId": "w4.t4",
+          "kind": "matching",
+          "difficulty": "hard",
+          "prompt": "Match each typed failure or state to what it means when reusing runs.",
+          "left": [
+            { "id": "l1", "text": "conversation_busy" },
+            { "id": "l2", "text": "conversation_gone" },
+            { "id": "l3", "text": "not_found" },
+            { "id": "l4", "text": "session_starting" }
+          ],
+          "right": [
+            { "id": "r1", "text": "A run is in flight; use spawn_steer instead of spawn_continue" },
+            { "id": "r2", "text": "The run's files expired; re-spawn with a summary" },
+            { "id": "r3", "text": "A run still waiting in the spawn queue has not started yet" },
+            { "id": "r4", "text": "A just-started run's session is still registering; retry shortly" },
+            { "id": "r5", "text": "The provider rejected the model name outright" }
+          ],
+          "hints": [
+            { "tier": 1, "text": "One right-hand option is about a rejected model name and matches nothing." },
+            { "tier": 2, "text": "busy means in flight, gone means expired." },
+            { "tier": 3, "text": "busy to steer, gone to re-spawn, not_found is still queued, session_starting means retry shortly." }
+          ],
+          "explanation": "conversation_busy means the run is in flight so you steer rather than continue, conversation_gone means the files expired so you re-spawn with a summary, not_found means a run still waiting in the queue has not started, and session_starting means a just-started session is still registering so you retry. A rejected model name is not one of these.",
+          "docRef": "subagents.md",
+          "targetSeconds": 95,
+          "solution": { "pairs": { "l1": "r1", "l2": "r2", "l3": "r3", "l4": "r4" } }
+        },
+        {
+          "id": "w4.t4.c8",
+          "worldId": "w4",
+          "topicId": "w4.t4",
+          "kind": "simulation",
+          "difficulty": "hard",
+          "scenario": "A worker you spawned with keep=true finished reviewing a module and returned its findings. You now want it to also write the fix, and you want it to resume with everything it already learned rather than re-explaining the module.",
+          "prompt": "Dispatch the follow-up into the existing conversation using the right tool and its conversation argument.",
+          "toolPalette": [
+            { "id": "spawn_continue", "text": "spawn_continue" },
+            { "id": "spawn_steer", "text": "spawn_steer" },
+            { "id": "spawn_run", "text": "spawn_run" },
+            { "id": "spawn_status", "text": "spawn_status" }
+          ],
+          "argSpecs": [
+            { "name": "conversation", "label": "conversation", "input": "text", "placeholder": "the original keep=true run's conversation id", "required": true },
+            { "name": "task", "label": "task", "input": "text", "placeholder": "the follow-up instruction", "required": true }
+          ],
+          "hints": [
+            { "tier": 1, "text": "The run is completed, not running, so you are not steering it." },
+            { "tier": 2, "text": "You want it to resume with its accumulated context." },
+            { "tier": 3, "text": "spawn_continue with the conversation id and the follow-up task." }
+          ],
+          "explanation": "spawn_continue dispatches a follow-up turn into the completed run's conversation so it resumes with full context. spawn_steer is only for a run still executing, and a fresh spawn_run would lose the context the worker already built. The conversation id is the id of the original keep=true spawn_run.",
+          "docRef": "subagents.md",
+          "targetSeconds": 150,
+          "roleVariants": {
+            "backend": {
+              "scenario": "A worker that just finished tracing a bug should now implement the fix, keeping all the context it built up.",
+              "prompt": "Dispatch the follow-up into the existing conversation with the right tool and conversation id."
+            },
+            "data": {
+              "scenario": "A worker that profiled a dataset should now write the cleanup script, reusing everything it learned.",
+              "prompt": "Dispatch the follow-up into the existing conversation with the right tool and conversation id."
+            }
+          },
+          "solution": { "toolId": "spawn_continue", "args": { "conversation": "conv-abc123", "task": "now implement the fix you identified and return the diff" }, "lenientArgs": { "conversation": "text", "task": "text" } }
+        },
+        {
+          "id": "w4.t4.c9",
+          "worldId": "w4",
+          "topicId": "w4.t4",
+          "kind": "debug-fix",
+          "difficulty": "hard",
+          "scenario": "You tried to spawn_continue a run that is still executing, and the call came back with conversation_busy.",
+          "prompt": "You reached for the wrong tool: a running turn cannot be continued. Fix the JSON so you course-correct the live run instead, changing the tool and keeping the message. Use interrupt so it cuts in now.",
+          "brokenCall": "{\n  \"tool\": \"spawn_continue\",\n  \"message\": \"stop and target the staging cluster, not prod\",\n  \"mode\": \"interrupt\"\n}",
+          "language": "json",
+          "hints": [
+            { "tier": 1, "text": "conversation_busy means the run is in flight." },
+            { "tier": 2, "text": "A live turn is steered, not continued." },
+            { "tier": 3, "text": "Change the tool to spawn_steer; keep the message and interrupt mode." }
+          ],
+          "explanation": "conversation_busy is the typed failure meaning the run is in flight, so spawn_continue is wrong. You use spawn_steer with mode interrupt to inject the correction into the running turn now. The message and mode stay; only the tool changes to spawn_steer.",
+          "docRef": "subagents.md",
+          "targetSeconds": 130,
+          "roleVariants": {
+            "devops-sre": {
+              "scenario": "A worker is mid-turn about to touch the wrong environment and your spawn_continue bounced with conversation_busy.",
+              "prompt": "Fix the call so you steer the live run with an interrupt instead of continuing it."
+            },
+            "security": {
+              "scenario": "A running worker is about to widen a permission and your continue attempt returned conversation_busy.",
+              "prompt": "Fix the call so you steer the live run with an interrupt instead of continuing it."
+            }
+          },
+          "solution": {
+            "accept": [
+              "{\"tool\":\"spawn_steer\",\"message\":\"stop and target the staging cluster, not prod\",\"mode\":\"interrupt\"}"
+            ],
+            "normalizer": "json"
+          }
+        },
+        {
+          "id": "w4.t4.c10",
+          "worldId": "w4",
+          "topicId": "w4.t4",
+          "kind": "single-choice",
+          "difficulty": "hard",
+          "prompt": "A completion event was truncated and you need the full output of a finished run. What is the recommended way to get it?",
+          "options": [
+            { "id": "a", "text": "Read the retained transcript with spawn_status (or read/grep on the result_path), not re-run the subagent" },
+            { "id": "b", "text": "Re-run the subagent with the same task to regenerate the output" },
+            { "id": "c", "text": "spawn_continue it with an empty task to make it repeat itself" },
+            { "id": "d", "text": "There is no way to recover a truncated completion event" }
+          ],
+          "hints": [
+            { "tier": 1, "text": "The full transcript is retained on disk for a grace window." },
+            { "tier": 2, "text": "There is a tool that reads that transcript by agent id." },
+            { "tier": 3, "text": "spawn_status reads it, with paging and grep; or read the result_path directly." }
+          ],
+          "explanation": "When a completion event is truncated it carries a short preview plus the transcript's file path, and you read the rest with spawn_status (paging or grep) or with read/grep on the result_path. Re-running the subagent wastes work; the transcript is retained for a grace window (default 1 hour) exactly so these reads succeed.",
+          "docRef": "subagents.md",
+          "targetSeconds": 90,
+          "solution": { "optionId": "a" }
+        }
+      ]
+    },
+    {
+      "id": "w4.t5",
+      "title": "Limits and Assignment Quality",
+      "summary": "resource_status and the adaptive cap versus the configured ceiling (subagent_auto_max), file and worktree ownership, and why overlapping writers to a shared resource must be serialized because a worktree does not isolate shared databases, ports or services.",
+      "challenges": [
+        {
+          "id": "w4.t5.c1",
+          "worldId": "w4",
+          "topicId": "w4.t5",
+          "kind": "single-choice",
+          "difficulty": "easy",
+          "prompt": "What does the configured subagent ceiling represent?",
+          "options": [
+            { "id": "a", "text": "A ceiling, not a target; the adaptive controller may run below it and it is never a command to start workers" },
+            { "id": "b", "text": "The exact number of subagents you must always run at once" },
+            { "id": "c", "text": "A guaranteed reservation of that many provider slots" },
+            { "id": "d", "text": "The minimum number of subagents required per spawn" }
+          ],
+          "hints": [
+            { "tier": 1, "text": "A ceiling is an upper bound, not a quota." },
+            { "tier": 2, "text": "The live controller can run below it, and it is not an instruction to fill slots." },
+            { "tier": 3, "text": "It is a ceiling the adaptive controller may run under; never a target." }
+          ],
+          "explanation": "The configured ceiling is a maximum, not a target. The adaptive controller may run below it, and the ceiling is never a command to start unnecessary workers. You submit only useful ready tasks; overflow queues automatically.",
+          "docRef": "dynamic-subagent-sizing.md",
+          "targetSeconds": 30,
+          "solution": { "optionId": "a" }
+        },
+        {
+          "id": "w4.t5.c2",
+          "worldId": "w4",
+          "topicId": "w4.t5",
+          "kind": "true-false",
+          "difficulty": "easy",
+          "prompt": "Decide whether the statement holds.",
+          "statement": "A separate git worktree isolates two parallel writers from a shared database, port or external service.",
+          "hints": [
+            { "tier": 1, "text": "A worktree is a filesystem concern only." },
+            { "tier": 2, "text": "Shared infrastructure sits outside the worktree." },
+            { "tier": 3, "text": "A worktree does not isolate shared databases, ports or services." }
+          ],
+          "explanation": "False. Parallel writers need separate ownership, and a worktree does not isolate shared databases, ports or external services. Two workers in different worktrees can still collide on the same database or port, so those must be serialized.",
+          "docRef": "subagents.md",
+          "targetSeconds": 25,
+          "solution": { "value": false }
+        },
+        {
+          "id": "w4.t5.c3",
+          "worldId": "w4",
+          "topicId": "w4.t5",
+          "kind": "tool-name",
+          "difficulty": "easy",
+          "prompt": "Before a heavy fan-out you want the advisory posture (ample, tight or critical) and the sub-agent cap in force. Which MCP tool reports those?",
+          "hints": [
+            { "tier": 1, "text": "It is the advisory, read-only resource tool." },
+            { "tier": 2, "text": "Its name names the status of resources." },
+            { "tier": 3, "text": "It is resource_status." }
+          ],
+          "explanation": "resource_status returns available memory, CPU load, an advisory posture of ample, tight or critical, and the sub-agent cap actually in force versus your configured max. It is advisory and reserves nothing, so headroom can change between the check and your action.",
+          "docRef": "subagents.md",
+          "targetSeconds": 40,
+          "solution": { "accept": ["resource_status", "@kirocrew-core/resource_status"], "normalizer": "tool" }
+        },
+        {
+          "id": "w4.t5.c4",
+          "worldId": "w4",
+          "topicId": "w4.t5",
+          "kind": "multi-choice",
+          "difficulty": "medium",
+          "prompt": "Select every true statement about the subagent cap and resource guards.",
+          "options": [
+            { "id": "a", "text": "agent.max_subagents = 0 means auto-size the cap at startup" },
+            { "id": "b", "text": "agent.subagent_auto_max defaults to 32 and is the absolute ceiling on the auto-computed cap" },
+            { "id": "c", "text": "agent.spawn_min_memory_gb is a per-spawn memory floor, independent of the count cap" },
+            { "id": "d", "text": "An explicit agent.max_subagents of 1 or 2 is honored exactly as written" },
+            { "id": "e", "text": "resource_status reserves the capacity it reports so it is guaranteed available" }
+          ],
+          "hints": [
+            { "tier": 1, "text": "Three statements are accurate; two misstate the floor and the advisory nature." },
+            { "tier": 2, "text": "A pin below 3 is normalized up, and resource_status reserves nothing." },
+            { "tier": 3, "text": "0 is auto, auto_max is 32, spawn_min_memory_gb is a separate floor; a pin of 1 or 2 is raised to 3 and resource_status is advisory." }
+          ],
+          "explanation": "agent.max_subagents = 0 auto-sizes, agent.subagent_auto_max defaults to 32 as the absolute ceiling, and agent.spawn_min_memory_gb is an independent per-spawn memory floor. A pin of 1 or 2 is normalized up to 3, not honored as written, and resource_status is advisory and reserves nothing.",
+          "docRef": "dynamic-subagent-sizing.md",
+          "targetSeconds": 80,
+          "solution": { "optionIds": ["a", "b", "c"] }
+        },
+        {
+          "id": "w4.t5.c5",
+          "worldId": "w4",
+          "topicId": "w4.t5",
+          "kind": "config-fill",
+          "difficulty": "medium",
+          "prompt": "You want Kiro Crew to auto-size the concurrent sub-agent cap from the host's resources rather than pinning a number. Write the exact value of agent.max_subagents that requests auto-sizing.",
+          "starter": "",
+          "hints": [
+            { "tier": 1, "text": "It is a single number, and it is not a positive count." },
+            { "tier": 2, "text": "Any value of 3 or more pins an explicit cap instead." },
+            { "tier": 3, "text": "The auto-sizing value is 0." }
+          ],
+          "explanation": "agent.max_subagents = 0 requests the host-safe auto cap, computed at startup from memory and CPU. A value of 3 or more pins an explicit ceiling, and 1 or 2 is normalized up to 3, so 0 is the only way to request auto-sizing.",
+          "docRef": "dynamic-subagent-sizing.md",
+          "targetSeconds": 55,
+          "roleVariants": {
+            "devops-sre": {
+              "scenario": "You run gateways on hosts of very different sizes and want each to size its cap itself.",
+              "prompt": "Write the agent.max_subagents value that requests auto-sizing."
+            },
+            "platform": {
+              "scenario": "You are templating a config that should adapt the subagent cap to whatever host it lands on.",
+              "prompt": "Write the agent.max_subagents value that requests auto-sizing."
+            }
+          },
+          "solution": { "accept": ["0"], "normalizer": "text" }
+        },
+        {
+          "id": "w4.t5.c6",
+          "worldId": "w4",
+          "topicId": "w4.t5",
+          "kind": "sequence",
+          "difficulty": "medium",
+          "prompt": "You are about to fan out writers that share one database. Order the steps for a safe, well-scoped dispatch.",
+          "items": [
+            { "id": "s1", "text": "Call resource_status to read headroom and the cap in force" },
+            { "id": "s2", "text": "Give each writer disjoint file and worktree ownership" },
+            { "id": "s3", "text": "Serialize the writers that share the one database, since a worktree does not isolate it" },
+            { "id": "s4", "text": "Submit only the ready, non-overlapping tasks and let overflow queue" }
+          ],
+          "hints": [
+            { "tier": 1, "text": "Check headroom before deciding how wide to go." },
+            { "tier": 2, "text": "Shared infrastructure cannot be parallelized by worktrees." },
+            { "tier": 3, "text": "Status, then disjoint ownership, then serialize the shared-DB writers, then submit the ready tasks." }
+          ],
+          "explanation": "You read headroom with resource_status, give each writer disjoint file and worktree ownership, serialize the writers that share the one database because a worktree does not isolate it, and submit only the ready non-overlapping tasks while overflow queues. Parallel writers to a shared resource must be serialized regardless of worktree.",
+          "docRef": "subagents.md",
+          "targetSeconds": 80,
+          "roleVariants": {
+            "data": {
+              "scenario": "Several workers must each load a table into the same warehouse, which they cannot write concurrently.",
+              "prompt": "Order the steps for a safe fan-out when the writers share one warehouse."
+            },
+            "devops-sre": {
+              "scenario": "Several workers would each bind the same local port, so they cannot all run at once.",
+              "prompt": "Order the steps for a safe fan-out when the writers share one port."
+            }
+          },
+          "solution": { "orderedItemIds": ["s1", "s2", "s3", "s4"] }
+        },
+        {
+          "id": "w4.t5.c7",
+          "worldId": "w4",
+          "topicId": "w4.t5",
+          "kind": "matching",
+          "difficulty": "medium",
+          "prompt": "Match each config key to what it controls.",
+          "left": [
+            { "id": "l1", "text": "agent.max_subagents" },
+            { "id": "l2", "text": "agent.subagent_auto_max" },
+            { "id": "l3", "text": "agent.spawn_min_memory_gb" },
+            { "id": "l4", "text": "agent.subagent_timeout_secs" }
+          ],
+          "right": [
+            { "id": "r1", "text": "0 auto-sizes; >=3 pins an explicit concurrent cap" },
+            { "id": "r2", "text": "The absolute ceiling (default 32) on the auto-computed cap" },
+            { "id": "r3", "text": "A per-spawn memory floor that refuses a spawn under real pressure" },
+            { "id": "r4", "text": "Per-subagent task timeout, clamped to 60s..86400s" },
+            { "id": "r5", "text": "The sidebar folder new subagents are filed under" }
+          ],
+          "hints": [
+            { "tier": 1, "text": "One right-hand option is about a sidebar folder and matches nothing." },
+            { "tier": 2, "text": "max_subagents is the cap, auto_max is its ceiling." },
+            { "tier": 3, "text": "max_subagents sets the cap, auto_max caps it, spawn_min_memory_gb is a floor, timeout_secs is the per-task timeout." }
+          ],
+          "explanation": "agent.max_subagents sets the concurrent cap (0 auto, >=3 explicit), agent.subagent_auto_max is the absolute ceiling (default 32) on the auto-computed cap, agent.spawn_min_memory_gb is a per-spawn memory floor, and agent.subagent_timeout_secs is the per-task timeout clamped to 60s..86400s. No key files subagents into a sidebar folder.",
+          "docRef": "dynamic-subagent-sizing.md",
+          "targetSeconds": 90,
+          "solution": { "pairs": { "l1": "r1", "l2": "r2", "l3": "r3", "l4": "r4" } }
+        },
+        {
+          "id": "w4.t5.c8",
+          "worldId": "w4",
+          "topicId": "w4.t5",
+          "kind": "simulation",
+          "difficulty": "hard",
+          "scenario": "You are about to launch a wide parallel suite and want to know the host headroom and the sub-agent cap actually in force before you decide how many tasks to submit.",
+          "prompt": "Pick the advisory tool that reports headroom and the live cap without reserving anything.",
+          "toolPalette": [
+            { "id": "resource_status", "text": "resource_status" },
+            { "id": "spawn_list", "text": "spawn_list" },
+            { "id": "spawn_run", "text": "spawn_run" },
+            { "id": "spawn_status", "text": "spawn_status" }
+          ],
+          "argSpecs": [
+            { "name": "reserves_capacity", "label": "Does it reserve the capacity it reports?", "input": "boolean", "required": true }
+          ],
+          "hints": [
+            { "tier": 1, "text": "You want a read-only headroom check, not a listing of runs." },
+            { "tier": 2, "text": "It is advisory, so it reserves nothing." },
+            { "tier": 3, "text": "resource_status, and it reserves nothing." }
+          ],
+          "explanation": "resource_status reports available memory, CPU load, posture and the sub-agent cap in force, and it is advisory so it reserves nothing. spawn_list only lists runs and spawn_status reads a transcript, so neither answers the headroom question before a fan-out.",
+          "docRef": "subagents.md",
+          "targetSeconds": 120,
+          "roleVariants": {
+            "devops-sre": {
+              "scenario": "Before kicking off a big test matrix you want to confirm the box is not already memory-tight.",
+              "prompt": "Pick the advisory tool that reports headroom and the live cap without reserving anything."
+            },
+            "cloud-architect": {
+              "scenario": "Before a wide parallel analysis you want to see the posture and the real cap, not a guess.",
+              "prompt": "Pick the advisory tool that reports headroom and the live cap without reserving anything."
+            }
+          },
+          "solution": { "toolId": "resource_status", "args": { "reserves_capacity": false } }
+        },
+        {
+          "id": "w4.t5.c9",
+          "worldId": "w4",
+          "topicId": "w4.t5",
+          "kind": "debug-fix",
+          "difficulty": "hard",
+          "scenario": "A config tried to pin the subagent cap very low and expected the gateway to honor it exactly.",
+          "prompt": "This value is silently raised by the loader, which is not what the author intended. If you truly want host-safe sizing, set the auto value instead. Fix the JSON so it requests auto-sizing, changing only the number.",
+          "brokenCall": "{\n  \"agent.max_subagents\": 1\n}",
+          "language": "json",
+          "hints": [
+            { "tier": 1, "text": "A pin of 1 is normalized up to 3, so it never does what it says." },
+            { "tier": 2, "text": "If the goal is host-safe sizing, there is one special value." },
+            { "tier": 3, "text": "Set it to 0 for auto-sizing." }
+          ],
+          "explanation": "max_subagents accepts 0 (auto) or an integer >= 3; a pin of 1 or 2 is normalized up to 3 with a config_bounds_clamped event, so it never runs below 3. If the intent is host-safe sizing, 0 is the only value that requests the auto cap.",
+          "docRef": "dynamic-subagent-sizing.md",
+          "targetSeconds": 120,
+          "roleVariants": {
+            "platform": {
+              "scenario": "A teammate pinned the cap to 1 to throttle a shared host and is surprised three workers still run.",
+              "prompt": "Fix the value so the config requests host-safe auto-sizing instead."
+            },
+            "devops-sre": {
+              "scenario": "You find a config pinning the cap to 2 that the loader keeps bumping to 3; you want adaptive sizing instead.",
+              "prompt": "Fix the value so the config requests host-safe auto-sizing instead."
+            }
+          },
+          "solution": {
+            "accept": [
+              "{\"agent.max_subagents\":0}"
+            ],
+            "normalizer": "json"
+          }
+        },
+        {
+          "id": "w4.t5.c10",
+          "worldId": "w4",
+          "topicId": "w4.t5",
+          "kind": "simulation",
+          "difficulty": "hard",
+          "boss": true,
+          "scenario": "You are the conductor for a release task with four parts. Part A: implement a rate limiter in server.py, which you will do yourself this turn. Part B: update docs/api.md to the finalized API (final, disjoint inputs). Part C and Part D: two integration suites that each need to write to the SAME shared staging database. You want B running in the background in parallel with your own work, and you must not corrupt the staging database by running C and D at once.",
+          "prompt": "Boss trial: dispatch the docs worker (Part B) as a background parallel task with the correct reason and details, scoped so it does not inherit memory it does not need but keeps lessons because it edits a file. Choose the setting that reflects how C and D must be run relative to each other.",
+          "toolPalette": [
+            { "id": "spawn_run", "text": "spawn_run (background)" },
+            { "id": "spawn_sub_agents", "text": "spawn_sub_agents (blocking)" },
+            { "id": "spawn_continue", "text": "spawn_continue" },
+            { "id": "spawn_steer", "text": "spawn_steer" }
+          ],
+          "argSpecs": [
+            { "name": "solo_reason", "label": "solo_reason for Part B", "input": "select", "required": true, "options": [
+              { "id": "parent_parallel", "text": "parent_parallel" },
+              { "id": "bulk_data", "text": "bulk_data" },
+              { "id": "specialist", "text": "specialist" },
+              { "id": "fresh_context", "text": "fresh_context" }
+            ] },
+            { "name": "solo_details", "label": "solo_details for Part B", "input": "text", "placeholder": "your separate work and the disjoint ownership", "required": true },
+            { "name": "include_memory", "label": "include_memory for Part B", "input": "boolean", "required": true },
+            { "name": "include_lessons", "label": "include_lessons for Part B", "input": "boolean", "required": true },
+            { "name": "cd_execution", "label": "How C and D run relative to each other", "input": "select", "required": true, "options": [
+              { "id": "serial", "text": "serialized, one after the other" },
+              { "id": "parallel", "text": "in parallel, in separate worktrees" }
+            ] }
+          ],
+          "hints": [
+            { "tier": 1, "text": "Part B is separate work running while you code, which is one specific solo_reason on the background tool." },
+            { "tier": 2, "text": "A worktree does not isolate the shared staging database, so C and D cannot both write it at once." },
+            { "tier": 3, "text": "spawn_run with parent_parallel and details, include_memory false but include_lessons true, and C and D serialized." }
+          ],
+          "explanation": "Part B is a parent_parallel case: you keep implementing in server.py while the worker owns docs/api.md, and that requires asynchronous spawn_run (blocking spawn_sub_agents cannot support parent-child parallel work) with solo_details naming your separate work and the disjoint ownership. The task text fully specifies the docs edit so include_memory can be false, but because the worker edits a file you keep include_lessons true so it does not repeat a corrected mistake. C and D both write the same staging database, and a worktree does not isolate a shared database, so they must be serialized, not run in parallel.",
+          "docRef": "subagents.md",
+          "targetSeconds": 220,
+          "roleVariants": {
+            "devops-sre": {
+              "scenario": "You coordinate a release: you harden the limiter in server.py, a worker refreshes docs/api.md in parallel, and two smoke suites both hit the one staging database.",
+              "prompt": "Dispatch the docs worker as a background parallel task with the right reason, details and context scope, and set how the two staging-database suites must run relative to each other."
+            },
+            "data": {
+              "scenario": "You coordinate a pipeline change: you edit the transform yourself, a worker updates the schema docs in parallel, and two backfills both write the same warehouse table.",
+              "prompt": "Dispatch the docs worker as a background parallel task with the right reason, details and context scope, and set how the two backfills must run relative to each other."
+            }
+          },
+          "solution": { "toolId": "spawn_run", "args": { "solo_reason": "parent_parallel", "solo_details": "I implement the rate limiter in server.py this turn; the worker owns docs/api.md only with finalized, disjoint inputs", "include_memory": false, "include_lessons": true, "cd_execution": "serial" }, "lenientArgs": { "solo_details": "text" } }
+        }
+      ]
+    }
+  ]
+}

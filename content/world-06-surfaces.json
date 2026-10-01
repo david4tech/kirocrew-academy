@@ -1,0 +1,1493 @@
+{
+  "id": "w6",
+  "order": 6,
+  "title": "Outputs and Surfaces",
+  "subtitle": "Widgets, artifacts, deploy, browser and computer use, skills and apps",
+  "lore": "A ghost that can only whisper is half a ghost. This world is about leaving a mark the living can see: a widget in the chat, a versioned artifact, a public URL, a driven browser, a loaded skill. Ship the result through the right surface, or it was never really done.",
+  "accent": "#5B21B6",
+  "topics": [
+    {
+      "id": "w6.t1",
+      "title": "Widgets and the Theme Contract",
+      "summary": "Rendering an mcwidget, why a fixed palette breaks dark mode, consuming host theme CSS variables with fallbacks, and the half-set background-and-text failure that leaves text invisible in one mode.",
+      "challenges": [
+        {
+          "id": "w6.t1.c1",
+          "worldId": "w6",
+          "topicId": "w6.t1",
+          "kind": "single-choice",
+          "difficulty": "easy",
+          "prompt": "An MCP App renders in the chat inside what kind of frame?",
+          "options": [
+            { "id": "a", "text": "A sandboxed, null-origin iframe with no access to the dashboard DOM, cookies or storage" },
+            { "id": "b", "text": "A same-origin iframe that shares the dashboard's cookies so it can call the API directly" },
+            { "id": "c", "text": "A raw div injected into the chat bubble with the server's HTML inlined" },
+            { "id": "d", "text": "A separate browser window the agent opens with the browser tool" }
+          ],
+          "hints": [
+            { "tier": 1, "text": "The host treats app HTML as server-controlled code, so it is isolated." },
+            { "tier": 2, "text": "The sandbox attribute is allow-scripts allow-forms, deliberately without allow-same-origin." },
+            { "tier": 3, "text": "It is a null-origin sandboxed iframe: no shared origin, no cookies, no storage." }
+          ],
+          "explanation": "App HTML is server-controlled code, so it renders in a single null-origin iframe sandboxed with allow-scripts allow-forms and deliberately without allow-same-origin. That is why it cannot touch the dashboard DOM, cookies or storage, and why unmounting it loses in-canvas state.",
+          "docRef": "mcp-apps.md",
+          "targetSeconds": 30,
+          "solution": { "optionId": "a" }
+        },
+        {
+          "id": "w6.t1.c2",
+          "worldId": "w6",
+          "topicId": "w6.t1",
+          "kind": "true-false",
+          "difficulty": "easy",
+          "prompt": "Decide whether the statement holds.",
+          "statement": "A widget that hardcodes a fixed hex palette (for example a white background and black text) renders correctly in both the light and dark dashboard themes.",
+          "hints": [
+            { "tier": 1, "text": "Think about what white-on-black becomes when the surrounding theme flips." },
+            { "tier": 2, "text": "The host sends the active palette so an app can paint in the user's theme; a fixed palette ignores that." },
+            { "tier": 3, "text": "A fixed palette does not adapt, so it breaks in whichever mode it was not designed for." }
+          ],
+          "explanation": "False. The host resolves its own design tokens for the active theme and sends them in hostContext.styles.variables, updating them when the theme changes under a mounted app. A widget that hardcodes a palette ignores all of that and renders wrong in whichever mode it was not built for, which is why you consume the host variables instead.",
+          "docRef": "mcp-apps.md",
+          "targetSeconds": 30,
+          "solution": { "value": false }
+        },
+        {
+          "id": "w6.t1.c3",
+          "worldId": "w6",
+          "topicId": "w6.t1",
+          "kind": "config-fill",
+          "difficulty": "medium",
+          "prompt": "You are writing a widget that must sit on the dashboard's surface color and still read correctly if the theme flips. Fill in the CSS so the panel background uses the host surface token with a safe fallback. Complete the value after background:.",
+          "starter": ".panel { background: ",
+          "hints": [
+            { "tier": 1, "text": "Read the host variable with var(), and give it a fallback as the second argument." },
+            { "tier": 2, "text": "The surface token is named --color-surface in the host variable set; declare a fallback because any variable may be absent." },
+            { "tier": 3, "text": "var(--color-surface, #ffffff) consumes the token and still paints if it is missing." }
+          ],
+          "explanation": "Colors arrive all-or-nothing and any variable may be absent, so you consume the host token with var(--color-surface, #ffffff): the panel paints in the user's theme when the token is present and still has a sane color when it is not. Keep keying off the theme field for light versus dark.",
+          "docRef": "mcp-apps.md",
+          "targetSeconds": 70,
+          "roleVariants": {
+            "backend": {
+              "scenario": "You build an internal status widget that renders in chat and must not look broken when a teammate runs the dashboard in dark mode.",
+              "prompt": "Complete the background value so the panel uses the host surface token with a fallback."
+            },
+            "qa": {
+              "scenario": "You are writing a widget whose visual regression test runs in both themes and must pass in each.",
+              "prompt": "Complete the background value so the panel uses the host surface token with a fallback."
+            },
+            "platform": {
+              "scenario": "You ship a shared widget template other teams reuse, so it has to be theme-safe by construction.",
+              "prompt": "Complete the background value so the panel uses the host surface token with a fallback."
+            }
+          },
+          "solution": {
+            "accept": [
+              "var(--color-surface, #ffffff)",
+              "var(--color-surface,#ffffff)",
+              "var(--color-surface, #fff)",
+              "var(--color-surface, white)"
+            ],
+            "normalizer": "text"
+          }
+        },
+        {
+          "id": "w6.t1.c4",
+          "worldId": "w6",
+          "topicId": "w6.t1",
+          "kind": "multi-choice",
+          "difficulty": "medium",
+          "prompt": "Select every statement that is true about the host theme variables sent to a widget.",
+          "options": [
+            { "id": "a", "text": "The palette, the two font families, --border-radius-sm/md/lg/xl and --shadow-sm/md/lg are sent" },
+            { "id": "b", "text": "No typography scale is sent, so --font-weight-* and the --font-*-size keys are absent and you keep your own" },
+            { "id": "c", "text": "You should declare a fallback for every CSS variable your app consumes, because any one may be absent" },
+            { "id": "d", "text": "theme is still sent alongside the variables so you can set the right color-scheme for light or dark" },
+            { "id": "e", "text": "Every design token the dashboard uses, including the full type scale, is guaranteed present" },
+            { "id": "f", "text": "The host serves custom web fonts to the frame through styles.css.fonts" }
+          ],
+          "hints": [
+            { "tier": 1, "text": "The host sends the palette and a few radius and shadow tokens, but not a type scale." },
+            { "tier": 2, "text": "Variables arrive independently and may be missing, and fonts are not forwarded because the CSP would block them." },
+            { "tier": 3, "text": "Pick the palette-plus-radius-plus-shadow statement, the no-type-scale statement, the always-declare-a-fallback statement, and the theme-is-sent statement." }
+          ],
+          "explanation": "The host sends the palette, the two font families, --border-radius-sm/md/lg/xl and --shadow-sm/md/lg, plus theme for color-scheme. It does not send a typography scale, so you keep your own, and because any variable may be absent you declare a fallback for each. styles.css.fonts is not sent, because the app CSP allows fonts only from self and data.",
+          "docRef": "mcp-apps.md",
+          "targetSeconds": 80,
+          "solution": { "optionIds": ["a", "b", "c", "d"] }
+        },
+        {
+          "id": "w6.t1.c5",
+          "worldId": "w6",
+          "topicId": "w6.t1",
+          "kind": "debug-fix",
+          "difficulty": "hard",
+          "scenario": "A widget sets its own background from the host surface token but left the text color hardcoded. In dark mode the surface goes dark and the black text vanishes.",
+          "prompt": "This is the half-set background-and-text failure. Rewrite the text color so it also follows the host token, with a fallback. Change only the color value.",
+          "brokenCall": ".label { background: var(--color-surface, #ffffff); color: #111111; }",
+          "language": "text",
+          "hints": [
+            { "tier": 1, "text": "Both the background and the text have to track the theme, not just one of them." },
+            { "tier": 2, "text": "The host sends a foreground token the same way it sends the surface token; consume it with a fallback." },
+            { "tier": 3, "text": "Use var(--color-text, #111111) so the text flips with the surface." }
+          ],
+          "explanation": "Setting the background from the host token but leaving the text hardcoded is the classic half-set failure: when the surface darkens, the fixed-dark text becomes unreadable. Both must come from host tokens, so color becomes var(--color-text, #111111). The fallback keeps a sane value if the token is absent, and the pair then flips together with the theme.",
+          "docRef": "mcp-apps.md",
+          "targetSeconds": 120,
+          "roleVariants": {
+            "qa": {
+              "scenario": "Your dark-mode visual test flags a widget whose text disappears, and you trace it to a background that themes but text that does not.",
+              "prompt": "Fix the text color so it tracks the host token with a fallback, matching the themed background."
+            },
+            "security": {
+              "scenario": "You are reviewing a widget before it ships and notice it only half-adopts the host theme, which is a correctness bug a user will hit in dark mode.",
+              "prompt": "Fix the text color so it tracks the host token with a fallback, matching the themed background."
+            },
+            "backend": {
+              "scenario": "A teammate's status widget is unreadable on your dark dashboard; the background themes but the text was left fixed.",
+              "prompt": "Fix the text color so it tracks the host token with a fallback, matching the themed background."
+            }
+          },
+          "solution": {
+            "accept": [
+              "var(--color-text, #111111)",
+              "var(--color-text,#111111)",
+              "var(--color-text, #111)"
+            ],
+            "normalizer": "text"
+          }
+        },
+        {
+          "id": "w6.t1.c6",
+          "worldId": "w6",
+          "topicId": "w6.t1",
+          "kind": "tool-name",
+          "difficulty": "medium",
+          "prompt": "You rendered a widget in chat and now want to keep it in the Artifacts tab for good rather than letting the automatic unpinned entry get pruned. Which MCP tool do you call to save it explicitly?",
+          "hints": [
+            { "tier": 1, "text": "It is the artifact tool whose verb is the act of keeping something." },
+            { "tier": 2, "text": "The content you pass is the inner HTML of the mcwidget, not the surrounding tag." },
+            { "tier": 3, "text": "It is artifact_save." }
+          ],
+          "explanation": "artifact_save gives the rendered widget a stable, pinned handle so it is not pruned like an automatic unpinned entry. For a widget you pass the inner HTML of the mcwidget tag as content. Starring the widget in chat achieves the same keep without a tool call.",
+          "docRef": "artifacts.md",
+          "targetSeconds": 45,
+          "solution": { "accept": ["artifact_save", "@kirocrew-core/artifact_save"], "normalizer": "tool" }
+        },
+        {
+          "id": "w6.t1.c7",
+          "worldId": "w6",
+          "topicId": "w6.t1",
+          "kind": "sequence",
+          "difficulty": "medium",
+          "prompt": "Order the steps the host takes to turn a tool result that names a ui:// resource into a rendered widget in the chat.",
+          "items": [
+            { "id": "s1", "text": "The gateway sees the tools/call result name a ui:// resource" },
+            { "id": "s2", "text": "The gateway issues an out-of-band resources/read to fetch the app HTML" },
+            { "id": "s3", "text": "The gateway spools the payload and injects an opaque marker at the start of the result text" },
+            { "id": "s4", "text": "The dashboard backend detects the marker, loads the payload and pushes an mcp_app_render event" },
+            { "id": "s5", "text": "The frontend mounts the HTML in a sandboxed iframe and completes the ui/initialize handshake" }
+          ],
+          "hints": [
+            { "tier": 1, "text": "Nothing can render until the gateway has actually fetched the resource." },
+            { "tier": 2, "text": "The marker is injected before the backend can detect it, and the iframe mounts last." },
+            { "tier": 3, "text": "See, fetch, spool-and-mark, detect-and-push, then mount-and-handshake." }
+          ],
+          "explanation": "The gateway sees the ui:// reference, does its own resources/read to fetch the HTML, spools the payload and injects an opaque marker at the start of the result text, the dashboard backend detects the marker and pushes an mcp_app_render websocket event, and the frontend mounts the HTML in a sandboxed iframe and completes ui/initialize. The marker leads the text so it survives truncation.",
+          "docRef": "mcp-apps.md",
+          "targetSeconds": 90,
+          "solution": { "orderedItemIds": ["s1", "s2", "s3", "s4", "s5"] }
+        },
+        {
+          "id": "w6.t1.c8",
+          "worldId": "w6",
+          "topicId": "w6.t1",
+          "kind": "matching",
+          "difficulty": "medium",
+          "prompt": "Match each theme-handoff fact to its consequence for a widget author.",
+          "left": [
+            { "id": "l1", "text": "--color-background-info arrives as a color-mix() expression" },
+            { "id": "l2", "text": "--font-sans / --font-mono usually do not survive sanitization" },
+            { "id": "l3", "text": "The frame is null-origin with no storage" },
+            { "id": "l4", "text": "Colors arrive all-or-nothing, non-color keys independently" }
+          ],
+          "right": [
+            { "id": "r1", "text": "Consume it directly or with a fallback; nesting it inside your own color-mix() will not survive" },
+            { "id": "r2", "text": "Do not rely on them; keep your own font stack as a fallback" },
+            { "id": "r3", "text": "Unmounting loses in-canvas state, so the panel works hard to keep frames mounted" },
+            { "id": "r4", "text": "Declare a fallback for every variable your app consumes" },
+            { "id": "r5", "text": "The host serves your @font-face from a dashboard-origin URL" }
+          ],
+          "hints": [
+            { "tier": 1, "text": "One right-hand entry is false (the host does not serve fonts from a dashboard URL) and has no match." },
+            { "tier": 2, "text": "The color-mix fact pairs with the nesting warning; the null-origin fact pairs with lost in-canvas state." },
+            { "tier": 3, "text": "l1 to r1, l2 to r2, l3 to r3, l4 to r4; r5 is the unused false entry." }
+          ],
+          "explanation": "The color-mix() wash will not survive being nested inside your own color-mix(), so consume it directly. The font-family keys usually get sanitized out, so keep your own stack. The null-origin frame has no storage, so unmounting loses in-canvas edits. Variables arrive independently, so declare a fallback for each. The host does not serve fonts from a dashboard URL, so r5 is false.",
+          "docRef": "mcp-apps.md",
+          "targetSeconds": 100,
+          "solution": { "pairs": { "l1": "r1", "l2": "r2", "l3": "r3", "l4": "r4" } }
+        },
+        {
+          "id": "w6.t1.c9",
+          "worldId": "w6",
+          "topicId": "w6.t1",
+          "kind": "simulation",
+          "difficulty": "medium",
+          "scenario": "Your widget renders fine inline but a colleague wants recurring diagrams to open in the right side panel instead of in the chat bubble, without a restart.",
+          "prompt": "Set the dashboard config so MCP App renders go to the side panel. Pick the key and its value.",
+          "toolPalette": [
+            { "id": "dashboard_mcp_app_panel", "text": "dashboard.mcp_app_panel" },
+            { "id": "mcp_gateway_enabled", "text": "mcp_gateway.enabled" },
+            { "id": "mcp_gateway_stub_servers", "text": "mcp_gateway.stub_servers" },
+            { "id": "chat_content_width", "text": "chat.content_width" }
+          ],
+          "argSpecs": [
+            { "name": "value", "label": "Value", "input": "boolean", "required": true }
+          ],
+          "hints": [
+            { "tier": 1, "text": "Backend sharing and stubbing are about routing servers, not about where a render lands." },
+            { "tier": 2, "text": "The side-panel destination is a dashboard setting, read at render time." },
+            { "tier": 3, "text": "Set dashboard.mcp_app_panel to true; it moves new renders to the side panel with no restart." }
+          ],
+          "explanation": "dashboard.mcp_app_panel set to true routes new MCP App renders into their own side-panel tab. The flag is read at render time, so no restart is needed, but it does not move diagrams already in your scrollback. mcp_gateway.enabled is backend sharing and stub_servers is routing; neither controls the render destination.",
+          "docRef": "mcp-apps.md",
+          "targetSeconds": 90,
+          "solution": { "toolId": "dashboard_mcp_app_panel", "args": { "value": true } }
+        },
+        {
+          "id": "w6.t1.c10",
+          "worldId": "w6",
+          "topicId": "w6.t1",
+          "kind": "single-choice",
+          "difficulty": "hard",
+          "prompt": "A widget in the side panel loses the user's in-canvas edits every time they switch to a different chat and back. Why, and what survives?",
+          "options": [
+            { "id": "a", "text": "The frame is null-origin with no storage; most mounted frames survive a chat switch by stable keying, but navigating away from Chat unmounts the tree so only the stored payload (not canvas edits) comes back" },
+            { "id": "b", "text": "The payload is deleted on blur, so nothing at all can be recovered" },
+            { "id": "c", "text": "The widget writes to localStorage, which the dashboard clears on every tab switch" },
+            { "id": "d", "text": "Side-panel widgets are re-fetched from the server on focus, so edits are always lost by design on any switch" }
+          ],
+          "hints": [
+            { "tier": 1, "text": "The frame has no storage of its own, so anything drawn in it is not persisted." },
+            { "tier": 2, "text": "App frames are kept mounted across chat switches by stable keying, but leaving the Chat route is a known limit." },
+            { "tier": 3, "text": "The stored payload rebuilds the diagram; only the in-canvas edits are the thing that is lost." }
+          ],
+          "explanation": "The frame is null-origin with no storage, so in-canvas edits are never persisted. App frames are kept mounted across chat switches by keying each on its slot plus tab id, but navigating away from the Chat route unmounts the panel tree. On return the stored payload rebuilds the diagram while the canvas edits are gone. localStorage is unavailable to the frame, so option c is wrong.",
+          "docRef": "mcp-apps.md",
+          "targetSeconds": 110,
+          "solution": { "optionId": "a" }
+        },
+        {
+          "id": "w6.t1.c11",
+          "worldId": "w6",
+          "topicId": "w6.t1",
+          "kind": "true-false",
+          "difficulty": "medium",
+          "prompt": "Decide whether the statement holds.",
+          "statement": "An MCP App can rely on cookies and localStorage keyed to a stable per-app origin for things like OAuth callbacks.",
+          "hints": [
+            { "tier": 1, "text": "Think about what origin a null-origin frame actually has." },
+            { "tier": 2, "text": "There is no stable per-app origin, so _meta.ui.domain has no effect." },
+            { "tier": 3, "text": "Anything keyed to an origin, including OAuth callbacks and CORS, will not work; cookies and localStorage are unavailable." }
+          ],
+          "explanation": "False. Because the frame is null-origin there is no stable per-app origin, so _meta.ui.domain has no effect and anything keyed to an origin (OAuth callbacks, CORS allowlists, API-key origin pinning) will not work. Cookies and localStorage are unavailable for the same reason.",
+          "docRef": "mcp-apps.md",
+          "targetSeconds": 40,
+          "solution": { "value": false }
+        },
+        {
+          "id": "w6.t1.c12",
+          "worldId": "w6",
+          "topicId": "w6.t1",
+          "kind": "debug-fix",
+          "difficulty": "hard",
+          "boss": true,
+          "scenario": "You have shipped a result as a widget rendered in chat, but a user reports it is unreadable in dark mode. You open the stylesheet and find the root panel hardcodes both a light background and dark text, ignoring the host theme entirely. This is the theme-unsafe widget the world has been warning about: a fixed palette that breaks the moment the dashboard flips to dark.",
+          "prompt": "Rewrite the single .root rule so BOTH the background and the text come from the host theme tokens with safe fallbacks, so the pair flips together with the theme. Change only the two property values; keep the surface token for background and the text token for color.",
+          "brokenCall": ".root { background: #ffffff; color: #111111; }",
+          "language": "text",
+          "hints": [
+            { "tier": 1, "text": "A fixed palette breaks the mode it was not built for, and here both properties are fixed, so both must adopt the host tokens." },
+            { "tier": 2, "text": "The host sends the active palette; consume the surface token for background and the foreground token for text, each with var() and a fallback, because any variable may be absent." },
+            { "tier": 3, "text": "Use var(--color-surface, #ffffff) for background and var(--color-text, #111111) for color so they track the theme together." }
+          ],
+          "explanation": "The theme-unsafe widget hardcodes its palette, so it is wrong in whichever mode it was not designed for; fixing only one property is the half-set failure that leaves text invisible when the surface flips. The repair makes both properties read host tokens: background var(--color-surface, #ffffff) and color var(--color-text, #111111). The fallbacks keep sane values if a token is absent, and because both now come from the host palette they flip together when the theme changes. Keep keying off the theme field for light versus dark, and remember colors arrive all-or-nothing so a fallback on each is not optional.",
+          "docRef": "mcp-apps.md",
+          "targetSeconds": 180,
+          "roleVariants": {
+            "security": {
+              "scenario": "You are the last review gate before a widget ships, and you catch that it hardcodes its whole palette, which is a correctness defect every dark-mode user will hit.",
+              "prompt": "Rewrite the .root rule so both background and text use the host theme tokens with fallbacks, so the widget is theme-safe."
+            },
+            "qa": {
+              "scenario": "Your cross-theme visual test fails on a widget whose root hardcodes a light background and dark text, so the text vanishes in dark mode.",
+              "prompt": "Rewrite the .root rule so both background and text use the host theme tokens with fallbacks, so the widget is theme-safe."
+            },
+            "platform": {
+              "scenario": "You own the shared widget template and a theme-unsafe root rule slipped in; it must be fixed so every reuse is theme-safe by construction.",
+              "prompt": "Rewrite the .root rule so both background and text use the host theme tokens with fallbacks, so the widget is theme-safe."
+            },
+            "backend": {
+              "scenario": "A widget you shipped renders white-on-white (or black-on-black) for teammates on the opposite theme because its root palette is hardcoded.",
+              "prompt": "Rewrite the .root rule so both background and text use the host theme tokens with fallbacks, so the widget is theme-safe."
+            }
+          },
+          "solution": {
+            "accept": [
+              ".root { background: var(--color-surface, #ffffff); color: var(--color-text, #111111); }",
+              ".root { background: var(--color-surface,#ffffff); color: var(--color-text,#111111); }"
+            ],
+            "normalizer": "text"
+          }
+        }
+      ]
+    },
+    {
+      "id": "w6.t2",
+      "title": "Artifacts and Versioning",
+      "summary": "Automatic registration of a rendered widget versus an explicit save, why you do not double-save, artifact_get plus artifact_update versioning, artifact_revert, folders, and marking a comment for review versus resolving.",
+      "challenges": [
+        {
+          "id": "w6.t2.c1",
+          "worldId": "w6",
+          "topicId": "w6.t2",
+          "kind": "single-choice",
+          "difficulty": "easy",
+          "prompt": "A widget you rendered in an ordinary chat session already appears in the Artifacts tab. What happened?",
+          "options": [
+            { "id": "a", "text": "Widgets rendered in chat are registered as artifacts automatically as each part finalizes" },
+            { "id": "b", "text": "Nothing is saved until you explicitly call artifact_save" },
+            { "id": "c", "text": "Only widgets rendered in incognito sessions are auto-registered" },
+            { "id": "d", "text": "The dashboard scans the transcript hourly and files any HTML it finds" }
+          ],
+          "hints": [
+            { "tier": 1, "text": "You did not call a save tool, yet it is there." },
+            { "tier": 2, "text": "Each widget is filed as its part of the response finalizes, not when the whole message ends." },
+            { "tier": 3, "text": "Rendered widgets auto-register as artifacts; the entries are just unpinned." }
+          ],
+          "explanation": "Widgets rendered in chat are registered as artifacts automatically, each one as its part of the response finalizes rather than when the message ends. The automatic entries are unpinned and the oldest are pruned when there are many, so star or save one you want to keep.",
+          "docRef": "artifacts.md",
+          "targetSeconds": 30,
+          "solution": { "optionId": "a" }
+        },
+        {
+          "id": "w6.t2.c2",
+          "worldId": "w6",
+          "topicId": "w6.t2",
+          "kind": "true-false",
+          "difficulty": "easy",
+          "prompt": "Decide whether the statement holds.",
+          "statement": "In an incognito or temporary session, a rendered widget is still registered as an artifact so you can find it later.",
+          "hints": [
+            { "tier": 1, "text": "The whole point of those modes is that nothing is left behind." },
+            { "tier": 2, "text": "Saving is refused outright in incognito and temporary sessions." },
+            { "tier": 3, "text": "Those modes never register or save a widget; it exists only in the conversation." }
+          ],
+          "explanation": "False. Incognito and temporary sessions never register a widget and cannot save one; saving is refused outright. A widget rendered there exists only in the conversation and is gone when the session ends. Render it in an ordinary session if you need to keep it.",
+          "docRef": "artifacts.md",
+          "targetSeconds": 30,
+          "solution": { "value": false }
+        },
+        {
+          "id": "w6.t2.c3",
+          "worldId": "w6",
+          "topicId": "w6.t2",
+          "kind": "tool-name",
+          "difficulty": "easy",
+          "prompt": "You want to roll a saved artifact's live state back to an earlier version without manually fetching the old content first. Which MCP tool does that in one call?",
+          "hints": [
+            { "tier": 1, "text": "The verb is the undo of a change, and it takes a target version." },
+            { "tier": 2, "text": "It reads the old version and writes it as the new live state, recording the rollback." },
+            { "tier": 3, "text": "It is artifact_revert." }
+          ],
+          "explanation": "artifact_revert reads a prior version's content and writes it as the new live state in one call, creating a fresh snapshot tagged as a rollback so the timeline shows what happened. You pass slug and target_version; use artifact_versions first to see what is available.",
+          "docRef": "artifacts.md",
+          "targetSeconds": 40,
+          "solution": { "accept": ["artifact_revert", "@kirocrew-core/artifact_revert"], "normalizer": "tool" }
+        },
+        {
+          "id": "w6.t2.c4",
+          "worldId": "w6",
+          "topicId": "w6.t2",
+          "kind": "multi-choice",
+          "difficulty": "medium",
+          "prompt": "Select every true statement about artifact versioning and comments.",
+          "options": [
+            { "id": "a", "text": "Every agent edit to a saved artifact creates a new version, like a commit" },
+            { "id": "b", "text": "A revert is itself recorded as a new version tagged as a rollback" },
+            { "id": "c", "text": "The agent can mark a comment thread as awaiting your review but cannot resolve it" },
+            { "id": "d", "text": "The agent can resolve any comment thread once it believes the point is addressed" },
+            { "id": "e", "text": "The agent can delete a provider-synced comment just like a local one" }
+          ],
+          "hints": [
+            { "tier": 1, "text": "Edits version like commits, and a revert is just another version." },
+            { "tier": 2, "text": "Resolving a thread is the human's job; the agent can only mark it for review." },
+            { "tier": 3, "text": "Pick the new-version-per-edit, the revert-is-a-version, and the mark-for-review-not-resolve statements." }
+          ],
+          "explanation": "Each agent edit creates a new version, and a revert is itself a new version tagged as a rollback so the timeline is honest. The agent can post, reply and mark a thread awaiting review but cannot resolve it, and it cannot delete provider-synced comments at all. Resolving is yours.",
+          "docRef": "artifacts.md",
+          "targetSeconds": 75,
+          "solution": { "optionIds": ["a", "b", "c"] }
+        },
+        {
+          "id": "w6.t2.c5",
+          "worldId": "w6",
+          "topicId": "w6.t2",
+          "kind": "config-fill",
+          "difficulty": "medium",
+          "prompt": "You are saving a dashboard widget as a pinned artifact and want it filed under a Reports/Q3 folder path, which should be created if it is missing. Write just the value you pass for the folder parameter of artifact_save.",
+          "starter": "",
+          "hints": [
+            { "tier": 1, "text": "The folder parameter accepts a slash-separated human path, and missing segments are auto-created." },
+            { "tier": 2, "text": "It is the literal path with a slash between the two folder names." },
+            { "tier": 3, "text": "It is Reports/Q3." }
+          ],
+          "explanation": "The folder parameter of artifact_save takes a folder id or a slash-separated human path, and missing path segments are auto-created (mkdir -p style). So you pass Reports/Q3 and both folders are created if they do not exist. Passing root or omitting it leaves the artifact unfiled.",
+          "docRef": "artifacts.md",
+          "targetSeconds": 55,
+          "roleVariants": {
+            "data": {
+              "scenario": "You generate a quarterly metrics widget and want it filed under the team's reporting folder tree.",
+              "prompt": "Write the folder value for artifact_save that files it under Reports/Q3, creating the path if missing."
+            },
+            "eng-manager": {
+              "scenario": "You are organizing saved dashboards into a quarterly structure so they are easy to find later.",
+              "prompt": "Write the folder value for artifact_save that files it under Reports/Q3, creating the path if missing."
+            }
+          },
+          "solution": { "accept": ["Reports/Q3", "Reports/Q3/"], "normalizer": "text" }
+        },
+        {
+          "id": "w6.t2.c6",
+          "worldId": "w6",
+          "topicId": "w6.t2",
+          "kind": "sequence",
+          "difficulty": "medium",
+          "prompt": "You are asked to iterate on an existing saved artifact at the user's request. Order the correct tool steps.",
+          "items": [
+            { "id": "s1", "text": "Call artifact_get on the slug to read the current content" },
+            { "id": "s2", "text": "Make the requested change to that content" },
+            { "id": "s3", "text": "Call artifact_update on the same slug with the new content" },
+            { "id": "s4", "text": "A new version is recorded automatically for the edit" }
+          ],
+          "hints": [
+            { "tier": 1, "text": "You read before you write, and the version is a side effect of the write." },
+            { "tier": 2, "text": "artifact_get first, then artifact_update on the same slug." },
+            { "tier": 3, "text": "Get, change, update, and the version snapshot follows automatically." }
+          ],
+          "explanation": "To iterate you call artifact_get to read the current content, apply the change, then call artifact_update on the same slug. The update records a new version automatically, like a commit. You do not call artifact_save again for an existing artifact: a taken slug is refused, not renamed.",
+          "docRef": "artifacts.md",
+          "targetSeconds": 85,
+          "roleVariants": {
+            "backend": {
+              "scenario": "A user asks you to tweak a status widget they saved last week.",
+              "prompt": "Order the tool steps to iterate on the existing saved artifact."
+            },
+            "qa": {
+              "scenario": "You need to adjust a saved report artifact after a review comment.",
+              "prompt": "Order the tool steps to iterate on the existing saved artifact."
+            }
+          },
+          "solution": { "orderedItemIds": ["s1", "s2", "s3", "s4"] }
+        },
+        {
+          "id": "w6.t2.c7",
+          "worldId": "w6",
+          "topicId": "w6.t2",
+          "kind": "matching",
+          "difficulty": "medium",
+          "prompt": "Match each artifact folder action to its effect.",
+          "left": [
+            { "id": "l1", "text": "artifact_move to a folder path" },
+            { "id": "l2", "text": "artifact_folder_delete with delete_contents false" },
+            { "id": "l3", "text": "artifact_folder_delete with delete_contents true" },
+            { "id": "l4", "text": "artifact_folder_rename" }
+          ],
+          "right": [
+            { "id": "r1", "text": "Metadata-only: files the artifact under the folder, content and version unchanged" },
+            { "id": "r2", "text": "Safe: children re-parent up to the folder's parent, only the folder is removed" },
+            { "id": "r3", "text": "Permanently deletes the whole subtree including every descendant artifact" },
+            { "id": "r4", "text": "Changes the folder name; nothing about the content changes" },
+            { "id": "r5", "text": "Publishes every artifact in the folder to a public URL" }
+          ],
+          "hints": [
+            { "tier": 1, "text": "One right-hand entry (publishing a folder) is invented and has no match." },
+            { "tier": 2, "text": "Deleting a folder is safe by default and destructive only with delete_contents true." },
+            { "tier": 3, "text": "l1 to r1, l2 to r2, l3 to r3, l4 to r4; r5 is the false entry." }
+          ],
+          "explanation": "Moving an artifact is metadata-only and does not touch content or version. Deleting a folder is safe by default: children re-parent to the folder's parent and only the folder goes. delete_contents true permanently deletes the whole subtree including descendant artifacts. Renaming changes only the name. There is no folder-level publish, so r5 is false.",
+          "docRef": "artifacts.md",
+          "targetSeconds": 100,
+          "solution": { "pairs": { "l1": "r1", "l2": "r2", "l3": "r3", "l4": "r4" } }
+        },
+        {
+          "id": "w6.t2.c8",
+          "worldId": "w6",
+          "topicId": "w6.t2",
+          "kind": "simulation",
+          "difficulty": "medium",
+          "scenario": "A reviewer left a comment thread on an artifact asking you to tighten a paragraph. You rewrote the paragraph in a new version and believe the point is addressed, but it is a judgement call you want the human to confirm rather than close yourself.",
+          "prompt": "Pick the tool that signals the issue is addressed and awaiting human verification, without resolving it.",
+          "toolPalette": [
+            { "id": "artifact_mark_review", "text": "artifact_mark_review" },
+            { "id": "artifact_delete_comment", "text": "artifact_delete_comment" },
+            { "id": "artifact_resolve_comment", "text": "artifact_resolve_comment" },
+            { "id": "artifact_reply_comment", "text": "artifact_reply_comment" }
+          ],
+          "argSpecs": [
+            { "name": "resolves_thread", "label": "Does the agent resolve the thread itself?", "input": "boolean", "required": true }
+          ],
+          "hints": [
+            { "tier": 1, "text": "The agent is never the one to resolve a thread; that is the human's call." },
+            { "tier": 2, "text": "Deleting is only for an unambiguous directive you fully carried out, not a judgement call." },
+            { "tier": 3, "text": "artifact_mark_review advances the thread to review for the human; it does not resolve." }
+          ],
+          "explanation": "artifact_mark_review advances the thread to a review state so the human can verify and resolve. The agent never resolves. Deleting a comment is reserved for an unambiguous directive you demonstrably applied, not a judgement call, so artifact_delete_comment is wrong here, and there is no agent resolve tool.",
+          "docRef": "artifacts.md",
+          "targetSeconds": 95,
+          "roleVariants": {
+            "eng-manager": {
+              "scenario": "You addressed a reviewer's wording request on a shared document artifact and want them to confirm it reads right before it is closed.",
+              "prompt": "Pick the tool that marks the thread for the reviewer's verification without resolving it."
+            },
+            "security": {
+              "scenario": "You revised a flagged section of an artifact but the sufficiency of the fix is a judgement call you want verified, not something to close yourself.",
+              "prompt": "Pick the tool that marks the thread for the reviewer's verification without resolving it."
+            }
+          },
+          "solution": { "toolId": "artifact_mark_review", "args": { "resolves_thread": false } }
+        },
+        {
+          "id": "w6.t2.c9",
+          "worldId": "w6",
+          "topicId": "w6.t2",
+          "kind": "debug-fix",
+          "difficulty": "hard",
+          "scenario": "A teammate wrote a note claiming the right way to keep editing an auto-registered widget is to call artifact_save again each time with the same slug.",
+          "prompt": "That double-saves and a taken slug is refused anyway. Rewrite the JSON note so the tool field names the correct tool for iterating on an existing artifact. Change only the tool value.",
+          "brokenCall": "{\n  \"intent\": \"iterate on existing artifact\",\n  \"tool\": \"artifact_save\"\n}",
+          "language": "json",
+          "hints": [
+            { "tier": 1, "text": "Saving creates a new artifact; iterating edits an existing one." },
+            { "tier": 2, "text": "A taken slug is refused by artifact_save, never silently renamed, so you use the edit tool instead." },
+            { "tier": 3, "text": "The tool for iterating in place is artifact_update." }
+          ],
+          "explanation": "You do not call artifact_save again on something already saved: a taken slug is refused, not renamed. To iterate you call artifact_update on the existing slug, which records a new version automatically. So the tool value becomes artifact_update.",
+          "docRef": "artifacts.md",
+          "targetSeconds": 110,
+          "roleVariants": {
+            "backend": {
+              "scenario": "You find this note in a teammate's PR describing how to edit a saved widget, and the tool it names is wrong.",
+              "prompt": "Correct the tool value so it names the right tool for iterating on an existing artifact."
+            },
+            "platform": {
+              "scenario": "You are standardizing how your team iterates on saved artifacts and spot the wrong tool in the runbook.",
+              "prompt": "Correct the tool value so it names the right tool for iterating on an existing artifact."
+            }
+          },
+          "solution": {
+            "accept": [
+              "{\"intent\":\"iterate on existing artifact\",\"tool\":\"artifact_update\"}"
+            ],
+            "normalizer": "json"
+          }
+        },
+        {
+          "id": "w6.t2.c10",
+          "worldId": "w6",
+          "topicId": "w6.t2",
+          "kind": "single-choice",
+          "difficulty": "hard",
+          "prompt": "You rendered a useful widget in chat and want to be sure it is not pruned, while also keeping its full edit history going forward. What is the correct minimal action?",
+          "options": [
+            { "id": "a", "text": "Save it once (or star it) so it is pinned; thereafter every agent edit via artifact_update records a new version automatically" },
+            { "id": "b", "text": "Call artifact_save after every single edit to force a new version each time" },
+            { "id": "c", "text": "Copy the HTML into a file so the versions live on disk, since artifacts do not keep history" },
+            { "id": "d", "text": "Nothing is needed; auto-registered widgets are pinned and versioned by default" }
+          ],
+          "hints": [
+            { "tier": 1, "text": "Auto entries are unpinned and get pruned, so you need one pinning action." },
+            { "tier": 2, "text": "Once it is a saved artifact, versioning is automatic on each edit." },
+            { "tier": 3, "text": "Pin it once (save or star), then let artifact_update version it; do not re-save each time." }
+          ],
+          "explanation": "Auto-registered widgets are unpinned and can be pruned, so one pinning action (save or star) is needed. After that, every agent edit through artifact_update records a new version automatically, so you do not re-save per edit, and artifacts do keep history, so a file copy is unnecessary.",
+          "docRef": "artifacts.md",
+          "targetSeconds": 100,
+          "solution": { "optionId": "a" }
+        }
+      ]
+    },
+    {
+      "id": "w6.t3",
+      "title": "Artifact Deploy",
+      "summary": "deploy_artifact is preview-only and never proves a deploy, the dashboard confirmation gate, world-readable exposure and TTL, static versus API versus stateful tiers, and what a webapp artifact is versus a static one.",
+      "challenges": [
+        {
+          "id": "w6.t3.c1",
+          "worldId": "w6",
+          "topicId": "w6.t3",
+          "kind": "single-choice",
+          "difficulty": "easy",
+          "prompt": "What does the deploy_artifact MCP tool actually do?",
+          "options": [
+            { "id": "a", "text": "It is preview-only: it records a pending confirmation and reports the scan and deploy details, but never creates public infrastructure" },
+            { "id": "b", "text": "It deploys the artifact to a public URL and returns the live link" },
+            { "id": "c", "text": "It creates the CloudFront distribution but leaves the S3 upload for the dashboard" },
+            { "id": "d", "text": "It deletes any existing deployment and redeploys from scratch" }
+          ],
+          "hints": [
+            { "tier": 1, "text": "The agent's part of publishing is deliberately not the part that goes live." },
+            { "tier": 2, "text": "The real deploy happens at a dashboard confirmation, not from the tool." },
+            { "tier": 3, "text": "deploy_artifact is preview-only and records a pending confirmation; it never publishes." }
+          ],
+          "explanation": "deploy_artifact is preview-only. It records a pending confirmation and returns scan status and what the deploy would do, but never creates public infrastructure. The actual deployment happens only at the blocking dashboard confirmation, so the tool returning cleanly does not prove anything is live.",
+          "docRef": "deploy-web.md",
+          "targetSeconds": 35,
+          "solution": { "optionId": "a" }
+        },
+        {
+          "id": "w6.t3.c2",
+          "worldId": "w6",
+          "topicId": "w6.t3",
+          "kind": "true-false",
+          "difficulty": "easy",
+          "prompt": "Decide whether the statement holds.",
+          "statement": "A deployed artifact is served from a public CloudFront URL with no authentication, so anyone with the link can view it.",
+          "hints": [
+            { "tier": 1, "text": "There is no login gate on a deployed artifact." },
+            { "tier": 2, "text": "The docs repeat that published content is world-readable and obscurity is not access control." },
+            { "tier": 3, "text": "True: anyone with the link can view it, so do not publish anything private." }
+          ],
+          "explanation": "True. A deployed artifact is served from a public CloudFront URL with no authentication and no access control: anyone with the link can view it, and obscurity is not access control. The exposure lasts until the TTL expires or you recall or destroy it.",
+          "docRef": "deploy-web.md",
+          "targetSeconds": 30,
+          "solution": { "value": true }
+        },
+        {
+          "id": "w6.t3.c3",
+          "worldId": "w6",
+          "topicId": "w6.t3",
+          "kind": "tool-name",
+          "difficulty": "medium",
+          "prompt": "From the agent side, which single MCP tool previews a deploy of a webapp artifact or local directory to a public URL on the user's AWS account?",
+          "hints": [
+            { "tier": 1, "text": "Its name is the verb for publishing plus the thing being published." },
+            { "tier": 2, "text": "It takes a site_id and either an artifact_slug or a local_dir." },
+            { "tier": 3, "text": "It is deploy_artifact." }
+          ],
+          "explanation": "deploy_artifact is the preview-only tool. It takes a site_id and mutually exclusive artifact_slug or local_dir, plus optional profile and ttl_hours, and returns scan status and deploy details. It never executes; final confirmation is in the dashboard Artifact Deploy page.",
+          "docRef": "deploy-web.md",
+          "targetSeconds": 45,
+          "solution": { "accept": ["deploy_artifact", "@kirocrew-core/deploy_artifact"], "normalizer": "tool" }
+        },
+        {
+          "id": "w6.t3.c4",
+          "worldId": "w6",
+          "topicId": "w6.t3",
+          "kind": "multi-choice",
+          "difficulty": "medium",
+          "prompt": "Select every true statement about deploying artifacts.",
+          "options": [
+            { "id": "a", "text": "A static artifact (widget/html/markdown) is rendered as a page and served from S3 behind CloudFront with OAC" },
+            { "id": "b", "text": "A kind=webapp artifact is deployed via the Deploy button, which runs the artifact-deploy skill in a fresh session" },
+            { "id": "c", "text": "deploy_artifact rejects a kind=webapp artifact passed as artifact_slug, because its content is an app summary, not deployable HTML" },
+            { "id": "d", "text": "A finite TTL deploy requires the in-account reaper to be installed or it is refused with a 409" },
+            { "id": "e", "text": "Kiro Crew writes the least-privilege IAM policy to your account for you" },
+            { "id": "f", "text": "The origin S3 bucket is made public so the browser can read it directly" }
+          ],
+          "hints": [
+            { "tier": 1, "text": "Static and webapp artifacts take different deploy paths, and finite TTL needs the reaper." },
+            { "tier": 2, "text": "Kiro Crew never writes IAM, and the origin bucket is private behind OAC." },
+            { "tier": 3, "text": "Pick the static-render, the webapp-skill, the webapp-rejected-by-tool, and the finite-TTL-needs-reaper statements." }
+          ],
+          "explanation": "A static artifact is rendered as a page from a private S3 bucket behind CloudFront with OAC. A webapp artifact deploys via the Deploy button running the artifact-deploy skill, and deploy_artifact rejects a webapp slug because its content is an app summary. Finite TTL needs the reaper or returns 409. Kiro Crew never writes IAM, and the bucket is private, not public.",
+          "docRef": "deploy-web.md",
+          "targetSeconds": 85,
+          "solution": { "optionIds": ["a", "b", "c", "d"] }
+        },
+        {
+          "id": "w6.t3.c5",
+          "worldId": "w6",
+          "topicId": "w6.t3",
+          "kind": "config-fill",
+          "difficulty": "medium",
+          "prompt": "You want a persistent deploy with no automatic cleanup and no reaper requirement. Write the ttl_hours value you pass to deploy_artifact for that.",
+          "starter": "",
+          "hints": [
+            { "tier": 1, "text": "A finite TTL needs the reaper; the no-reaper mode is the one you take down yourself." },
+            { "tier": 2, "text": "The persistent mode is expressed as a specific numeric ttl_hours." },
+            { "tier": 3, "text": "It is 0: ttl_hours=0 means persistent, no reaper required." }
+          ],
+          "explanation": "ttl_hours=0 is the persistent mode: no reaper is required and you take the site down yourself from the console. Any finite TTL (default 72, up to 8760) requires the in-account reaper or the deploy is refused with a 409.",
+          "docRef": "deploy-web.md",
+          "targetSeconds": 55,
+          "roleVariants": {
+            "devops-sre": {
+              "scenario": "You are publishing a long-lived status page and the reaper is not installed in that account.",
+              "prompt": "Write the ttl_hours value for a persistent, no-reaper deploy."
+            },
+            "cloud-architect": {
+              "scenario": "You want a landing page to stay up indefinitely and be torn down manually, not by a scheduled Lambda.",
+              "prompt": "Write the ttl_hours value for a persistent, no-reaper deploy."
+            }
+          },
+          "solution": { "accept": ["0"], "normalizer": "text" }
+        },
+        {
+          "id": "w6.t3.c6",
+          "worldId": "w6",
+          "topicId": "w6.t3",
+          "kind": "sequence",
+          "difficulty": "medium",
+          "prompt": "Order the one-time AWS setup steps before the first artifact deploy.",
+          "items": [
+            { "id": "s1", "text": "Configure the AWS profile on the gateway host (aws configure sso or a named profile)" },
+            { "id": "s2", "text": "Register the profile name and region in the /deploy console" },
+            { "id": "s3", "text": "Click Verify for the read-only reachability check" },
+            { "id": "s4", "text": "Get the IAM policy and apply it yourself to a dedicated role" },
+            { "id": "s5", "text": "Run the first real deploy, which is the true permission test" }
+          ],
+          "hints": [
+            { "tier": 1, "text": "The profile must exist before you can register it, and you apply IAM before the first deploy." },
+            { "tier": 2, "text": "Verify is only reachability; the first deploy is the real permission test." },
+            { "tier": 3, "text": "Configure, register, verify, apply the policy yourself, then deploy." }
+          ],
+          "explanation": "You configure the profile on the gateway host, register its name and region in the console, click Verify for a read-only reachability check, get and apply the least-privilege IAM policy yourself (Kiro Crew never writes IAM), then run the first deploy, which is the true permission test because create and write permissions cannot be checked without writing.",
+          "docRef": "deploy-web.md",
+          "targetSeconds": 95,
+          "roleVariants": {
+            "devops-sre": {
+              "scenario": "You are onboarding a new account for artifact deploys and want the setup order right the first time.",
+              "prompt": "Order the one-time AWS setup steps before the first deploy."
+            },
+            "security": {
+              "scenario": "You are reviewing how deploy access is granted and want to confirm IAM is applied by a human before anything deploys.",
+              "prompt": "Order the one-time AWS setup steps before the first deploy."
+            },
+            "cloud-architect": {
+              "scenario": "You are documenting the account bootstrap for your team's deploy workflow.",
+              "prompt": "Order the one-time AWS setup steps before the first deploy."
+            }
+          },
+          "solution": { "orderedItemIds": ["s1", "s2", "s3", "s4", "s5"] }
+        },
+        {
+          "id": "w6.t3.c7",
+          "worldId": "w6",
+          "topicId": "w6.t3",
+          "kind": "matching",
+          "difficulty": "medium",
+          "prompt": "Match each deploy tier or takedown action to what it means.",
+          "left": [
+            { "id": "l1", "text": "Static tier" },
+            { "id": "l2", "text": "API tier" },
+            { "id": "l3", "text": "Stateful tier" },
+            { "id": "l4", "text": "Recall" }
+          ],
+          "right": [
+            { "id": "r1", "text": "S3 (private, per-site prefix) + CloudFront + OAC" },
+            { "id": "r2", "text": "Adds an API Gateway HTTP API to a Lambda at /<slug>/api/*" },
+            { "id": "r3", "text": "Adds a DynamoDB table so the app can persist data" },
+            { "id": "r4", "text": "Fast unpublish: empties objects and invalidates cache, infrastructure stays so re-deploy restores it" },
+            { "id": "r5", "text": "Irreversible full teardown that deletes the distribution and bucket" }
+          ],
+          "hints": [
+            { "tier": 1, "text": "The three tiers add resources cumulatively; Recall is reversible but Destroy is not." },
+            { "tier": 2, "text": "Recall only empties and invalidates; the deleting-everything option is Destroy, which is the unused entry." },
+            { "tier": 3, "text": "l1 to r1, l2 to r2, l3 to r3, l4 to r4; r5 describes Destroy and is unused." }
+          ],
+          "explanation": "Static is S3 private plus CloudFront plus OAC. API adds an API Gateway HTTP API to a Lambda. Stateful adds a DynamoDB table. Recall is a fast, reversible unpublish that empties objects and invalidates the cache while keeping the infrastructure. The unused entry describes Destroy, which is the irreversible full teardown.",
+          "docRef": "deploy-web.md",
+          "targetSeconds": 100,
+          "solution": { "pairs": { "l1": "r1", "l2": "r2", "l3": "r3", "l4": "r4" } }
+        },
+        {
+          "id": "w6.t3.c8",
+          "worldId": "w6",
+          "topicId": "w6.t3",
+          "kind": "simulation",
+          "difficulty": "hard",
+          "scenario": "A user asks you to publish a saved HTML artifact with slug quarterly-review to a public URL under the site slot named q3-review, on their default profile, and they want it to clean itself up after three days.",
+          "prompt": "Preview the deploy with the agent-side tool and the right arguments.",
+          "toolPalette": [
+            { "id": "deploy_artifact", "text": "deploy_artifact" },
+            { "id": "artifact_save", "text": "artifact_save" },
+            { "id": "artifact_update", "text": "artifact_update" },
+            { "id": "artifact_move", "text": "artifact_move" }
+          ],
+          "argSpecs": [
+            { "name": "site_id", "label": "Deploy slot name", "input": "text", "required": true },
+            { "name": "artifact_slug", "label": "Artifact slug to deploy", "input": "text", "required": true },
+            { "name": "ttl_hours", "label": "Hours until auto-cleanup", "input": "text", "required": true }
+          ],
+          "hints": [
+            { "tier": 1, "text": "This is a preview of a deploy, not a save or a move." },
+            { "tier": 2, "text": "site_id is the slot name, artifact_slug is the artifact, and three days is a finite TTL in hours." },
+            { "tier": 3, "text": "deploy_artifact with site_id q3-review, artifact_slug quarterly-review, ttl_hours 72." }
+          ],
+          "explanation": "deploy_artifact previews the deploy: site_id is the slot (q3-review), artifact_slug names the artifact (quarterly-review), and three days is ttl_hours 72. The tool only records a pending confirmation; the user confirms the actual deploy in the dashboard. Note a finite TTL needs the reaper installed or it is refused with a 409.",
+          "docRef": "deploy-web.md",
+          "targetSeconds": 150,
+          "roleVariants": {
+            "devops-sre": {
+              "scenario": "A stakeholder wants a saved HTML report (slug quarterly-review) up at a public link for three days under the q3-review slot, on the default profile.",
+              "prompt": "Preview the deploy with the correct agent-side tool and arguments."
+            },
+            "cloud-architect": {
+              "scenario": "You are asked to stage a saved HTML artifact publicly for a three-day review window under a named slot.",
+              "prompt": "Preview the deploy with the correct agent-side tool and arguments."
+            }
+          },
+          "solution": {
+            "toolId": "deploy_artifact",
+            "args": { "site_id": "q3-review", "artifact_slug": "quarterly-review", "ttl_hours": "72" }
+          }
+        },
+        {
+          "id": "w6.t3.c9",
+          "worldId": "w6",
+          "topicId": "w6.t3",
+          "kind": "debug-fix",
+          "difficulty": "hard",
+          "scenario": "A runbook claims that once deploy_artifact returns successfully the site is live and that a credential finding in the content scan can be overridden to publish anyway.",
+          "prompt": "Both claims are wrong. Rewrite the JSON so both booleans are correct. Change only the two boolean values.",
+          "brokenCall": "{\n  \"deploy_artifact_makes_it_live\": true,\n  \"credential_finding_can_be_overridden\": true\n}",
+          "language": "json",
+          "hints": [
+            { "tier": 1, "text": "The tool is preview-only, and the scan has one severity you can never override." },
+            { "tier": 2, "text": "The dashboard confirmation makes it live, and credential-severity findings refuse the deploy outright." },
+            { "tier": 3, "text": "Both values should be false." }
+          ],
+          "explanation": "deploy_artifact is preview-only, so it does not make a site live: the dashboard confirmation does. And credential-severity findings in the pre-publish scan can never be overridden; the deploy is refused outright (other findings can be overridden with an explicit choice). So both booleans are false.",
+          "docRef": "deploy-web.md",
+          "targetSeconds": 120,
+          "roleVariants": {
+            "security": {
+              "scenario": "You are auditing a deploy runbook and spot two claims that would let someone assume an unverified or unsafe publish is fine.",
+              "prompt": "Correct the two boolean values so the note matches how deploy actually behaves."
+            },
+            "devops-sre": {
+              "scenario": "A colleague's deploy notes overstate what the preview tool does and what the scan allows.",
+              "prompt": "Correct the two boolean values so the note matches how deploy actually behaves."
+            }
+          },
+          "solution": {
+            "accept": [
+              "{\"deploy_artifact_makes_it_live\":false,\"credential_finding_can_be_overridden\":false}"
+            ],
+            "normalizer": "json"
+          }
+        },
+        {
+          "id": "w6.t3.c10",
+          "worldId": "w6",
+          "topicId": "w6.t3",
+          "kind": "single-choice",
+          "difficulty": "hard",
+          "prompt": "Right after a first deploy, the public link returns a DNS or 'site can't be reached' error. What is the correct read?",
+          "options": [
+            { "id": "a", "text": "A new CloudFront distribution takes roughly 5 to 15 minutes to propagate globally; this is expected, watch the console status" },
+            { "id": "b", "text": "The deploy failed and must be re-run immediately" },
+            { "id": "c", "text": "The origin bucket was left private, so you must make it public to serve content" },
+            { "id": "d", "text": "The content scan silently blocked the upload" }
+          ],
+          "hints": [
+            { "tier": 1, "text": "The first deploy of a new distribution is slow for a reason unrelated to your content." },
+            { "tier": 2, "text": "Global propagation takes minutes; later deploys reuse the distribution and are fast." },
+            { "tier": 3, "text": "It is expected propagation of a new distribution, 5 to 15 minutes; watch the status." }
+          ],
+          "explanation": "A new CloudFront distribution takes roughly 5 to 15 minutes to propagate globally, and until it reaches Deployed the link returns a DNS or 'site can't be reached' error. That is expected, not a failure. The origin bucket is meant to stay private behind OAC, so making it public is wrong, and later deploys reuse the distribution and complete in seconds.",
+          "docRef": "deploy-web.md",
+          "targetSeconds": 95,
+          "solution": { "optionId": "a" }
+        }
+      ]
+    },
+    {
+      "id": "w6.t4",
+      "title": "Browser and Computer Use",
+      "summary": "The browser MCP tool versus playwright-cli, snapshot refs dying with the page, which browser commands exist, the local-address refusal, computer use being off by default in its own protected file, the tree-first rule, and the password and dashboard refusals.",
+      "challenges": [
+        {
+          "id": "w6.t4.c1",
+          "worldId": "w6",
+          "topicId": "w6.t4",
+          "kind": "single-choice",
+          "difficulty": "easy",
+          "prompt": "The agent is asked to open a public page and read its text. When is driving the browser panel unnecessary?",
+          "options": [
+            { "id": "a", "text": "When the page can be reached and read directly; reading is cheaper than driving, so a simple text read may not need the browser at all" },
+            { "id": "b", "text": "Never; every page read must go through the browser panel" },
+            { "id": "c", "text": "Only when the page requires a login" },
+            { "id": "d", "text": "Only when computer use is enabled" }
+          ],
+          "hints": [
+            { "tier": 1, "text": "Driving a page is for interaction, logins, or script-rendered content." },
+            { "tier": 2, "text": "If only the text of a public page is needed, there is a cheaper path." },
+            { "tier": 3, "text": "Reading a reachable page directly is cheaper than driving it, so the browser may be skipped." }
+          ],
+          "explanation": "Reading a page the agent can already reach is cheaper than driving it, so a request that only needs the text of a public page may be answered without the browser. Driving the panel is for interaction, a logged-in session, or a page whose content only exists once its scripts have run.",
+          "docRef": "browser-control.md",
+          "targetSeconds": 35,
+          "solution": { "optionId": "a" }
+        },
+        {
+          "id": "w6.t4.c2",
+          "worldId": "w6",
+          "topicId": "w6.t4",
+          "kind": "true-false",
+          "difficulty": "easy",
+          "prompt": "Decide whether the statement holds.",
+          "statement": "The agent can navigate the browser panel to a localhost or private-network address.",
+          "hints": [
+            { "tier": 1, "text": "Think about what lives at loopback and private addresses." },
+            { "tier": 2, "text": "Those are where your own control planes, including this dashboard, live." },
+            { "tier": 3, "text": "Local and private addresses are refused; only globally routable addresses are accepted." }
+          ],
+          "explanation": "False. The agent cannot navigate the panel to localhost, a loopback address, or a private-network address, because those are where your own control planes (this dashboard among them) live. Only globally routable addresses are accepted.",
+          "docRef": "browser-control.md",
+          "targetSeconds": 30,
+          "solution": { "value": false }
+        },
+        {
+          "id": "w6.t4.c3",
+          "worldId": "w6",
+          "topicId": "w6.t4",
+          "kind": "tool-name",
+          "difficulty": "medium",
+          "prompt": "Before you can click an element in the browser panel, you need the element reference. Which browser op do you run first to read the page as a structured list of its elements?",
+          "hints": [
+            { "tier": 1, "text": "It is the op that reads the page structure, not a click or a screenshot." },
+            { "tier": 2, "text": "Its result gives you the refs that click and type consume." },
+            { "tier": 3, "text": "It is the snapshot op." }
+          ],
+          "explanation": "You call the browser tool with op=snapshot first to read the page as a structured list of elements and get the refs. Then op=click or op=type consumes a ref. The refs are tied to that snapshot of the page, so they die when the page changes.",
+          "docRef": "browser-control.md",
+          "targetSeconds": 45,
+          "solution": { "accept": ["snapshot", "browser snapshot", "op=snapshot"], "normalizer": "tool" }
+        },
+        {
+          "id": "w6.t4.c4",
+          "worldId": "w6",
+          "topicId": "w6.t4",
+          "kind": "multi-choice",
+          "difficulty": "medium",
+          "prompt": "Select every action the browser tool can perform on a page.",
+          "options": [
+            { "id": "a", "text": "Navigate to a URL" },
+            { "id": "b", "text": "Click an element by its snapshot ref" },
+            { "id": "c", "text": "Type text and optionally submit" },
+            { "id": "d", "text": "Take a screenshot and read the browser console" },
+            { "id": "e", "text": "Install a browser extension into the user's everyday browser automatically" },
+            { "id": "f", "text": "Navigate the panel to the Kiro Crew dashboard at localhost" }
+          ],
+          "hints": [
+            { "tier": 1, "text": "Four of these are real page operations; two are things the tool is not allowed to do." },
+            { "tier": 2, "text": "The attach extension is a user-only install, and localhost navigation is refused." },
+            { "tier": 3, "text": "Pick navigate, click by ref, type with optional submit, and screenshot plus console." }
+          ],
+          "explanation": "The browser tool can navigate, read the page (snapshot), click, type, press a key, hover, select from a dropdown, screenshot, wait_for, go back, and read the console. It cannot install the attach-mode extension (only the user can), and it cannot navigate to localhost or private addresses.",
+          "docRef": "browser-control.md",
+          "targetSeconds": 80,
+          "solution": { "optionIds": ["a", "b", "c", "d"] }
+        },
+        {
+          "id": "w6.t4.c5",
+          "worldId": "w6",
+          "topicId": "w6.t4",
+          "kind": "config-fill",
+          "difficulty": "medium",
+          "prompt": "You are driving a web form in the panel and want to fill a search box and submit in one browser call. The op is type. Write just the args key whose value true causes the field to be submitted after typing.",
+          "starter": "",
+          "hints": [
+            { "tier": 1, "text": "The type op takes a ref, the text, and one more flag for sending the form." },
+            { "tier": 2, "text": "The flag is a boolean named for the act of submitting." },
+            { "tier": 3, "text": "It is submit (op='type' args={ref, text, submit: true})." }
+          ],
+          "explanation": "The browser type op takes ref and text, and a submit boolean. Setting submit to true sends the field after typing (for example to trigger a search), so the key is submit. You get the ref from a prior snapshot call.",
+          "docRef": "browser-control.md",
+          "targetSeconds": 55,
+          "roleVariants": {
+            "qa": {
+              "scenario": "You are automating a login form check and need to type into a field and submit it in one step.",
+              "prompt": "Name the type-op args key whose true value submits the field after typing."
+            },
+            "backend": {
+              "scenario": "You are scripting a search-and-read flow in the browser panel and want to type a query and send it together.",
+              "prompt": "Name the type-op args key whose true value submits the field after typing."
+            }
+          },
+          "solution": { "accept": ["submit"], "normalizer": "text" }
+        },
+        {
+          "id": "w6.t4.c6",
+          "worldId": "w6",
+          "topicId": "w6.t4",
+          "kind": "sequence",
+          "difficulty": "medium",
+          "prompt": "Order the browser-tool steps to click a button that only appears after the page's scripts run.",
+          "items": [
+            { "id": "s1", "text": "op=navigate to the page URL" },
+            { "id": "s2", "text": "op=wait_for the button to appear" },
+            { "id": "s3", "text": "op=snapshot to read the page and get the button's ref" },
+            { "id": "s4", "text": "op=click with that ref" }
+          ],
+          "hints": [
+            { "tier": 1, "text": "You cannot snapshot a ref for something that has not appeared yet." },
+            { "tier": 2, "text": "Navigate, wait for it to appear, then snapshot, then click." },
+            { "tier": 3, "text": "The ref comes from the snapshot taken after the element exists, and click uses that ref." }
+          ],
+          "explanation": "Navigate to the page, wait_for the button to appear (its content only exists after scripts run), snapshot to read the current page and get the button's ref, then click with that ref. Refs are tied to the snapshot, so you take the snapshot after the element exists.",
+          "docRef": "browser-control.md",
+          "targetSeconds": 90,
+          "roleVariants": {
+            "qa": {
+              "scenario": "You are testing a single-page app where the submit button renders only after a client-side fetch completes.",
+              "prompt": "Order the browser-tool steps to click the script-rendered button."
+            },
+            "backend": {
+              "scenario": "You are driving a dynamic page where a control appears only once its JavaScript has run.",
+              "prompt": "Order the browser-tool steps to click the script-rendered button."
+            }
+          },
+          "solution": { "orderedItemIds": ["s1", "s2", "s3", "s4"] }
+        },
+        {
+          "id": "w6.t4.c7",
+          "worldId": "w6",
+          "topicId": "w6.t4",
+          "kind": "matching",
+          "difficulty": "hard",
+          "prompt": "Match each computer-use fact to its reason or consequence.",
+          "left": [
+            { "id": "l1", "text": "The computer-use enable lives in its own protected file, not config.json" },
+            { "id": "l2", "text": "Password fields render as <secure> and their window is not captured as an image" },
+            { "id": "l3", "text": "The agent prefers a control's position in the window outline over pixel coordinates" },
+            { "id": "l4", "text": "On Windows a coordinate click moves your real cursor" }
+          ],
+          "right": [
+            { "id": "r1", "text": "config.json is agent-shell writable, so an enable stored there could be flipped by a prompt injection" },
+            { "id": "r2", "text": "Secrets are kept out of the outline and screenshots the agent can read" },
+            { "id": "r3", "text": "The tree identity is what makes refusals like the password-field block enforceable; pixels cannot express it" },
+            { "id": "r4", "text": "There is no per-process input delivery, so the agent is required to tell you rather than succeed silently" },
+            { "id": "r5", "text": "macOS always warps the real cursor for every click" }
+          ],
+          "hints": [
+            { "tier": 1, "text": "One right-hand entry about macOS is false (macOS does not warp the cursor for every click)." },
+            { "tier": 2, "text": "The protected file exists because config.json is agent-writable; the tree-first rule makes refusals enforceable." },
+            { "tier": 3, "text": "l1 to r1, l2 to r2, l3 to r3, l4 to r4; r5 is the false macOS entry." }
+          ],
+          "explanation": "The enable sits in a protected file because config.json is writable by the agent's shell and could be flipped by injection. Password fields are redacted so secrets stay out of what the agent reads. Addressing a control by its position in the tree is what makes identity-based refusals enforceable. Windows has no per-process input delivery, so a coordinate click moves the real cursor and the agent must say so. macOS delivers to the target app alone and does not warp the cursor for every click, so r5 is false.",
+          "docRef": "computer-use.md",
+          "targetSeconds": 120,
+          "roleVariants": {
+            "security": {
+              "scenario": "You are assessing the computer-use feature's threat model before enabling it on a shared machine.",
+              "prompt": "Match each computer-use fact to its security reason or consequence."
+            },
+            "platform": {
+              "scenario": "You are writing the internal guidance for turning on computer use and why its switch is where it is.",
+              "prompt": "Match each computer-use fact to its security reason or consequence."
+            }
+          },
+          "solution": { "pairs": { "l1": "r1", "l2": "r2", "l3": "r3", "l4": "r4" } }
+        },
+        {
+          "id": "w6.t4.c8",
+          "worldId": "w6",
+          "topicId": "w6.t4",
+          "kind": "simulation",
+          "difficulty": "medium",
+          "scenario": "A public web app renders its result only after client-side scripts run, and the agent needs to read what finally appears in the panel. The agent has already navigated and waited for the content.",
+          "prompt": "Pick the browser op that reads the current page as a structured element list so the agent can see the rendered content.",
+          "toolPalette": [
+            { "id": "snapshot", "text": "browser op=snapshot" },
+            { "id": "screenshot", "text": "browser op=screenshot" },
+            { "id": "console", "text": "browser op=console" },
+            { "id": "navigate", "text": "browser op=navigate" }
+          ],
+          "argSpecs": [
+            { "name": "reads_structure", "label": "Does it return a structured element list?", "input": "boolean", "required": true }
+          ],
+          "hints": [
+            { "tier": 1, "text": "A screenshot is pixels; the console is logs; neither is a structured element list." },
+            { "tier": 2, "text": "The op that reads the page as structured elements is also the one that yields clickable refs." },
+            { "tier": 3, "text": "It is snapshot." }
+          ],
+          "explanation": "op=snapshot reads the page as a structured list of its elements, which is what the agent needs to read rendered content and get refs. A screenshot returns an image, console returns log output, and navigate changes the URL. Snapshot is the structured read.",
+          "docRef": "browser-control.md",
+          "targetSeconds": 90,
+          "roleVariants": {
+            "qa": {
+              "scenario": "You are verifying that a single-page app shows the right result after its fetch resolves, and you want the structured content rather than a picture.",
+              "prompt": "Pick the browser op that reads the page as a structured element list."
+            },
+            "data": {
+              "scenario": "You need to extract values a dashboard renders only after its scripts run, as structured elements rather than an image.",
+              "prompt": "Pick the browser op that reads the page as a structured element list."
+            }
+          },
+          "solution": { "toolId": "snapshot", "args": { "reads_structure": true } }
+        },
+        {
+          "id": "w6.t4.c9",
+          "worldId": "w6",
+          "topicId": "w6.t4",
+          "kind": "debug-fix",
+          "difficulty": "hard",
+          "scenario": "A browser automation note claims that a snapshot ref stays valid across page navigation, and that the agent can drive the panel to the local dashboard at a loopback address.",
+          "prompt": "Both claims are wrong. Rewrite the JSON so both booleans are correct. Change only the two boolean values.",
+          "brokenCall": "{\n  \"snapshot_ref_survives_navigation\": true,\n  \"panel_can_open_loopback_address\": true\n}",
+          "language": "json",
+          "hints": [
+            { "tier": 1, "text": "A ref belongs to the snapshot it came from, and loopback is a refused destination." },
+            { "tier": 2, "text": "Refs die when the page changes, so you re-snapshot; local and private addresses are refused." },
+            { "tier": 3, "text": "Both values should be false." }
+          ],
+          "explanation": "A snapshot ref is tied to the page state it was read from, so it dies when the page changes and you must re-snapshot. The panel also cannot be driven to localhost, a loopback address, or a private-network address. So both booleans are false.",
+          "docRef": "browser-control.md",
+          "targetSeconds": 115,
+          "roleVariants": {
+            "qa": {
+              "scenario": "You find a flaky browser test that reuses a stale ref after a page change and assumes it can hit a loopback service.",
+              "prompt": "Correct the two boolean values so the note matches how the browser tool behaves."
+            },
+            "security": {
+              "scenario": "You are reviewing a browser-automation note that overstates what the panel can reach and how long refs live.",
+              "prompt": "Correct the two boolean values so the note matches how the browser tool behaves."
+            }
+          },
+          "solution": {
+            "accept": [
+              "{\"snapshot_ref_survives_navigation\":false,\"panel_can_open_loopback_address\":false}"
+            ],
+            "normalizer": "json"
+          }
+        },
+        {
+          "id": "w6.t4.c10",
+          "worldId": "w6",
+          "topicId": "w6.t4",
+          "kind": "single-choice",
+          "difficulty": "medium",
+          "prompt": "What is the difference between the built-in browser and browsing through playwright-cli?",
+          "options": [
+            { "id": "a", "text": "With the built-in browser on, the agent drives the dashboard Browser panel; with it off, the agent browses through playwright-cli instead of driving the panel" },
+            { "id": "b", "text": "playwright-cli can navigate to localhost while the built-in browser cannot" },
+            { "id": "c", "text": "The built-in browser requires computer use to be enabled; playwright-cli does not" },
+            { "id": "d", "text": "They are the same tool with two names" }
+          ],
+          "hints": [
+            { "tier": 1, "text": "The Settings toggle picks which path the agent uses." },
+            { "tier": 2, "text": "On by default in the desktop app means driving the panel." },
+            { "tier": 3, "text": "Built-in on drives the panel; off routes browsing through playwright-cli." }
+          ],
+          "explanation": "The Settings Browser toggle controls this. With the built-in browser on (default in the desktop app) the agent drives the dashboard Browser panel. With it off, the agent browses through playwright-cli rather than driving the panel. It is settable only in the desktop app; in a plain browser or on a remote gateway it reads off and is not editable.",
+          "docRef": "browser-control.md",
+          "targetSeconds": 70,
+          "solution": { "optionId": "a" }
+        }
+      ]
+    },
+    {
+      "id": "w6.t5",
+      "title": "Skills and Apps",
+      "summary": "Loading a skill by reading it, skill_search versus skill_discover versus skill_fetch, why installing is a human-only action, why a missing app tool means the app is not installed, and why enabling an app runs its code with full gateway privileges.",
+      "challenges": [
+        {
+          "id": "w6.t5.c1",
+          "worldId": "w6",
+          "topicId": "w6.t5",
+          "kind": "single-choice",
+          "difficulty": "easy",
+          "prompt": "What is a skill, concretely?",
+          "options": [
+            { "id": "a", "text": "A directory containing a SKILL.md file, with optional auxiliary scripts and nested directories" },
+            { "id": "b", "text": "A single row in a database the gateway queries at startup" },
+            { "id": "c", "text": "An MCP server that must be routed through the gateway" },
+            { "id": "d", "text": "A compiled binary installed on the PATH" }
+          ],
+          "hints": [
+            { "tier": 1, "text": "Skills live on disk under a skills directory." },
+            { "tier": 2, "text": "Each one is a directory with at least a specific markdown file." },
+            { "tier": 3, "text": "A skill is a directory containing a SKILL.md file." }
+          ],
+          "explanation": "A skill is a directory containing a SKILL.md file, optionally with auxiliary scripts and nested directories. Global skills live in ~/.kiro/crew/skills/. The frontmatter controls whether it is always-on, on-demand, or triggered.",
+          "docRef": "skills.md",
+          "targetSeconds": 30,
+          "solution": { "optionId": "a" }
+        },
+        {
+          "id": "w6.t5.c2",
+          "worldId": "w6",
+          "topicId": "w6.t5",
+          "kind": "true-false",
+          "difficulty": "easy",
+          "prompt": "Decide whether the statement holds.",
+          "statement": "The agent can install a skill from a GitHub repository by itself.",
+          "hints": [
+            { "tier": 1, "text": "Think about who is allowed to write new skill files to disk." },
+            { "tier": 2, "text": "The agent can read a repository skill but not install one." },
+            { "tier": 3, "text": "Installing is always a person's action from the dashboard." }
+          ],
+          "explanation": "False. Installing a skill is always a person's action from the dashboard. The agent can read a repository skill with skill_fetch but cannot install one. Imports are unauthenticated and GitHub rate-limited, and private repositories are not supported.",
+          "docRef": "skills.md",
+          "targetSeconds": 30,
+          "solution": { "value": false }
+        },
+        {
+          "id": "w6.t5.c3",
+          "worldId": "w6",
+          "topicId": "w6.t5",
+          "kind": "tool-name",
+          "difficulty": "medium",
+          "prompt": "You need to find an installed skill by searching its key, name, description, and (if needed) its body. Which MCP tool do you use?",
+          "hints": [
+            { "tier": 1, "text": "It searches installed skills, not the public registry." },
+            { "tier": 2, "text": "Its name pairs the word skill with the act of searching." },
+            { "tier": 3, "text": "It is skill_search." }
+          ],
+          "explanation": "skill_search searches installed skills by key, name and description, then falls back to bodies only if metadata has no match. It defaults to 20 results and caps limit at 50. skill_discover searches the public registry instead, and skill_fetch reads one discovered registry skill.",
+          "docRef": "skills.md",
+          "targetSeconds": 45,
+          "solution": { "accept": ["skill_search", "@kirocrew-core/skill_search"], "normalizer": "tool" }
+        },
+        {
+          "id": "w6.t5.c4",
+          "worldId": "w6",
+          "topicId": "w6.t5",
+          "kind": "multi-choice",
+          "difficulty": "medium",
+          "prompt": "Select every true statement about enabling apps.",
+          "options": [
+            { "id": "a", "text": "A disabled app contributes no pages, no agents, no skills, no crons and no backend process" },
+            { "id": "b", "text": "Enabling an app runs its code with the same privileges as Kiro Crew itself" },
+            { "id": "c", "text": "A third-party app is deny-by-default: refused until you grant it trust" },
+            { "id": "d", "text": "Shipped apps need Enable, not Install, because they are already on disk" },
+            { "id": "e", "text": "Every app runs inside a process-level sandbox that isolates its filesystem and network" },
+            { "id": "f", "text": "A shipped app can be uninstalled from the Library the same way an installed one can" }
+          ],
+          "hints": [
+            { "tier": 1, "text": "Enabling is the activation gate, and third-party code is deny-by-default." },
+            { "tier": 2, "text": "There is no process-level sandbox, and a shipped app can only be disabled, not uninstalled." },
+            { "tier": 3, "text": "Pick the disabled-contributes-nothing, the full-privileges, the deny-by-default, and the enable-not-install statements." }
+          ],
+          "explanation": "A disabled app contributes nothing (pages, agents, skills, crons, backend). Enabling runs its code with the same privileges as Kiro Crew itself, there is no process-level sandbox, so third-party apps are deny-by-default until you grant trust. Shipped apps are already on disk and only need Enable, and a shipped app can be disabled but not uninstalled.",
+          "docRef": "apps.md",
+          "targetSeconds": 85,
+          "solution": { "optionIds": ["a", "b", "c", "d"] }
+        },
+        {
+          "id": "w6.t5.c5",
+          "worldId": "w6",
+          "topicId": "w6.t5",
+          "kind": "config-fill",
+          "difficulty": "medium",
+          "prompt": "You want an on-demand skill to inject its full content into every eligible session instead. Which SKILL.md frontmatter field do you set to true? Write just the field name.",
+          "starter": "",
+          "hints": [
+            { "tier": 1, "text": "It is a boolean frontmatter field that forces full injection." },
+            { "tier": 2, "text": "Its name is the word for all the time." },
+            { "tier": 3, "text": "It is always (always: true)." }
+          ],
+          "explanation": "Setting always: true in the SKILL.md frontmatter injects the skill's full content into every eligible session. Without it, an on-demand skill starts the session with only a summary and the agent loads the full file when it applies.",
+          "docRef": "skills.md",
+          "targetSeconds": 50,
+          "roleVariants": {
+            "platform": {
+              "scenario": "You maintain a house-style skill every session should always carry in full.",
+              "prompt": "Name the SKILL.md frontmatter field you set to true for full injection every session."
+            },
+            "eng-manager": {
+              "scenario": "You want a standards skill to be present in full for the whole team's sessions rather than loaded on demand.",
+              "prompt": "Name the SKILL.md frontmatter field you set to true for full injection every session."
+            }
+          },
+          "solution": { "accept": ["always"], "normalizer": "text" }
+        },
+        {
+          "id": "w6.t5.c6",
+          "worldId": "w6",
+          "topicId": "w6.t5",
+          "kind": "sequence",
+          "difficulty": "medium",
+          "prompt": "You need a capability no installed skill covers. Order the correct steps that stay within what the agent is allowed to do.",
+          "items": [
+            { "id": "s1", "text": "skill_search to confirm no installed skill already covers it" },
+            { "id": "s2", "text": "skill_discover to search the public registry for a candidate" },
+            { "id": "s3", "text": "skill_fetch to read the candidate's instructions without installing" },
+            { "id": "s4", "text": "Ask the user to install it from the dashboard, since the agent cannot" }
+          ],
+          "hints": [
+            { "tier": 1, "text": "Check what is already installed before searching the registry." },
+            { "tier": 2, "text": "Fetching reads without installing; installing is a human action." },
+            { "tier": 3, "text": "Search installed, discover in registry, fetch to read, then ask the user to install." }
+          ],
+          "explanation": "You first skill_search installed skills, then skill_discover the public registry, then skill_fetch to read a candidate without installing. Because the agent cannot install, the last step is to ask the user to install it from the dashboard. skill_discover and skill_fetch never write files.",
+          "docRef": "skills.md",
+          "targetSeconds": 90,
+          "roleVariants": {
+            "backend": {
+              "scenario": "A task needs a specialized workflow and nothing you have installed matches it.",
+              "prompt": "Order the steps that stay within what the agent may do to obtain the capability."
+            },
+            "devops-sre": {
+              "scenario": "You need a skill for an unusual deployment flow that is not in your installed set.",
+              "prompt": "Order the steps that stay within what the agent may do to obtain the capability."
+            }
+          },
+          "solution": { "orderedItemIds": ["s1", "s2", "s3", "s4"] }
+        },
+        {
+          "id": "w6.t5.c7",
+          "worldId": "w6",
+          "topicId": "w6.t5",
+          "kind": "matching",
+          "difficulty": "medium",
+          "prompt": "Match each skill-discovery tool to what it does.",
+          "left": [
+            { "id": "l1", "text": "skill_search" },
+            { "id": "l2", "text": "skill_discover" },
+            { "id": "l3", "text": "skill_fetch" },
+            { "id": "l4", "text": "Installing a skill" }
+          ],
+          "right": [
+            { "id": "r1", "text": "Searches installed skills by key, name, description, then bodies" },
+            { "id": "r2", "text": "Searches the public registry and resolves a repo query, installing nothing" },
+            { "id": "r3", "text": "Reads one discovered registry skill's main instruction file without installing" },
+            { "id": "r4", "text": "A person's action from the dashboard; the agent cannot do it" },
+            { "id": "r5", "text": "Rewrites an installed skill's frontmatter automatically each session" }
+          ],
+          "hints": [
+            { "tier": 1, "text": "One right-hand entry (auto-rewriting frontmatter) is invented and has no match." },
+            { "tier": 2, "text": "search is installed, discover is the registry, fetch reads one, install is human." },
+            { "tier": 3, "text": "l1 to r1, l2 to r2, l3 to r3, l4 to r4; r5 is the false entry." }
+          ],
+          "explanation": "skill_search searches installed skills, skill_discover searches the public registry and resolves a repo query without installing, skill_fetch reads one discovered skill's main instruction file without installing, and installing is a human-only dashboard action. Nothing auto-rewrites a skill's frontmatter per session, so r5 is false.",
+          "docRef": "skills.md",
+          "targetSeconds": 95,
+          "solution": { "pairs": { "l1": "r1", "l2": "r2", "l3": "r3", "l4": "r4" } }
+        },
+        {
+          "id": "w6.t5.c8",
+          "worldId": "w6",
+          "topicId": "w6.t5",
+          "kind": "simulation",
+          "difficulty": "medium",
+          "scenario": "You believe a skill named git-workflow is installed and you want to read its full content now so you can follow it, without searching the registry.",
+          "prompt": "Pick the tool and action that loads the installed skill's content by name.",
+          "toolPalette": [
+            { "id": "skill_search", "text": "skill_search" },
+            { "id": "skill_discover", "text": "skill_discover" },
+            { "id": "skill_fetch", "text": "skill_fetch" },
+            { "id": "skill_install", "text": "skill_install" }
+          ],
+          "argSpecs": [
+            { "name": "action", "label": "Action", "input": "select", "required": true, "options": [
+              { "id": "read", "text": "read" },
+              { "id": "search", "text": "search" },
+              { "id": "list", "text": "list" }
+            ] }
+          ],
+          "hints": [
+            { "tier": 1, "text": "The registry tools are for things not installed; this one is installed." },
+            { "tier": 2, "text": "skill_search has an action parameter, and one action loads an exact key." },
+            { "tier": 3, "text": "skill_search with action read loads the exact installed skill." }
+          ],
+          "explanation": "skill_search is the tool for installed skills, and its read action loads an exact key's content. skill_discover and skill_fetch are for the public registry, and there is no skill_install tool for the agent because installing is a human-only dashboard action.",
+          "docRef": "skills.md",
+          "targetSeconds": 90,
+          "roleVariants": {
+            "backend": {
+              "scenario": "You want to follow your team's installed code-search skill and need its full text loaded by name right now.",
+              "prompt": "Pick the tool and action that loads the installed skill's content by name."
+            },
+            "platform": {
+              "scenario": "You need the exact content of an installed standards skill, not a registry lookup.",
+              "prompt": "Pick the tool and action that loads the installed skill's content by name."
+            }
+          },
+          "solution": { "toolId": "skill_search", "args": { "action": "read" } }
+        },
+        {
+          "id": "w6.t5.c9",
+          "worldId": "w6",
+          "topicId": "w6.t5",
+          "kind": "debug-fix",
+          "difficulty": "hard",
+          "scenario": "An agent note claims that when an app's MCP tool is missing it should just call the app's backend over a raw HTTP request instead, and that enabling an app is sandboxed so trust does not matter.",
+          "prompt": "Both claims are wrong. Rewrite the JSON so both booleans are correct. Change only the two boolean values.",
+          "brokenCall": "{\n  \"missing_app_tool_means_rewrite_as_raw_http\": true,\n  \"enabling_an_app_is_sandboxed\": true\n}",
+          "language": "json",
+          "hints": [
+            { "tier": 1, "text": "A missing app tool means the app is not installed or enabled, not that you reach around it." },
+            { "tier": 2, "text": "App code runs with full gateway privileges; there is no process-level sandbox." },
+            { "tier": 3, "text": "Both values should be false." }
+          ],
+          "explanation": "A missing app tool means the app is not installed or enabled; the correct response is to say so, not to rewrite the call as raw HTTP around a boundary that exists for a reason. And enabling an app runs its code with the same privileges as Kiro Crew itself, with no process-level sandbox, which is exactly why third-party apps are deny-by-default. So both booleans are false.",
+          "docRef": "apps.md",
+          "targetSeconds": 120,
+          "roleVariants": {
+            "security": {
+              "scenario": "You are reviewing an agent runbook that would bypass a missing app tool with raw HTTP and that misstates the app sandbox model.",
+              "prompt": "Correct the two boolean values so the note matches how apps actually work."
+            },
+            "platform": {
+              "scenario": "You find a note telling agents to work around a missing app tool and claiming apps are sandboxed.",
+              "prompt": "Correct the two boolean values so the note matches how apps actually work."
+            }
+          },
+          "solution": {
+            "accept": [
+              "{\"missing_app_tool_means_rewrite_as_raw_http\":false,\"enabling_an_app_is_sandboxed\":false}"
+            ],
+            "normalizer": "json"
+          }
+        },
+        {
+          "id": "w6.t5.c10",
+          "worldId": "w6",
+          "topicId": "w6.t5",
+          "kind": "single-choice",
+          "difficulty": "hard",
+          "prompt": "You enable a shipped app, then disable it later. What happens to what it contributed and to its data?",
+          "options": [
+            { "id": "a", "text": "Disable reverses all contributions (pages, agents, skills, crons, backend) and keeps the app's data directory" },
+            { "id": "b", "text": "Disable deletes the app and its data permanently" },
+            { "id": "c", "text": "Disable keeps the pages and agents running but stops only the backend process" },
+            { "id": "d", "text": "You cannot disable a shipped app, only uninstall it" }
+          ],
+          "hints": [
+            { "tier": 1, "text": "Disable is the clean reverse of enable, but it is not a delete." },
+            { "tier": 2, "text": "Registration happens on enable and is undone on disable; the data survives." },
+            { "tier": 3, "text": "Disable reverses the contributions and keeps the data directory." }
+          ],
+          "explanation": "Enabling an app registers its pages, agents, skills, crons and backend; disabling reverses all of that and keeps the app's data directory. A shipped app can be disabled but not uninstalled, and uninstalling (for installed apps) also keeps data unless you pass --purge-data.",
+          "docRef": "apps.md",
+          "targetSeconds": 95,
+          "solution": { "optionId": "a" }
+        },
+        {
+          "id": "w6.t5.c11",
+          "worldId": "w6",
+          "topicId": "w6.t5",
+          "kind": "true-false",
+          "difficulty": "medium",
+          "prompt": "Decide whether the statement holds.",
+          "statement": "Enabling an app can add entries to your agent picker and your skill list, because an app may ship its own agents and skills.",
+          "hints": [
+            { "tier": 1, "text": "An app is a unit that can bring more than just pages." },
+            { "tier": 2, "text": "Registration of an app's agents and skills happens on enable." },
+            { "tier": 3, "text": "True: an app may ship agents, skills, MCP tools and crons, registered on enable." }
+          ],
+          "explanation": "True. Enabling an app can add to your agent picker and skill list because an app may ship its own agents and skills, which are registered on enable and undone on disable. Apps can also bring MCP tools and scheduled jobs.",
+          "docRef": "apps.md",
+          "targetSeconds": 40,
+          "solution": { "value": true }
+        }
+      ]
+    }
+  ]
+}

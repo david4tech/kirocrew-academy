@@ -1,12 +1,12 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router';
 import { Lock, Swords } from 'lucide-react';
-import type { ProgressSnapshot, PublicWorld } from '@kirocrew-academy/shared';
+import type { ProgressSnapshot, WorldSummary } from '@kirocrew-academy/shared';
 import { WORLD_UNLOCK_THRESHOLD } from '@kirocrew-academy/shared';
 import { KiroGhost } from '../components/KiroGhost';
 import { LoadingGhost } from '../components/LoadingGhost';
 import { api, ApiClientError } from '../lib/api';
-import { content } from '../lib/content';
+import { contentIndex } from '../lib/content';
 
 export function WorldMapPage() {
   const [progress, setProgress] = useState<ProgressSnapshot | null>(null);
@@ -41,7 +41,7 @@ export function WorldMapPage() {
     );
   }
 
-  const worlds: PublicWorld[] = content.worlds;
+  const worlds: WorldSummary[] = contentIndex.worlds;
   const worldProgress = progress?.worlds ?? [];
 
   if (worlds.length === 0) {
@@ -95,7 +95,7 @@ function WorldNode({
   bossDefeated,
   unlockReason,
 }: {
-  world: PublicWorld;
+  world: WorldSummary;
   unlocked: boolean;
   masteryPct: number;
   bossDefeated: boolean;

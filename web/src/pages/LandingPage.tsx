@@ -1,12 +1,12 @@
 import { Link } from 'react-router';
 import { KiroGhost } from '../components/KiroGhost';
 import { Button } from '../components/Button';
-import { content } from '../lib/content';
+import { contentIndex } from '../lib/content';
 
 const WORLD_COUNT = 7;
 
 export function LandingPage() {
-  const worlds = content.worlds.length > 0 ? content.worlds : placeholderWorlds();
+  const worlds = contentIndex.worlds.length > 0 ? contentIndex.worlds : placeholderWorlds();
 
   return (
     <div className="mx-auto flex max-w-5xl flex-col items-center gap-12 py-10 text-center">

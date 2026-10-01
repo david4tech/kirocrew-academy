@@ -1,0 +1,1424 @@
+{
+  "id": "w3",
+  "order": 3,
+  "title": "Scheduling",
+  "subtitle": "Cron jobs, schedule expressions, timezones, the cheap wake profile and job lifecycle",
+  "lore": "A ghost that only haunts when you are watching is a poltergeist with stage fright. Learn to haunt on a schedule: wake at the right minute, in the right timezone, on the cheapest possible budget, and never twice when once will do.",
+  "accent": "#6D28D9",
+  "topics": [
+    {
+      "id": "w3.t1",
+      "title": "cron_add Fundamentals and Expressing a Schedule",
+      "summary": "The cron_add tool and the five ways to say when a job fires: every for intervals, cron_expr for calendar schedules, and at, delay and at_time for one-shots.",
+      "challenges": [
+        {
+          "id": "w3.t1.c1",
+          "worldId": "w3",
+          "topicId": "w3.t1",
+          "kind": "single-choice",
+          "difficulty": "easy",
+          "prompt": "Which MCP tool creates a scheduled job in Kiro Crew?",
+          "options": [
+            { "id": "a", "text": "cron_add" },
+            { "id": "b", "text": "schedule_create" },
+            { "id": "c", "text": "monitor_start" },
+            { "id": "d", "text": "task_run" }
+          ],
+          "hints": [
+            { "tier": 1, "text": "The tool name is the verb add on the cron noun." },
+            { "tier": 2, "text": "Natural language like 'check my pipeline every 30 minutes' is turned into one specific MCP call." },
+            { "tier": 3, "text": "It is cron_add; monitor_start watches a target and task_run drives the autonomous task runner." }
+          ],
+          "explanation": "Kiro Crew uses the cron_add MCP tool to create a job, whether you asked in natural language, filled in the Schedule page, or ran the CLI. monitor_start arms a watch loop and task_run starts the task runner, neither of which schedules a recurring cron.",
+          "docRef": "cron-and-scheduling.md",
+          "targetSeconds": 25,
+          "solution": { "optionId": "a" }
+        },
+        {
+          "id": "w3.t1.c2",
+          "worldId": "w3",
+          "topicId": "w3.t1",
+          "kind": "true-false",
+          "difficulty": "easy",
+          "prompt": "Decide whether the statement holds.",
+          "statement": "The smallest interval you can set with the every field is 60 seconds.",
+          "hints": [
+            { "tier": 1, "text": "every takes a value in seconds, and there is a documented floor." },
+            { "tier": 2, "text": "The schedule-types table notes a minimum next to the interval example." },
+            { "tier": 3, "text": "The minimum is 60 seconds, so every=300 is five minutes and every=30 is below the floor." }
+          ],
+          "explanation": "True. The interval field every is in seconds with a documented minimum of 60s. every=300 means every five minutes; a value under 60 is below the floor the schema enforces.",
+          "docRef": "cron-and-scheduling.md",
+          "targetSeconds": 25,
+          "solution": { "value": true }
+        },
+        {
+          "id": "w3.t1.c3",
+          "worldId": "w3",
+          "topicId": "w3.t1",
+          "kind": "tool-name",
+          "difficulty": "easy",
+          "prompt": "You want to see the next scheduled run time of your jobs from a chat session. Which MCP tool lists them?",
+          "hints": [
+            { "tier": 1, "text": "It is the list verb on the cron noun." },
+            { "tier": 2, "text": "The dashboard and Slack both show a next-run time for every entry this tool returns." },
+            { "tier": 3, "text": "It is cron_list." }
+          ],
+          "explanation": "cron_list returns your jobs with their next scheduled run time. It is scoped to the calling session, so it only shows jobs this session owns.",
+          "docRef": "cron-and-scheduling.md",
+          "targetSeconds": 30,
+          "solution": { "accept": ["cron_list"], "normalizer": "tool" }
+        },
+        {
+          "id": "w3.t1.c4",
+          "worldId": "w3",
+          "topicId": "w3.t1",
+          "kind": "multi-choice",
+          "difficulty": "medium",
+          "prompt": "Select every field cron_add accepts to express WHEN a job fires.",
+          "options": [
+            { "id": "a", "text": "every (interval in seconds)" },
+            { "id": "b", "text": "cron_expr (five-field cron expression)" },
+            { "id": "c", "text": "at (Unix timestamp, one-shot)" },
+            { "id": "d", "text": "delay (seconds from now, one-shot)" },
+            { "id": "e", "text": "at_time (human time string, one-shot)" },
+            { "id": "f", "text": "session (the chat session the job fires into)" },
+            { "id": "g", "text": "frequency (a named preset like hourly or daily)" }
+          ],
+          "hints": [
+            { "tier": 1, "text": "Five of these are real scheduling fields; two are inventions a user might reach for." },
+            { "tier": 2, "text": "There is no named-preset field, and cron_add does not take a session field at all." },
+            { "tier": 3, "text": "The real set is every, cron_expr, at, delay and at_time." }
+          ],
+          "explanation": "The five scheduling fields are every, cron_expr, at, delay and at_time. There is no frequency preset, and cron_add does not accept a session field: that is a common mistake, since output delivery is resolved from the owning session, not a parameter.",
+          "docRef": "cron-and-scheduling.md",
+          "targetSeconds": 70,
+          "solution": { "optionIds": ["a", "b", "c", "d", "e"] }
+        },
+        {
+          "id": "w3.t1.c5",
+          "worldId": "w3",
+          "topicId": "w3.t1",
+          "kind": "config-fill",
+          "difficulty": "medium",
+          "prompt": "Write the five-field cron_expr that fires at 09:00 on every weekday (Monday through Friday). Use numeric day-of-week values. Write just the expression.",
+          "starter": "",
+          "hints": [
+            { "tier": 1, "text": "The fields are min hour dom month dow, and you only constrain hour and dow." },
+            { "tier": 2, "text": "Minute is 0, hour is 9, day-of-month and month are wildcards, and the dow range covers Monday to Friday." },
+            { "tier": 3, "text": "With 0=Sun through 6=Sat, Monday to Friday is the range 1-5." }
+          ],
+          "explanation": "0 9 * * 1-5 fires at 09:00 on weekdays. The MCP schema documents numeric day-of-week with 0=Sun through 6=Sat, so Monday to Friday is 1-5. This is a daily-frequency schedule, so without strict_schedule it also takes 0 to 59 minutes of jitter.",
+          "docRef": "cron-and-scheduling.md",
+          "targetSeconds": 70,
+          "roleVariants": {
+            "devops-sre": {
+              "scenario": "You want a weekday-morning pipeline health digest that lands at 9am.",
+              "prompt": "Write the five-field cron_expr for 09:00 Monday through Friday, numeric day-of-week."
+            },
+            "eng-manager": {
+              "scenario": "You want a standup-prep summary every working day at 9am.",
+              "prompt": "Write the five-field cron_expr for 09:00 Monday through Friday, numeric day-of-week."
+            }
+          },
+          "solution": { "accept": ["0 9 * * 1-5"], "normalizer": "cron" }
+        },
+        {
+          "id": "w3.t1.c6",
+          "worldId": "w3",
+          "topicId": "w3.t1",
+          "kind": "sequence",
+          "difficulty": "medium",
+          "prompt": "Order what happens, from the scheduled instant to delivery, when an agent cron fires.",
+          "items": [
+            { "id": "s1", "text": "The cron timer fires at the scheduled time" },
+            { "id": "s2", "text": "The job's message is sent to an LLM session (reused across runs by default)" },
+            { "id": "s3", "text": "The agent produces a result" },
+            { "id": "s4", "text": "The result follows the job's delivery and silent settings" }
+          ],
+          "hints": [
+            { "tier": 1, "text": "The timer has to fire before anything runs, and delivery is the last thing to happen." },
+            { "tier": 2, "text": "An agent cron goes through an LLM session; the result exists before it is delivered." },
+            { "tier": 3, "text": "Fire, send to the session, produce the result, then deliver per the silent and delivery settings." }
+          ],
+          "explanation": "The timer fires, an agent cron sends its message to an LLM session (reused across runs unless persistent_session is false), the agent produces a result, and the result is then delivered according to the job's delivery and silent settings. A script or command cron would instead bypass the LLM at the second step.",
+          "docRef": "cron-and-scheduling.md",
+          "targetSeconds": 75,
+          "solution": { "orderedItemIds": ["s1", "s2", "s3", "s4"] }
+        },
+        {
+          "id": "w3.t1.c7",
+          "worldId": "w3",
+          "topicId": "w3.t1",
+          "kind": "matching",
+          "difficulty": "medium",
+          "prompt": "Match each one-shot or recurring field to the kind of value it takes.",
+          "left": [
+            { "id": "l1", "text": "every" },
+            { "id": "l2", "text": "at" },
+            { "id": "l3", "text": "delay" },
+            { "id": "l4", "text": "at_time" }
+          ],
+          "right": [
+            { "id": "r1", "text": "Interval in seconds for a recurring job" },
+            { "id": "r2", "text": "A Unix timestamp for a one-shot job" },
+            { "id": "r3", "text": "Seconds from now for a one-shot job" },
+            { "id": "r4", "text": "A human time string like 'tomorrow 9am' for a one-shot job" },
+            { "id": "r5", "text": "A five-field calendar expression" }
+          ],
+          "hints": [
+            { "tier": 1, "text": "One right-hand entry describes cron_expr and matches nothing on the left here." },
+            { "tier": 2, "text": "Two of the left fields are absolute (a clock) and one is relative (from now)." },
+            { "tier": 3, "text": "every is seconds-interval, at is a Unix timestamp, delay is seconds-from-now, at_time is a human string." }
+          ],
+          "explanation": "every is a recurring interval in seconds, at is an absolute Unix timestamp, delay is seconds from now, and at_time is a human-readable one-shot time. The unused option describes cron_expr, a five-field calendar expression.",
+          "docRef": "cron-and-scheduling.md",
+          "targetSeconds": 80,
+          "solution": { "pairs": { "l1": "r1", "l2": "r2", "l3": "r3", "l4": "r4" } }
+        },
+        {
+          "id": "w3.t1.c8",
+          "worldId": "w3",
+          "topicId": "w3.t1",
+          "kind": "simulation",
+          "difficulty": "medium",
+          "scenario": "You want a recurring health check that runs every five minutes, with no further scheduling nuance.",
+          "prompt": "Build the cron_add call for a job named pipeline-check that fires every five minutes.",
+          "toolPalette": [
+            { "id": "cron_add", "text": "cron_add" },
+            { "id": "cron_update", "text": "cron_update" },
+            { "id": "monitor_start", "text": "monitor_start" },
+            { "id": "task_run", "text": "task_run" }
+          ],
+          "argSpecs": [
+            { "name": "name", "label": "name", "input": "text", "placeholder": "job name", "required": true },
+            { "name": "message", "label": "message", "input": "text", "placeholder": "the prompt the agent runs", "required": true },
+            { "name": "every", "label": "every (seconds)", "input": "text", "placeholder": "interval in seconds", "required": true }
+          ],
+          "hints": [
+            { "tier": 1, "text": "Creating a job is cron_add, and a recurring interval is expressed in seconds." },
+            { "tier": 2, "text": "Five minutes is 300 seconds, and that is above the 60s floor." },
+            { "tier": 3, "text": "cron_add with name pipeline-check, a message, and every=300." }
+          ],
+          "explanation": "cron_add with every=300 creates a job that fires every five minutes (300 seconds, above the 60s minimum). monitor_start would arm a watch loop and task_run starts the task runner, neither of which is a recurring interval cron.",
+          "docRef": "cron-and-scheduling.md",
+          "targetSeconds": 110,
+          "roleVariants": {
+            "devops-sre": {
+              "scenario": "You need a lightweight pipeline health poll on a fixed five-minute cadence.",
+              "prompt": "Build the cron_add call for a job named pipeline-check that fires every five minutes."
+            },
+            "platform": {
+              "scenario": "You want a shared-runner heartbeat check every five minutes.",
+              "prompt": "Build the cron_add call for a job named pipeline-check that fires every five minutes."
+            }
+          },
+          "solution": { "toolId": "cron_add", "args": { "name": "pipeline-check", "message": "check pipeline health", "every": "300" }, "lenientArgs": { "message": "text", "name": "text" } }
+        },
+        {
+          "id": "w3.t1.c9",
+          "worldId": "w3",
+          "topicId": "w3.t1",
+          "kind": "debug-fix",
+          "difficulty": "hard",
+          "prompt": "A teammate wrote this cron_add call to fire every five minutes but it is rejected. The interval field is wrong and the value is below the floor. Rewrite the JSON so it uses the correct field name and a valid five-minute interval.",
+          "brokenCall": "{\n  \"name\": \"pipeline-check\",\n  \"message\": \"check pipeline health\",\n  \"interval\": 30\n}",
+          "language": "json",
+          "hints": [
+            { "tier": 1, "text": "There is no interval field, and 30 would be below the minimum anyway." },
+            { "tier": 2, "text": "The recurring-interval field is called every and is in seconds, minimum 60." },
+            { "tier": 3, "text": "Replace interval with every, and use 300 for five minutes." }
+          ],
+          "explanation": "The recurring-interval field is every, not interval, and it is in seconds with a 60s minimum. Five minutes is 300. The common error is both the wrong field name and a sub-minimum value.",
+          "docRef": "cron-and-scheduling.md",
+          "targetSeconds": 110,
+          "roleVariants": {
+            "backend": {
+              "scenario": "You inherited a scheduling snippet from a service repo and it will not register.",
+              "prompt": "Fix the field name and the interval so the job fires every five minutes."
+            },
+            "qa": {
+              "scenario": "You are writing a scheduled smoke-test trigger and the call is rejected.",
+              "prompt": "Fix the field name and the interval so the job fires every five minutes."
+            }
+          },
+          "solution": {
+            "accept": [
+              "{\"name\":\"pipeline-check\",\"message\":\"check pipeline health\",\"every\":300}"
+            ],
+            "normalizer": "json"
+          }
+        },
+        {
+          "id": "w3.t1.c10",
+          "worldId": "w3",
+          "topicId": "w3.t1",
+          "kind": "single-choice",
+          "difficulty": "hard",
+          "prompt": "You pass both every=300 and at_time=\"tomorrow 9am\" to a single cron_add call. Conceptually, what have you expressed?",
+          "options": [
+            { "id": "a", "text": "Two conflicting schedule kinds in one job: a recurring interval and a one-shot absolute time, which is not a coherent single schedule" },
+            { "id": "b", "text": "A job that runs once tomorrow at 9am and then every five minutes forever" },
+            { "id": "c", "text": "A job that runs every five minutes but only after tomorrow 9am" },
+            { "id": "d", "text": "A job that averages the two into a single cadence" }
+          ],
+          "hints": [
+            { "tier": 1, "text": "every is a recurring schedule; at_time is a one-shot. They are different schedule kinds." },
+            { "tier": 2, "text": "The schedule-types table lists interval, one-shot and cron expression as distinct ways to say when, not combinable layers." },
+            { "tier": 3, "text": "Mixing a recurring interval with a one-shot absolute time is not a single coherent schedule." }
+          ],
+          "explanation": "every (interval) and at_time (one-shot) are distinct schedule kinds, not layers you stack. A job should express one of every, cron_expr, at, delay or at_time. Supplying a recurring interval and a one-shot absolute time together does not describe one coherent schedule; pick the single kind that matches your intent.",
+          "docRef": "cron-and-scheduling.md",
+          "targetSeconds": 90,
+          "solution": { "optionId": "a" }
+        }
+      ]
+    },
+    {
+      "id": "w3.t2",
+      "title": "Agent, Script and Command Jobs, and the ctx API",
+      "summary": "The three execution modes of a cron, agent versus script versus command, and the script ctx helpers call_tool and notify with the flow-control exceptions Skip, Done and Report.",
+      "challenges": [
+        {
+          "id": "w3.t2.c1",
+          "worldId": "w3",
+          "topicId": "w3.t2",
+          "kind": "single-choice",
+          "difficulty": "easy",
+          "prompt": "What distinguishes a script cron and a command cron from an agent cron?",
+          "options": [
+            { "id": "a", "text": "Script and command crons bypass the LLM entirely; an agent cron sends its message to an LLM session" },
+            { "id": "b", "text": "Script and command crons run more often than agent crons" },
+            { "id": "c", "text": "Only agent crons can be scheduled with cron_expr" },
+            { "id": "d", "text": "Script and command crons always run as root" }
+          ],
+          "hints": [
+            { "tier": 1, "text": "The difference is whether a model is in the loop at all." },
+            { "tier": 2, "text": "One mode talks to an LLM; the other two execute a callable or a shell command directly." },
+            { "tier": 3, "text": "Script and command crons bypass the LLM; the agent cron sends its message to an LLM session." }
+          ],
+          "explanation": "An agent cron sends its message to an LLM session. A script cron executes a configured Python callable and a command cron runs a shell command, both bypassing the LLM. Scheduling fields apply to all three modes equally.",
+          "docRef": "cron-and-scheduling.md",
+          "targetSeconds": 30,
+          "solution": { "optionId": "a" }
+        },
+        {
+          "id": "w3.t2.c2",
+          "worldId": "w3",
+          "topicId": "w3.t2",
+          "kind": "true-false",
+          "difficulty": "easy",
+          "prompt": "Decide whether the statement holds.",
+          "statement": "A single cron can set both script and command at the same time.",
+          "hints": [
+            { "tier": 1, "text": "A job runs in exactly one mode." },
+            { "tier": 2, "text": "The docs say script cannot be combined with command." },
+            { "tier": 3, "text": "They are mutually exclusive, so setting both is invalid." }
+          ],
+          "explanation": "False. script and command are mutually exclusive: a script cron sets script and cannot also set command, and a command cron sets command and cannot also set script. A job has exactly one execution mode.",
+          "docRef": "cron-and-scheduling.md",
+          "targetSeconds": 25,
+          "solution": { "value": false }
+        },
+        {
+          "id": "w3.t2.c3",
+          "worldId": "w3",
+          "topicId": "w3.t2",
+          "kind": "tool-name",
+          "difficulty": "medium",
+          "prompt": "Inside a script cron, which ctx helper invokes an MCP tool? Write just the attribute call as ctx.<name>.",
+          "hints": [
+            { "tier": 1, "text": "It is a method on the ctx object that reaches a server and a tool." },
+            { "tier": 2, "text": "Its arguments are the server name, the tool name, and an args dict." },
+            { "tier": 3, "text": "It is ctx.call_tool." }
+          ],
+          "explanation": "ctx.call_tool(server, tool, args) invokes an MCP tool from inside a script cron. ctx.notify(text) is the separate helper that delivers a gateway message.",
+          "docRef": "cron-and-scheduling.md",
+          "targetSeconds": 45,
+          "solution": { "accept": ["ctx.call_tool", "call_tool"], "normalizer": "tool" }
+        },
+        {
+          "id": "w3.t2.c4",
+          "worldId": "w3",
+          "topicId": "w3.t2",
+          "kind": "multi-choice",
+          "difficulty": "medium",
+          "prompt": "Select every true statement about the script cron ctx API and its flow-control exceptions.",
+          "options": [
+            { "id": "a", "text": "ctx.message holds the job's message, usable as arguments" },
+            { "id": "b", "text": "ctx.notify(text) sends a gateway message" },
+            { "id": "c", "text": "raise Skip() ends this tick silently" },
+            { "id": "d", "text": "raise Done() completes and removes the job" },
+            { "id": "e", "text": "raise Report(message) deletes the job after delivering the message" },
+            { "id": "f", "text": "The helpers and exceptions are imported from kiro_crew.cron_script" }
+          ],
+          "hints": [
+            { "tier": 1, "text": "Five of these are accurate; one gets a flow-control exception's effect backwards." },
+            { "tier": 2, "text": "Done removes the job, but Report is the one that keeps it scheduled." },
+            { "tier": 3, "text": "Report delivers a message while keeping the job scheduled, so the claim that it deletes the job is false." }
+          ],
+          "explanation": "ctx.message, ctx.notify and ctx.call_tool are real, and Skip, Done and Report are imported from kiro_crew.cron_script. Skip ends the tick silently and Done completes and removes the job, but Report delivers a message while keeping the job scheduled, so the option that says Report deletes the job is false.",
+          "docRef": "cron-and-scheduling.md",
+          "targetSeconds": 75,
+          "solution": { "optionIds": ["a", "b", "c", "d", "f"] }
+        },
+        {
+          "id": "w3.t2.c5",
+          "worldId": "w3",
+          "topicId": "w3.t2",
+          "kind": "config-fill",
+          "difficulty": "medium",
+          "prompt": "A script cron finished its work and should deliver a message but stay on its schedule for the next tick. Write the single Python statement that does this. Use the message text exactly: Result recorded; keep this cron scheduled",
+          "starter": "raise ",
+          "hints": [
+            { "tier": 1, "text": "You want the flow-control exception that keeps the job scheduled, not the one that removes it." },
+            { "tier": 2, "text": "Skip is silent and Done removes the job; you want the third one, which carries a message." },
+            { "tier": 3, "text": "It is Report with the message string as its argument." }
+          ],
+          "explanation": "raise Report(\"Result recorded; keep this cron scheduled\") delivers the message and keeps the job scheduled. Done would remove the job and Skip would end the tick silently with no message.",
+          "docRef": "cron-and-scheduling.md",
+          "targetSeconds": 70,
+          "roleVariants": {
+            "backend": {
+              "scenario": "Your script cron posted a status line and must remain on its recurring schedule.",
+              "prompt": "Write the raise statement that delivers the message and keeps the job scheduled, message: Result recorded; keep this cron scheduled"
+            },
+            "data": {
+              "scenario": "Your nightly ingest check reported its summary and should keep running on schedule.",
+              "prompt": "Write the raise statement that delivers the message and keeps the job scheduled, message: Result recorded; keep this cron scheduled"
+            }
+          },
+          "solution": { "accept": ["raise Report(\"Result recorded; keep this cron scheduled\")", "Report(\"Result recorded; keep this cron scheduled\")", "raise Report('Result recorded; keep this cron scheduled')"], "normalizer": "text" }
+        },
+        {
+          "id": "w3.t2.c6",
+          "worldId": "w3",
+          "topicId": "w3.t2",
+          "kind": "sequence",
+          "difficulty": "medium",
+          "prompt": "Order the lines of a minimal script cron that calls an MCP tool, notifies the result, and keeps itself scheduled.",
+          "items": [
+            { "id": "s1", "text": "from kiro_crew.cron_script import Done, Report, Skip" },
+            { "id": "s2", "text": "def run(ctx):" },
+            { "id": "s3", "text": "result = ctx.call_tool(\"server-name\", \"tool-name\", {\"key\": \"value\"})" },
+            { "id": "s4", "text": "ctx.notify(result)" },
+            { "id": "s5", "text": "raise Report(\"Result recorded; keep this cron scheduled\")" }
+          ],
+          "hints": [
+            { "tier": 1, "text": "The import comes first and the raise comes last." },
+            { "tier": 2, "text": "You must call the tool before you can notify its result." },
+            { "tier": 3, "text": "import, def run, call_tool, notify, then raise Report." }
+          ],
+          "explanation": "Import the helpers from kiro_crew.cron_script, define run(ctx), call the tool, notify its result, then raise Report to deliver a message while keeping the job scheduled. This is the documented minimal script-cron shape.",
+          "docRef": "cron-and-scheduling.md",
+          "targetSeconds": 85,
+          "roleVariants": {
+            "data": {
+              "scenario": "You are writing a nightly data-freshness script cron.",
+              "prompt": "Order the lines of a minimal script cron that calls a tool, notifies, and stays scheduled."
+            },
+            "platform": {
+              "scenario": "You are scaffolding a reusable script-cron template for the team.",
+              "prompt": "Order the lines of a minimal script cron that calls a tool, notifies, and stays scheduled."
+            }
+          },
+          "solution": { "orderedItemIds": ["s1", "s2", "s3", "s4", "s5"] }
+        },
+        {
+          "id": "w3.t2.c7",
+          "worldId": "w3",
+          "topicId": "w3.t2",
+          "kind": "matching",
+          "difficulty": "medium",
+          "prompt": "Match each script-cron flow-control exception or helper to its effect.",
+          "left": [
+            { "id": "l1", "text": "raise Skip()" },
+            { "id": "l2", "text": "raise Done()" },
+            { "id": "l3", "text": "raise Report(msg)" },
+            { "id": "l4", "text": "ctx.notify(text)" }
+          ],
+          "right": [
+            { "id": "r1", "text": "End this tick silently" },
+            { "id": "r2", "text": "Complete and remove the job" },
+            { "id": "r3", "text": "Deliver a message while keeping the job scheduled" },
+            { "id": "r4", "text": "Send a gateway message during the run" },
+            { "id": "r5", "text": "Invoke an MCP tool and return its result" }
+          ],
+          "hints": [
+            { "tier": 1, "text": "One right-hand entry describes ctx.call_tool and matches nothing on the left." },
+            { "tier": 2, "text": "Two of the exceptions change the job's future (remove versus keep); one is silent." },
+            { "tier": 3, "text": "Skip is silent, Done removes, Report keeps-and-delivers, notify sends a message." }
+          ],
+          "explanation": "Skip ends the tick silently, Done completes and removes the job, Report delivers a message while keeping the job scheduled, and ctx.notify sends a gateway message. The unused option describes ctx.call_tool.",
+          "docRef": "cron-and-scheduling.md",
+          "targetSeconds": 80,
+          "solution": { "pairs": { "l1": "r1", "l2": "r2", "l3": "r3", "l4": "r4" } }
+        },
+        {
+          "id": "w3.t2.c8",
+          "worldId": "w3",
+          "topicId": "w3.t2",
+          "kind": "simulation",
+          "difficulty": "hard",
+          "scenario": "You want a nightly backup via a plain shell command, with no LLM in the loop at all. The command writes a tarball and exits.",
+          "prompt": "Build the cron_add call that runs a shell command on a daily schedule without invoking an LLM.",
+          "toolPalette": [
+            { "id": "cron_add", "text": "cron_add" },
+            { "id": "task_run", "text": "task_run" },
+            { "id": "spawn_run", "text": "spawn_run" },
+            { "id": "monitor_start", "text": "monitor_start" }
+          ],
+          "argSpecs": [
+            { "name": "name", "label": "name", "input": "text", "placeholder": "job name", "required": true },
+            { "name": "command", "label": "command", "input": "text", "placeholder": "shell command to run", "required": true },
+            { "name": "cron_expr", "label": "cron_expr", "input": "text", "placeholder": "five-field expression", "required": true }
+          ],
+          "hints": [
+            { "tier": 1, "text": "A command cron is still created by cron_add; the field that makes it bypass the LLM is command." },
+            { "tier": 2, "text": "A daily 2am schedule is a cron_expr, and command excludes any LLM message." },
+            { "tier": 3, "text": "cron_add with a command and cron_expr=\"0 2 * * *\" for 2am daily." }
+          ],
+          "explanation": "cron_add with the command field set runs a shell command and bypasses the LLM. cron_expr=\"0 2 * * *\" fires daily at 02:00. task_run drives the task runner and spawn_run launches a subagent, neither of which is a scheduled command cron.",
+          "docRef": "cron-and-scheduling.md",
+          "targetSeconds": 120,
+          "roleVariants": {
+            "devops-sre": {
+              "scenario": "You need a nightly tarball backup driven by cron with no model cost.",
+              "prompt": "Build the cron_add call that runs a shell command daily at 2am without an LLM."
+            },
+            "security": {
+              "scenario": "You want an auditable, LLM-free nightly job that only runs a vetted shell command.",
+              "prompt": "Build the cron_add call that runs a shell command daily at 2am without an LLM."
+            }
+          },
+          "solution": { "toolId": "cron_add", "args": { "name": "nightly-backup", "command": "tar czf /backups/nightly.tgz /data", "cron_expr": "0 2 * * *" }, "lenientArgs": { "name": "text", "command": "text" } }
+        },
+        {
+          "id": "w3.t2.c9",
+          "worldId": "w3",
+          "topicId": "w3.t2",
+          "kind": "debug-fix",
+          "difficulty": "hard",
+          "prompt": "This script cron imports its flow-control exceptions from the wrong module, so the import fails at the first tick. Rewrite the import line to use the correct module.",
+          "brokenCall": "from kiro_crew.cron import Done, Report, Skip",
+          "language": "text",
+          "hints": [
+            { "tier": 1, "text": "The module name in the import is wrong." },
+            { "tier": 2, "text": "The docs import these from a module whose name ends in cron_script, not cron." },
+            { "tier": 3, "text": "It is kiro_crew.cron_script." }
+          ],
+          "explanation": "The context helpers and flow-control exceptions Done, Report and Skip are imported from kiro_crew.cron_script, not kiro_crew.cron. The wrong module name raises ImportError on the first tick.",
+          "docRef": "cron-and-scheduling.md",
+          "targetSeconds": 90,
+          "roleVariants": {
+            "data": {
+              "scenario": "Your nightly ingest script cron fails at the first tick with an ImportError on its flow-control helpers.",
+              "prompt": "Rewrite the import line to use the correct module for Done, Report and Skip."
+            },
+            "backend": {
+              "scenario": "A script cron you copied from an old gist imports its exceptions from the wrong module.",
+              "prompt": "Rewrite the import line to use the correct module for Done, Report and Skip."
+            }
+          },
+          "solution": { "accept": ["from kiro_crew.cron_script import Done, Report, Skip"], "normalizer": "text" }
+        },
+        {
+          "id": "w3.t2.c10",
+          "worldId": "w3",
+          "topicId": "w3.t2",
+          "kind": "single-choice",
+          "difficulty": "hard",
+          "prompt": "You want to preview a script cron locally with real MCP tools before scheduling it, and have notifications printed rather than delivered. Which command does this?",
+          "options": [
+            { "id": "a", "text": "kirocrew cron preview ~/.kiro/crew/crons/my.py:run --message \"arguments for ctx.message\"" },
+            { "id": "b", "text": "kirocrew cron add ~/.kiro/crew/crons/my.py:run --dry-run" },
+            { "id": "c", "text": "kirocrew cron trigger ~/.kiro/crew/crons/my.py:run" },
+            { "id": "d", "text": "python ~/.kiro/crew/crons/my.py" }
+          ],
+          "hints": [
+            { "tier": 1, "text": "There is a dedicated preview subcommand for script crons." },
+            { "tier": 2, "text": "It takes the file:function path and a --message that becomes ctx.message." },
+            { "tier": 3, "text": "It is kirocrew cron preview with the callable path and --message." }
+          ],
+          "explanation": "kirocrew cron preview runs the script locally with real MCP tools, and notifications are captured and printed instead of delivered. The --message value becomes ctx.message. Running the file directly with python would not wire up ctx or the MCP tools.",
+          "docRef": "cron-and-scheduling.md",
+          "targetSeconds": 90,
+          "solution": { "optionId": "a" }
+        }
+      ]
+    },
+    {
+      "id": "w3.t3",
+      "title": "Timezones, Skip Dates and Jitter",
+      "summary": "How cron_expr is evaluated against the IANA timezone field, how skip_dates uses that same timezone to decide what today means, and how execution jitter works and when strict_schedule disables it.",
+      "challenges": [
+        {
+          "id": "w3.t3.c1",
+          "worldId": "w3",
+          "topicId": "w3.t3",
+          "kind": "single-choice",
+          "difficulty": "easy",
+          "prompt": "Without a timezone field set on a job, what determines what today and the firing hour mean?",
+          "options": [
+            { "id": "a", "text": "The global config timezone, falling back to UTC" },
+            { "id": "b", "text": "Always the browser's local timezone" },
+            { "id": "c", "text": "Always UTC, with no fallback chain" },
+            { "id": "d", "text": "The timezone of whoever last edited the job" }
+          ],
+          "hints": [
+            { "tier": 1, "text": "There is a fallback chain, not a single fixed zone." },
+            { "tier": 2, "text": "The job's own timezone is first; without it something broader is used." },
+            { "tier": 3, "text": "It falls back to the global config timezone, then UTC." }
+          ],
+          "explanation": "The timezone field determines what today means and when the hour fires. Without it, the global config timezone is used, falling back to UTC. This matters when a UTC date boundary differs from the user's local date.",
+          "docRef": "cron-and-scheduling.md",
+          "targetSeconds": 30,
+          "solution": { "optionId": "a" }
+        },
+        {
+          "id": "w3.t3.c2",
+          "worldId": "w3",
+          "topicId": "w3.t3",
+          "kind": "true-false",
+          "difficulty": "easy",
+          "prompt": "Decide whether the statement holds.",
+          "statement": "Setting strict_schedule to true disables execution jitter entirely.",
+          "hints": [
+            { "tier": 1, "text": "Jitter is a small random delay; strict_schedule is the opt-out." },
+            { "tier": 2, "text": "The docs describe strict_schedule as the way to require exact timing." },
+            { "tier": 3, "text": "strict_schedule: true disables jitter so the job fires exactly on schedule." }
+          ],
+          "explanation": "True. strict_schedule: true disables jitter entirely, for workflows that need exact timing or depend on job ordering. Without it, a job takes the jitter range for its frequency.",
+          "docRef": "cron-and-scheduling.md",
+          "targetSeconds": 25,
+          "solution": { "value": true }
+        },
+        {
+          "id": "w3.t3.c3",
+          "worldId": "w3",
+          "topicId": "w3.t3",
+          "kind": "tool-name",
+          "difficulty": "medium",
+          "prompt": "You want to add holiday skip dates to an existing job without recreating it. Which MCP tool do you call?",
+          "hints": [
+            { "tier": 1, "text": "You are modifying a job that already exists, not creating one." },
+            { "tier": 2, "text": "The docs show skip_dates being added via this tool with a job_id." },
+            { "tier": 3, "text": "It is cron_update." }
+          ],
+          "explanation": "cron_update modifies an existing job in place, for example cron_update(job_id=\"abc123\", skip_dates=[\"2026-12-25\", \"2026-12-26\"]). Removing and re-adding would lose the job id and its history.",
+          "docRef": "cron-and-scheduling.md",
+          "targetSeconds": 40,
+          "solution": { "accept": ["cron_update"], "normalizer": "tool" }
+        },
+        {
+          "id": "w3.t3.c4",
+          "worldId": "w3",
+          "topicId": "w3.t3",
+          "kind": "multi-choice",
+          "difficulty": "medium",
+          "prompt": "Select every true statement about skip_dates behavior.",
+          "options": [
+            { "id": "a", "text": "skip_dates is a list of ISO dates like 2026-12-25" },
+            { "id": "b", "text": "When the current local date is in skip_dates, the job is silently not fired" },
+            { "id": "c", "text": "The timezone field determines what today means for the skip check" },
+            { "id": "d", "text": "last_run_ts is NOT updated on a skipped date, so the next run naturally covers the gap" },
+            { "id": "e", "text": "A skipped date fires the job twice the following day to make up for it" }
+          ],
+          "hints": [
+            { "tier": 1, "text": "Four of these are accurate; one invents a make-up behavior." },
+            { "tier": 2, "text": "A skip is silent and does not advance last_run_ts; nothing is doubled up later." },
+            { "tier": 3, "text": "The claim about firing twice the next day is false." }
+          ],
+          "explanation": "skip_dates is a list of ISO dates, a job due on a skipped local date is silently not fired, the timezone field decides what today means, and last_run_ts is not advanced so since-last-run logic covers the gap naturally. There is no make-up double firing.",
+          "docRef": "cron-and-scheduling.md",
+          "targetSeconds": 70,
+          "solution": { "optionIds": ["a", "b", "c", "d"] }
+        },
+        {
+          "id": "w3.t3.c5",
+          "worldId": "w3",
+          "topicId": "w3.t3",
+          "kind": "config-fill",
+          "difficulty": "medium",
+          "prompt": "Write the IANA timezone string for Luxembourg, as used in the morning-digest example's timezone field. Write just the value.",
+          "starter": "",
+          "hints": [
+            { "tier": 1, "text": "IANA zones are Region/City, not an abbreviation like CET." },
+            { "tier": 2, "text": "The region is Europe and the city is the country's capital." },
+            { "tier": 3, "text": "It is Europe/Luxembourg." }
+          ],
+          "explanation": "Europe/Luxembourg is the IANA timezone used in the morning-digest skip-dates example. IANA identifiers are Region/City; an abbreviation like CET is not a valid timezone value here.",
+          "docRef": "cron-and-scheduling.md",
+          "targetSeconds": 55,
+          "roleVariants": {
+            "eng-manager": {
+              "scenario": "Your team is in Luxembourg and the weekday digest must respect local holidays.",
+              "prompt": "Write the IANA timezone string for Luxembourg used in the timezone field."
+            },
+            "devops-sre": {
+              "scenario": "You are pinning a job's date evaluation to the Luxembourg office timezone.",
+              "prompt": "Write the IANA timezone string for Luxembourg used in the timezone field."
+            }
+          },
+          "solution": { "accept": ["Europe/Luxembourg"], "normalizer": "text" }
+        },
+        {
+          "id": "w3.t3.c6",
+          "worldId": "w3",
+          "topicId": "w3.t3",
+          "kind": "sequence",
+          "difficulty": "hard",
+          "prompt": "Order these schedules from the LARGEST possible jitter range to the smallest (no jitter last).",
+          "items": [
+            { "id": "s1", "text": "Daily cron 0 9 * * * (daily/weekly: 0 to 59 minutes)" },
+            { "id": "s2", "text": "Hourly cron 0 * * * * (hourly: 0 to 5 minutes)" },
+            { "id": "s3", "text": "Sub-hourly */5 * * * * (none)" },
+            { "id": "s4", "text": "One-shot via at (none)" }
+          ],
+          "hints": [
+            { "tier": 1, "text": "Daily jobs get the widest jitter window; sub-hourly and one-shot get none." },
+            { "tier": 2, "text": "Daily is 0 to 59 minutes, hourly is 0 to 5 minutes, and the last two are zero." },
+            { "tier": 3, "text": "Daily, then hourly, then the two zero-jitter cases (sub-hourly before one-shot keeps the table order)." }
+          ],
+          "explanation": "Daily and weekly schedules take 0 to 59 minutes of jitter, hourly schedules take 0 to 5 minutes, and sub-hourly schedules and one-shot at jobs take none. Jitter spreads load so thousands of jobs do not fire at the same instant.",
+          "docRef": "cron-and-scheduling.md",
+          "targetSeconds": 95,
+          "solution": { "orderedItemIds": ["s1", "s2", "s3", "s4"] }
+        },
+        {
+          "id": "w3.t3.c7",
+          "worldId": "w3",
+          "topicId": "w3.t3",
+          "kind": "matching",
+          "difficulty": "medium",
+          "prompt": "Match each schedule to its jitter range.",
+          "left": [
+            { "id": "l1", "text": "Daily cron 0 9 * * *" },
+            { "id": "l2", "text": "Hourly cron 0 * * * *" },
+            { "id": "l3", "text": "Sub-hourly */5 * * * *" },
+            { "id": "l4", "text": "One-shot via at" }
+          ],
+          "right": [
+            { "id": "r1", "text": "0 to 59 minutes" },
+            { "id": "r2", "text": "0 to 5 minutes" },
+            { "id": "r3", "text": "None" },
+            { "id": "r4", "text": "0 to 59 minutes only when strict_schedule is true" }
+          ],
+          "hints": [
+            { "tier": 1, "text": "Two schedules get no jitter; map both to the same None entry." },
+            { "tier": 2, "text": "Daily is the widest window, hourly is the narrow one." },
+            { "tier": 3, "text": "Daily is 0 to 59, hourly is 0 to 5, sub-hourly and one-shot are both None." }
+          ],
+          "explanation": "Daily/weekly schedules take 0 to 59 minutes, hourly 0 to 5 minutes, and sub-hourly and one-shot take none. The distractor is wrong because strict_schedule disables jitter rather than switching it on.",
+          "docRef": "cron-and-scheduling.md",
+          "targetSeconds": 80,
+          "solution": { "pairs": { "l1": "r1", "l2": "r2", "l3": "r3", "l4": "r3" } }
+        },
+        {
+          "id": "w3.t3.c8",
+          "worldId": "w3",
+          "topicId": "w3.t3",
+          "kind": "simulation",
+          "difficulty": "hard",
+          "scenario": "You need a weekday 07:00 morning digest evaluated in Luxembourg local time, skipping three national holidays.",
+          "prompt": "Build the cron_add call: name morning-digest, a message, weekday 7am cron_expr, the Luxembourg timezone, and the three skip dates 2026-04-06, 2026-05-01 and 2026-05-14.",
+          "toolPalette": [
+            { "id": "cron_add", "text": "cron_add" },
+            { "id": "cron_update", "text": "cron_update" },
+            { "id": "cron_trigger", "text": "cron_trigger" },
+            { "id": "monitor_watch", "text": "monitor_watch" }
+          ],
+          "argSpecs": [
+            { "name": "name", "label": "name", "input": "text", "required": true },
+            { "name": "message", "label": "message", "input": "text", "required": true },
+            { "name": "cron_expr", "label": "cron_expr", "input": "text", "placeholder": "min hour dom month dow", "required": true },
+            { "name": "timezone", "label": "timezone", "input": "text", "placeholder": "IANA zone", "required": true },
+            { "name": "skip_dates", "label": "skip_dates", "input": "text", "placeholder": "comma-separated ISO dates", "required": true }
+          ],
+          "hints": [
+            { "tier": 1, "text": "This is a new job, so cron_add, with a weekday 7am expression." },
+            { "tier": 2, "text": "7am weekdays is 0 7 * * 1-5, the zone is Europe/Luxembourg, and skip_dates lists the three ISO dates." },
+            { "tier": 3, "text": "cron_add with cron_expr=\"0 7 * * 1-5\", timezone=\"Europe/Luxembourg\", skip_dates of the three dates." }
+          ],
+          "explanation": "cron_add with cron_expr=\"0 7 * * 1-5\", timezone=\"Europe/Luxembourg\" and skip_dates=[\"2026-04-06\",\"2026-05-01\",\"2026-05-14\"] fires weekdays at 7am Luxembourg time and silently skips the three holidays. The timezone field governs both the firing hour and the skip-date evaluation.",
+          "docRef": "cron-and-scheduling.md",
+          "targetSeconds": 150,
+          "roleVariants": {
+            "eng-manager": {
+              "scenario": "Your Luxembourg team wants a weekday 7am digest that respects national holidays.",
+              "prompt": "Build the cron_add call for a weekday 7am Luxembourg digest skipping the three holidays."
+            },
+            "data": {
+              "scenario": "A daily data summary should run weekday mornings in Luxembourg time and skip the holiday calendar.",
+              "prompt": "Build the cron_add call for a weekday 7am Luxembourg digest skipping the three holidays."
+            }
+          },
+          "solution": { "toolId": "cron_add", "args": { "name": "morning-digest", "message": "Summarize what happened since your last run", "cron_expr": "0 7 * * 1-5", "timezone": "Europe/Luxembourg", "skip_dates": "2026-04-06,2026-05-01,2026-05-14" }, "lenientArgs": { "name": "text", "message": "text", "cron_expr": "cron", "skip_dates": "text" } }
+        },
+        {
+          "id": "w3.t3.c9",
+          "worldId": "w3",
+          "topicId": "w3.t3",
+          "kind": "debug-fix",
+          "difficulty": "hard",
+          "prompt": "A teammate tried to pin a job to Central European time with an abbreviation, which is not a valid IANA identifier. Rewrite the JSON so timezone holds the correct IANA zone for Luxembourg, changing only the timezone value.",
+          "brokenCall": "{\n  \"cron_expr\": \"0 7 * * 1-5\",\n  \"timezone\": \"CET\"\n}",
+          "language": "json",
+          "hints": [
+            { "tier": 1, "text": "CET is an abbreviation, not an IANA Region/City identifier." },
+            { "tier": 2, "text": "The timezone field wants a value like Europe/<City>." },
+            { "tier": 3, "text": "Use Europe/Luxembourg." }
+          ],
+          "explanation": "The timezone field takes an IANA identifier such as Europe/Luxembourg, not an abbreviation like CET. An abbreviation does not identify a single zone with its DST rules, which is why the IANA Region/City form is required.",
+          "docRef": "cron-and-scheduling.md",
+          "targetSeconds": 95,
+          "roleVariants": {
+            "devops-sre": {
+              "scenario": "A job in the repo pins its timezone to CET and the scheduler will not accept it.",
+              "prompt": "Fix the timezone value to the correct IANA zone for Luxembourg."
+            },
+            "platform": {
+              "scenario": "You are standardizing timezone fields across scheduled jobs and find a bare CET.",
+              "prompt": "Fix the timezone value to the correct IANA zone for Luxembourg."
+            }
+          },
+          "solution": { "accept": ["{\"cron_expr\":\"0 7 * * 1-5\",\"timezone\":\"Europe/Luxembourg\"}"], "normalizer": "json" }
+        },
+        {
+          "id": "w3.t3.c10",
+          "worldId": "w3",
+          "topicId": "w3.t3",
+          "kind": "single-choice",
+          "difficulty": "hard",
+          "prompt": "Your job ordering depends on exact firing times, but you created it with kirocrew cron add. Why might it still fire a few minutes late, and what fixes it?",
+          "options": [
+            { "id": "a", "text": "The CLI leaves strict_schedule at its default of false, so the job takes jitter; create or edit it via MCP or the dashboard with strict_schedule true" },
+            { "id": "b", "text": "The CLI always disables jitter, so lateness must be a clock problem" },
+            { "id": "c", "text": "kirocrew cron add has a --strict flag you forgot to pass" },
+            { "id": "d", "text": "Jitter only affects one-shot jobs, so a recurring job is never delayed" }
+          ],
+          "hints": [
+            { "tier": 1, "text": "The CLI has no way to set strict scheduling." },
+            { "tier": 2, "text": "A job created by the CLI keeps the default jitter for its frequency." },
+            { "tier": 3, "text": "There is no CLI flag; use MCP or the dashboard to set strict_schedule true." }
+          ],
+          "explanation": "kirocrew cron add leaves strict_schedule at its default false, so the job takes the jitter for its frequency. The CLI has no flag for strict scheduling, so you set strict_schedule true via the MCP cron_add or the dashboard toggle instead.",
+          "docRef": "cron-and-scheduling.md",
+          "targetSeconds": 95,
+          "solution": { "optionId": "a" }
+        }
+      ]
+    },
+    {
+      "id": "w3.t4",
+      "title": "The Cheap Wake Profile",
+      "summary": "The fields that make a polling or scanner job cheap and quiet: minimal_context, persistent_session false, hide_in_chat, and the two different timeouts, timeout for subprocesses versus timeout_secs for the whole wake.",
+      "challenges": [
+        {
+          "id": "w3.t4.c1",
+          "worldId": "w3",
+          "topicId": "w3.t4",
+          "kind": "single-choice",
+          "difficulty": "easy",
+          "prompt": "What does setting persistent_session to false do for an agent cron?",
+          "options": [
+            { "id": "a", "text": "Opens a fresh session each run with a clean slate and no last_result, so context does not accumulate" },
+            { "id": "b", "text": "Deletes the job after one run" },
+            { "id": "c", "text": "Makes the job run twice as often" },
+            { "id": "d", "text": "Stores the whole conversation on disk forever" }
+          ],
+          "hints": [
+            { "tier": 1, "text": "It is about whether the session is reused across runs or not." },
+            { "tier": 2, "text": "The default true accumulates context; false is for polling and scanners." },
+            { "tier": 3, "text": "false gives a fresh session each run, clean slate, no last_result." }
+          ],
+          "explanation": "persistent_session: false opens a fresh session per run (session key cron:{id}:{uuid}), with a clean slate and no last_result prepended. It prevents context accumulation that can cause OOM or model slowdown on polling or scanner jobs.",
+          "docRef": "cron-and-scheduling.md",
+          "targetSeconds": 30,
+          "solution": { "optionId": "a" }
+        },
+        {
+          "id": "w3.t4.c2",
+          "worldId": "w3",
+          "topicId": "w3.t4",
+          "kind": "true-false",
+          "difficulty": "easy",
+          "prompt": "Decide whether the statement holds.",
+          "statement": "A hide_in_chat cron still appears as a chat session in the dashboard active-session list.",
+          "hints": [
+            { "tier": 1, "text": "The field name says what it does to the chat surface." },
+            { "tier": 2, "text": "It is for fire-and-forget jobs that should stay out of the Chats sidebar." },
+            { "tier": 3, "text": "hide_in_chat means the runs do NOT appear as a chat session, so the statement is false." }
+          ],
+          "explanation": "False. hide_in_chat=true keeps a cron's runs out of the dashboard active-session list, for fire-and-forget jobs like digests and cleanups. The result still reaches Slack or the dashboard notification and the History tab.",
+          "docRef": "cron-and-scheduling.md",
+          "targetSeconds": 25,
+          "solution": { "value": false }
+        },
+        {
+          "id": "w3.t4.c3",
+          "worldId": "w3",
+          "topicId": "w3.t4",
+          "kind": "tool-name",
+          "difficulty": "medium",
+          "prompt": "You want to flip an existing noisy scanner job to hide_in_chat without recreating it. Which MCP tool do you call?",
+          "hints": [
+            { "tier": 1, "text": "You are changing a setting on a job that already exists." },
+            { "tier": 2, "text": "The same tool that edits a message, schedule or channel edits this flag too." },
+            { "tier": 3, "text": "It is cron_update." }
+          ],
+          "explanation": "cron_update changes fields on an existing job, including hide_in_chat, without losing the job id or history. Removing and re-adding would be the heavier, lossier path.",
+          "docRef": "cron-and-scheduling.md",
+          "targetSeconds": 40,
+          "solution": { "accept": ["cron_update"], "normalizer": "tool" }
+        },
+        {
+          "id": "w3.t4.c4",
+          "worldId": "w3",
+          "topicId": "w3.t4",
+          "kind": "multi-choice",
+          "difficulty": "hard",
+          "prompt": "Select every true statement about minimal_context and the two timeout fields.",
+          "options": [
+            { "id": "a", "text": "minimal_context skips memory, lessons, skills and thread history injection" },
+            { "id": "b", "text": "minimal_context leaves only date/time and agent identity in context" },
+            { "id": "c", "text": "timeout bounds script and command subprocesses" },
+            { "id": "d", "text": "timeout_secs is the per-wake execution budget for one run of the job" },
+            { "id": "e", "text": "timeout and timeout_secs are the same field under two names" }
+          ],
+          "hints": [
+            { "tier": 1, "text": "Four of these are accurate; one conflates two distinct fields." },
+            { "tier": 2, "text": "timeout is the subprocess bound; timeout_secs is the whole-wake deadline." },
+            { "tier": 3, "text": "The claim that the two timeouts are the same field is false." }
+          ],
+          "explanation": "minimal_context skips memory, lessons, skills and history, leaving essentially date/time and agent identity. timeout bounds only script and command subprocesses, while timeout_secs is the per-wake execution budget for one run of the job. They are distinct fields, so the option saying they are the same is false.",
+          "docRef": "cron-and-scheduling.md",
+          "targetSeconds": 80,
+          "roleVariants": {
+            "devops-sre": {
+              "scenario": "You are tuning a fleet of scheduled checks and keep mixing up the two timeout fields.",
+              "prompt": "Select every true statement about minimal_context and the two timeout fields."
+            },
+            "platform": {
+              "scenario": "You are writing team guidance on cheap-wake tuning and want the timeout semantics exactly right.",
+              "prompt": "Select every true statement about minimal_context and the two timeout fields."
+            }
+          },
+          "solution": { "optionIds": ["a", "b", "c", "d"] }
+        },
+        {
+          "id": "w3.t4.c5",
+          "worldId": "w3",
+          "topicId": "w3.t4",
+          "kind": "config-fill",
+          "difficulty": "medium",
+          "prompt": "A command cron legitimately runs for about 12 minutes, past the 300 second command default. Which cron_add field raises the subprocess bound, and to what value in seconds for a 12-minute ceiling? Write it as field=seconds.",
+          "starter": "",
+          "hints": [
+            { "tier": 1, "text": "The field that bounds a command subprocess is the shorter-named of the two timeouts." },
+            { "tier": 2, "text": "timeout is the subprocess bound (not timeout_secs, which is the whole-wake budget)." },
+            { "tier": 3, "text": "12 minutes is 720 seconds, so timeout=720." }
+          ],
+          "explanation": "timeout bounds the script or command subprocess (defaults: 30s script, 300s command). For a 12-minute command you raise timeout to 720. timeout_secs is a different field, the per-wake execution budget for the whole run.",
+          "docRef": "cron-and-scheduling.md",
+          "targetSeconds": 65,
+          "roleVariants": {
+            "devops-sre": {
+              "scenario": "Your command cron syncs a large artifact and overruns the 300s default.",
+              "prompt": "Give the field=seconds that raises the subprocess bound to a 12-minute ceiling."
+            },
+            "data": {
+              "scenario": "A command cron runs a 12-minute batch export and keeps getting killed at 300s.",
+              "prompt": "Give the field=seconds that raises the subprocess bound to a 12-minute ceiling."
+            }
+          },
+          "solution": { "accept": ["timeout=720"], "normalizer": "text" }
+        },
+        {
+          "id": "w3.t4.c6",
+          "worldId": "w3",
+          "topicId": "w3.t4",
+          "kind": "sequence",
+          "difficulty": "medium",
+          "prompt": "You are turning a chatty, context-heavy poller into a cheap, quiet scanner. Order the decisions by what each one targets, from cutting injected context, to dropping cross-run accumulation, to hiding the chat tab.",
+          "items": [
+            { "id": "s1", "text": "Set minimal_context true to cut memory, lessons, skills and history injection" },
+            { "id": "s2", "text": "Set persistent_session false so each run starts clean with no last_result" },
+            { "id": "s3", "text": "Set hide_in_chat true so runs stay out of the active-session list" }
+          ],
+          "hints": [
+            { "tier": 1, "text": "The order given in the prompt matches the three distinct targets: injected context, cross-run state, then the UI surface." },
+            { "tier": 2, "text": "minimal_context trims what is injected, persistent_session false drops accumulation, hide_in_chat hides the tab." },
+            { "tier": 3, "text": "minimal_context, then persistent_session false, then hide_in_chat." }
+          ],
+          "explanation": "Each field targets a different cost: minimal_context trims injected context per run, persistent_session false stops cross-run context accumulation, and hide_in_chat keeps the fire-and-forget runs out of the Chats sidebar. Together they are the cheap wake profile for a scanner.",
+          "docRef": "cron-and-scheduling.md",
+          "targetSeconds": 85,
+          "roleVariants": {
+            "platform": {
+              "scenario": "You are hardening a shared-runner poller that is burning tokens and cluttering the sidebar.",
+              "prompt": "Order the three cheap-wake decisions by target: injected context, cross-run state, then UI surface."
+            },
+            "devops-sre": {
+              "scenario": "Your 5-minute health scanner is noisy and expensive and you want it lean and silent.",
+              "prompt": "Order the three cheap-wake decisions by target: injected context, cross-run state, then UI surface."
+            }
+          },
+          "solution": { "orderedItemIds": ["s1", "s2", "s3"] }
+        },
+        {
+          "id": "w3.t4.c7",
+          "worldId": "w3",
+          "topicId": "w3.t4",
+          "kind": "matching",
+          "difficulty": "medium",
+          "prompt": "Match each cheap-wake field to what it controls.",
+          "left": [
+            { "id": "l1", "text": "minimal_context" },
+            { "id": "l2", "text": "persistent_session: false" },
+            { "id": "l3", "text": "hide_in_chat" },
+            { "id": "l4", "text": "timeout" }
+          ],
+          "right": [
+            { "id": "r1", "text": "Skips memory, lessons, skills and history injection" },
+            { "id": "r2", "text": "Fresh session each run, no last_result, no accumulation" },
+            { "id": "r3", "text": "Keeps the runs out of the active-session list" },
+            { "id": "r4", "text": "Bounds the script or command subprocess" },
+            { "id": "r5", "text": "The per-wake execution budget for one whole run" }
+          ],
+          "hints": [
+            { "tier": 1, "text": "One right-hand entry describes timeout_secs and has no left match here." },
+            { "tier": 2, "text": "timeout is the subprocess bound, not the whole-wake budget." },
+            { "tier": 3, "text": "minimal_context trims injection, persistent_session false drops accumulation, hide_in_chat hides the tab, timeout bounds the subprocess." }
+          ],
+          "explanation": "minimal_context trims injected context, persistent_session false gives a fresh session per run, hide_in_chat keeps runs out of the Chats sidebar, and timeout bounds the script or command subprocess. The unused option describes timeout_secs, the per-wake execution budget.",
+          "docRef": "cron-and-scheduling.md",
+          "targetSeconds": 80,
+          "solution": { "pairs": { "l1": "r1", "l2": "r2", "l3": "r3", "l4": "r4" } }
+        },
+        {
+          "id": "w3.t4.c8",
+          "worldId": "w3",
+          "topicId": "w3.t4",
+          "kind": "simulation",
+          "difficulty": "hard",
+          "scenario": "You want the cheapest possible 5-minute pipeline scanner: no injected memory or history, no cross-run accumulation, and no chat tab in the sidebar.",
+          "prompt": "Build the cron_add call that fires every five minutes with the full cheap-wake profile set.",
+          "toolPalette": [
+            { "id": "cron_add", "text": "cron_add" },
+            { "id": "cron_update", "text": "cron_update" },
+            { "id": "monitor_start", "text": "monitor_start" },
+            { "id": "spawn_run", "text": "spawn_run" }
+          ],
+          "argSpecs": [
+            { "name": "name", "label": "name", "input": "text", "required": true },
+            { "name": "message", "label": "message", "input": "text", "required": true },
+            { "name": "every", "label": "every (seconds)", "input": "text", "required": true },
+            { "name": "minimal_context", "label": "minimal_context", "input": "boolean", "required": true },
+            { "name": "persistent_session", "label": "persistent_session", "input": "boolean", "required": true },
+            { "name": "hide_in_chat", "label": "hide_in_chat", "input": "boolean", "required": true }
+          ],
+          "hints": [
+            { "tier": 1, "text": "This is a new job, so cron_add, with the three cheap-wake booleans." },
+            { "tier": 2, "text": "minimal_context true, persistent_session false (fresh each run), hide_in_chat true, every=300." },
+            { "tier": 3, "text": "cron_add with every=300, minimal_context=true, persistent_session=false, hide_in_chat=true." }
+          ],
+          "explanation": "cron_add with every=300, minimal_context=true, persistent_session=false and hide_in_chat=true is the full cheap-wake scanner profile: trimmed injection, no cross-run accumulation, and no sidebar tab. Note persistent_session is false, not true, which is the one easy to get backwards.",
+          "docRef": "cron-and-scheduling.md",
+          "targetSeconds": 150,
+          "roleVariants": {
+            "devops-sre": {
+              "scenario": "You want a lean 5-minute pipeline scanner that costs almost nothing and stays off the sidebar.",
+              "prompt": "Build the cron_add call for a 5-minute scanner with the full cheap-wake profile."
+            },
+            "platform": {
+              "scenario": "A shared-runner poll should be as cheap and quiet as possible on a 5-minute cadence.",
+              "prompt": "Build the cron_add call for a 5-minute scanner with the full cheap-wake profile."
+            }
+          },
+          "solution": { "toolId": "cron_add", "args": { "name": "pipeline-scanner", "message": "check pipeline health", "every": "300", "minimal_context": true, "persistent_session": false, "hide_in_chat": true }, "lenientArgs": { "name": "text", "message": "text" } }
+        },
+        {
+          "id": "w3.t4.c9",
+          "worldId": "w3",
+          "topicId": "w3.t4",
+          "kind": "debug-fix",
+          "difficulty": "hard",
+          "prompt": "This scanner job was meant to avoid context accumulation but accumulates anyway, because persistent_session is set backwards. Change only that boolean so each run starts clean.",
+          "brokenCall": "{\n  \"name\": \"pipeline-scanner\",\n  \"message\": \"check pipeline health\",\n  \"every\": 300,\n  \"persistent_session\": true\n}",
+          "language": "json",
+          "hints": [
+            { "tier": 1, "text": "true reuses the session across runs; that is the opposite of what a scanner wants." },
+            { "tier": 2, "text": "A clean slate per run needs persistent_session false." },
+            { "tier": 3, "text": "Set persistent_session to false." }
+          ],
+          "explanation": "persistent_session: true (the default) reuses the session and accumulates context. A scanner wants persistent_session: false so each run gets a fresh session with no last_result, which is what prevents the OOM and slowdown this job was hitting.",
+          "docRef": "cron-and-scheduling.md",
+          "targetSeconds": 90,
+          "roleVariants": {
+            "backend": {
+              "scenario": "A polling job in your repo slows down over time because the session is reused.",
+              "prompt": "Flip the one boolean so each scanner run starts with a clean session."
+            },
+            "qa": {
+              "scenario": "A scheduled smoke-test poller leaks context across runs and eventually stalls.",
+              "prompt": "Flip the one boolean so each scanner run starts with a clean session."
+            }
+          },
+          "solution": { "accept": ["{\"name\":\"pipeline-scanner\",\"message\":\"check pipeline health\",\"every\":300,\"persistent_session\":false}"], "normalizer": "json" }
+        },
+        {
+          "id": "w3.t4.c10",
+          "worldId": "w3",
+          "topicId": "w3.t4",
+          "kind": "single-choice",
+          "difficulty": "hard",
+          "prompt": "A single wake of your agent cron legitimately needs about 45 minutes, past the 30-minute default. Which field do you raise, and why not the other timeout?",
+          "options": [
+            { "id": "a", "text": "Raise timeout_secs: it is the per-wake execution budget for the whole run; timeout only bounds script or command subprocesses, which an agent cron does not use" },
+            { "id": "b", "text": "Raise timeout: it is the whole-run budget and timeout_secs is only for subprocesses" },
+            { "id": "c", "text": "Neither; the 30-minute budget is a hard limit that cannot be changed" },
+            { "id": "d", "text": "Raise every, since a longer interval extends the per-run budget" }
+          ],
+          "hints": [
+            { "tier": 1, "text": "An agent cron has no subprocess, so the subprocess timeout is irrelevant to it." },
+            { "tier": 2, "text": "The whole-wake deadline is the field whose name ends in _secs." },
+            { "tier": 3, "text": "Raise timeout_secs; timeout only bounds script and command subprocesses." }
+          ],
+          "explanation": "timeout_secs is the per-wake execution budget, defaulting to 30 minutes, and is what you raise for a long agent run. timeout only bounds script or command subprocesses, which an agent cron does not have, so raising it would do nothing. every is a schedule field, unrelated to the run budget.",
+          "docRef": "cron-and-scheduling.md",
+          "targetSeconds": 95,
+          "solution": { "optionId": "a" }
+        }
+      ]
+    },
+    {
+      "id": "w3.t5",
+      "title": "Job Lifecycle and Secrets",
+      "summary": "Managing a job over its life: why cron_list from chat is scoped to the calling session, preferring cron_update over remove and re-add, firing now with cron_trigger, pausing and resuming, and requesting vault secrets for a script cron with cron_secret_request.",
+      "challenges": [
+        {
+          "id": "w3.t5.c1",
+          "worldId": "w3",
+          "topicId": "w3.t5",
+          "kind": "single-choice",
+          "difficulty": "easy",
+          "prompt": "You call cron_list from a chat session and a job you created with kirocrew cron add is missing. Why?",
+          "options": [
+            { "id": "a", "text": "cron_list from chat is scoped to the calling session; a job created outside a chat has no owning session, so it is not listed there" },
+            { "id": "b", "text": "The job was silently deleted by the CLI" },
+            { "id": "c", "text": "cron_list only ever shows paused jobs" },
+            { "id": "d", "text": "Jobs created via the CLI are never real jobs" }
+          ],
+          "hints": [
+            { "tier": 1, "text": "cron_list from chat only sees jobs the calling session owns." },
+            { "tier": 2, "text": "A CLI-created job has no owning chat session, so chat scope cannot see it." },
+            { "tier": 3, "text": "It is scoped to the session; manage ownerless jobs from kirocrew cron list or the dashboard." }
+          ],
+          "explanation": "cron_list from chat is scoped to the calling session and only lists jobs that session owns. A job created outside a chat (the CLI, the dashboard, an onboarding import) has no owning session, so it is managed from kirocrew cron list or the dashboard Schedule page instead, not from chat scope.",
+          "docRef": "cron-and-scheduling.md",
+          "targetSeconds": 35,
+          "solution": { "optionId": "a" }
+        },
+        {
+          "id": "w3.t5.c2",
+          "worldId": "w3",
+          "topicId": "w3.t5",
+          "kind": "true-false",
+          "difficulty": "easy",
+          "prompt": "Decide whether the statement holds.",
+          "statement": "cron_trigger runs a job immediately, regardless of its schedule.",
+          "hints": [
+            { "tier": 1, "text": "The verb trigger means fire it now." },
+            { "tier": 2, "text": "It is the manual immediate-execution path for a job." },
+            { "tier": 3, "text": "cron_trigger triggers an immediate run regardless of schedule, so the statement is true." }
+          ],
+          "explanation": "True. cron_trigger triggers an immediate execution of a job regardless of its schedule, which is how you test a job without waiting for its next scheduled fire.",
+          "docRef": "cron-and-scheduling.md",
+          "targetSeconds": 25,
+          "solution": { "value": true }
+        },
+        {
+          "id": "w3.t5.c3",
+          "worldId": "w3",
+          "topicId": "w3.t5",
+          "kind": "tool-name",
+          "difficulty": "medium",
+          "prompt": "A script cron needs a vault secret injected into its subprocess environment at fire time. Which MCP tool records that pending request for the operator to approve? Write the tool name.",
+          "hints": [
+            { "tier": 1, "text": "The tool name combines cron, secret and the fact that it is a request." },
+            { "tier": 2, "text": "It does not grant anything; it records a pending request the operator approves in the dashboard." },
+            { "tier": 3, "text": "It is cron_secret_request." }
+          ],
+          "explanation": "cron_secret_request records a pending request mapping an env-var name to a vault secret name for a script cron you own. It grants nothing by itself: the operator approves it in the dashboard (Schedule, job, Secrets) before the value is injected into the subprocess env at fire time.",
+          "docRef": "secrets-vault.md",
+          "targetSeconds": 50,
+          "solution": { "accept": ["cron_secret_request"], "normalizer": "tool" }
+        },
+        {
+          "id": "w3.t5.c4",
+          "worldId": "w3",
+          "topicId": "w3.t5",
+          "kind": "multi-choice",
+          "difficulty": "medium",
+          "prompt": "Select every true statement about managing a job's lifecycle.",
+          "options": [
+            { "id": "a", "text": "cron_update changes name, message, schedule and other fields in place without losing the job id" },
+            { "id": "b", "text": "cron_pause stops a job from firing until it is resumed" },
+            { "id": "c", "text": "cron_resume re-enables a paused job" },
+            { "id": "d", "text": "cron_trigger fires a job now regardless of schedule" },
+            { "id": "e", "text": "cron_update can rewrite a job's owning session_key to repoint where its output lands" },
+            { "id": "f", "text": "cron_remove deletes a single job by id" }
+          ],
+          "hints": [
+            { "tier": 1, "text": "Five of these are real lifecycle operations; one claims a power the update tool does not have." },
+            { "tier": 2, "text": "Ownership (session_key) is asserted by the operator via the CLI, not by cron_update." },
+            { "tier": 3, "text": "The claim that cron_update can rewrite session_key is false." }
+          ],
+          "explanation": "cron_update edits fields in place, cron_pause and cron_resume toggle firing, cron_trigger fires now, and cron_remove deletes one job by id. But session_key is not writable through cron_update or the dashboard PATCH: ownership is asserted only via kirocrew cron adopt, so a session cannot repoint another job's output. That option is false.",
+          "docRef": "cron-and-scheduling.md",
+          "targetSeconds": 80,
+          "roleVariants": {
+            "security": {
+              "scenario": "You are auditing whether a chat session could repoint another job's output by editing it.",
+              "prompt": "Select every true statement about managing a job's lifecycle."
+            },
+            "platform": {
+              "scenario": "You are documenting the sanctioned lifecycle operations for the team's scheduled jobs.",
+              "prompt": "Select every true statement about managing a job's lifecycle."
+            }
+          },
+          "solution": { "optionIds": ["a", "b", "c", "d", "f"] }
+        },
+        {
+          "id": "w3.t5.c5",
+          "worldId": "w3",
+          "topicId": "w3.t5",
+          "kind": "config-fill",
+          "difficulty": "medium",
+          "prompt": "You need to change only the message of an existing job with id abc123 to the new prompt check tickets, keeping its id, schedule and history. Write the MCP call. Use the message text exactly: check tickets",
+          "starter": "cron_update(",
+          "hints": [
+            { "tier": 1, "text": "Editing in place is cron_update, not remove then add." },
+            { "tier": 2, "text": "It takes job_id and the field you are changing." },
+            { "tier": 3, "text": "cron_update(job_id=\"abc123\", message=\"check tickets\")." }
+          ],
+          "explanation": "cron_update(job_id=\"abc123\", message=\"check tickets\") edits the message in place and keeps the job id, schedule and history. Removing and re-adding would churn the id and lose history, which is why cron_update is preferred.",
+          "docRef": "cron-and-scheduling.md",
+          "targetSeconds": 65,
+          "roleVariants": {
+            "eng-manager": {
+              "scenario": "You want to reword a recurring ticket-review job without disturbing its schedule.",
+              "prompt": "Write the cron_update call that changes only job abc123's message to: check tickets"
+            },
+            "devops-sre": {
+              "scenario": "You are updating the prompt of a live job and must not lose its id or history.",
+              "prompt": "Write the cron_update call that changes only job abc123's message to: check tickets"
+            }
+          },
+          "solution": { "accept": ["cron_update(job_id=\"abc123\", message=\"check tickets\")", "cron_update(job_id='abc123', message='check tickets')", "cron_update(job_id=\"abc123\",message=\"check tickets\")"], "normalizer": "text" }
+        },
+        {
+          "id": "w3.t5.c6",
+          "worldId": "w3",
+          "topicId": "w3.t5",
+          "kind": "sequence",
+          "difficulty": "medium",
+          "prompt": "Order the steps to get a vault secret into a script cron's environment at fire time.",
+          "items": [
+            { "id": "s1", "text": "Store the secret in the vault via Settings, Secrets in the dashboard" },
+            { "id": "s2", "text": "Call cron_secret_request mapping an env-var name to the vault secret name" },
+            { "id": "s3", "text": "The operator approves the pending request in Schedule, job, Secrets" },
+            { "id": "s4", "text": "The value is injected into the job's subprocess env at fire time" }
+          ],
+          "hints": [
+            { "tier": 1, "text": "The secret must exist in the vault before you can request it, and approval precedes injection." },
+            { "tier": 2, "text": "cron_secret_request only records a pending request; a human approves it before anything is injected." },
+            { "tier": 3, "text": "Store, request, operator approves, then inject at fire time." }
+          ],
+          "explanation": "The secret must already exist in the vault, then cron_secret_request records a pending env-var-to-secret mapping, the operator approves it in the dashboard, and only then is the value injected into the subprocess env at fire time. The request grants nothing on its own.",
+          "docRef": "secrets-vault.md",
+          "targetSeconds": 90,
+          "roleVariants": {
+            "security": {
+              "scenario": "You are reviewing how a scheduled script gets its credential without the agent ever reading it.",
+              "prompt": "Order the steps to get a vault secret into a script cron at fire time."
+            },
+            "platform": {
+              "scenario": "You are documenting the approved path for giving a script cron a token.",
+              "prompt": "Order the steps to get a vault secret into a script cron at fire time."
+            }
+          },
+          "solution": { "orderedItemIds": ["s1", "s2", "s3", "s4"] }
+        },
+        {
+          "id": "w3.t5.c7",
+          "worldId": "w3",
+          "topicId": "w3.t5",
+          "kind": "matching",
+          "difficulty": "medium",
+          "prompt": "Match each lifecycle tool or command to what it does.",
+          "left": [
+            { "id": "l1", "text": "cron_pause" },
+            { "id": "l2", "text": "cron_resume" },
+            { "id": "l3", "text": "cron_trigger" },
+            { "id": "l4", "text": "kirocrew cron adopt --session-of <slot>" }
+          ],
+          "right": [
+            { "id": "r1", "text": "Stop a job from firing until resumed" },
+            { "id": "r2", "text": "Re-enable a paused job" },
+            { "id": "r3", "text": "Fire a job immediately, ignoring the schedule" },
+            { "id": "r4", "text": "Assign a job's owning session and output destination" },
+            { "id": "r5", "text": "Permanently delete a job by id" }
+          ],
+          "hints": [
+            { "tier": 1, "text": "One right-hand entry describes cron_remove and matches nothing on the left." },
+            { "tier": 2, "text": "adopt is the only one that writes ownership, and it is a CLI command, not an MCP tool." },
+            { "tier": 3, "text": "pause stops, resume re-enables, trigger fires now, adopt assigns ownership." }
+          ],
+          "explanation": "cron_pause stops firing, cron_resume re-enables, cron_trigger fires now regardless of schedule, and kirocrew cron adopt --session-of assigns the owning session (and thus the output destination). The unused option describes cron_remove.",
+          "docRef": "cron-and-scheduling.md",
+          "targetSeconds": 85,
+          "solution": { "pairs": { "l1": "r1", "l2": "r2", "l3": "r3", "l4": "r4" } }
+        },
+        {
+          "id": "w3.t5.c8",
+          "worldId": "w3",
+          "topicId": "w3.t5",
+          "kind": "simulation",
+          "difficulty": "medium",
+          "scenario": "You just created a daily job and want to confirm it works right now rather than waiting until tomorrow morning.",
+          "prompt": "Pick the tool that fires the job immediately, and supply its id.",
+          "toolPalette": [
+            { "id": "cron_trigger", "text": "cron_trigger" },
+            { "id": "cron_resume", "text": "cron_resume" },
+            { "id": "cron_update", "text": "cron_update" },
+            { "id": "cron_add", "text": "cron_add" }
+          ],
+          "argSpecs": [
+            { "name": "job_id", "label": "job_id", "input": "text", "placeholder": "the job id", "required": true }
+          ],
+          "hints": [
+            { "tier": 1, "text": "You want an immediate run, not an edit or a new job." },
+            { "tier": 2, "text": "The trigger tool takes just the job_id." },
+            { "tier": 3, "text": "cron_trigger with the job_id." }
+          ],
+          "explanation": "cron_trigger(job_id=...) fires the job now regardless of schedule, which is how you verify a daily job without waiting. cron_resume only un-pauses, cron_update edits fields, and cron_add would create a duplicate job.",
+          "docRef": "cron-and-scheduling.md",
+          "targetSeconds": 90,
+          "roleVariants": {
+            "qa": {
+              "scenario": "You want to smoke-test a newly created scheduled job on demand.",
+              "prompt": "Pick the tool that fires the job immediately, and give its id."
+            },
+            "devops-sre": {
+              "scenario": "You want to validate a daily job's behavior now instead of overnight.",
+              "prompt": "Pick the tool that fires the job immediately, and give its id."
+            }
+          },
+          "solution": { "toolId": "cron_trigger", "args": { "job_id": "abc123" }, "lenientArgs": { "job_id": "text" } }
+        },
+        {
+          "id": "w3.t5.c9",
+          "worldId": "w3",
+          "topicId": "w3.t5",
+          "kind": "debug-fix",
+          "difficulty": "hard",
+          "prompt": "A teammate tried to repoint a job's output by setting session_key through cron_update. That field is not writable there, and the real fix uses the CLI adopt command. Rewrite this as the correct bash command to assign job abc123 to the dashboard slot chat-3-1712793600.",
+          "brokenCall": "cron_update job_id=abc123 session_key=dashboard:chat-3-1712793600",
+          "language": "bash",
+          "hints": [
+            { "tier": 1, "text": "Ownership is written only by the CLI adopt command, not cron_update." },
+            { "tier": 2, "text": "The command is kirocrew cron adopt <id> --session-of <slot>." },
+            { "tier": 3, "text": "kirocrew cron adopt abc123 --session-of chat-3-1712793600 (a bare slot name gets the dashboard: namespace added)." }
+          ],
+          "explanation": "session_key is not writable through cron_update or the dashboard PATCH, by design, so a session cannot repoint another job's output. Ownership is asserted only via kirocrew cron adopt abc123 --session-of chat-3-1712793600; a bare slot name is given the dashboard: namespace automatically.",
+          "docRef": "cron-and-scheduling.md",
+          "targetSeconds": 110,
+          "roleVariants": {
+            "platform": {
+              "scenario": "A runbook tells people to edit session_key via cron_update, which does not work.",
+              "prompt": "Rewrite it as the correct CLI command to assign job abc123 to slot chat-3-1712793600."
+            },
+            "security": {
+              "scenario": "You are closing off a would-be output-repointing path and documenting the sanctioned one.",
+              "prompt": "Rewrite it as the correct CLI command to assign job abc123 to slot chat-3-1712793600."
+            }
+          },
+          "solution": { "accept": ["kirocrew cron adopt abc123 --session-of chat-3-1712793600", "kirocrew cron adopt abc123 --session-of dashboard:chat-3-1712793600"], "normalizer": "text" }
+        },
+        {
+          "id": "w3.t5.c10",
+          "worldId": "w3",
+          "topicId": "w3.t5",
+          "kind": "single-choice",
+          "difficulty": "hard",
+          "prompt": "You call a mutating cron tool from chat on a job created by the dashboard, and get a vague job not found. What is the most accurate reading?",
+          "options": [
+            { "id": "a", "text": "The job is outside the calling session's scope (no owning session), and the vague error deliberately avoids letting you enumerate jobs you may not see" },
+            { "id": "b", "text": "The job was permanently deleted and the error is a bug" },
+            { "id": "c", "text": "The job id is always malformed when this happens" },
+            { "id": "d", "text": "Chat tools can manage any job and the error means a network failure" }
+          ],
+          "hints": [
+            { "tier": 1, "text": "A dashboard-created job has no owning chat session." },
+            { "tier": 2, "text": "The vague message is intentional, not a bug: it avoids leaking which jobs exist." },
+            { "tier": 3, "text": "The job is out of scope; manage it from kirocrew cron list or the Schedule page." }
+          ],
+          "explanation": "A job with no owning session is outside every chat session's scope, so cron_list does not show it and the mutating tools answer a deliberately vague job not found rather than confirming it exists, which would let a caller enumerate jobs they may not see. Manage those jobs from kirocrew cron list or the dashboard Schedule page.",
+          "docRef": "cron-and-scheduling.md",
+          "targetSeconds": 100,
+          "solution": { "optionId": "a" }
+        },
+        {
+          "id": "w3.t5.c11",
+          "worldId": "w3",
+          "topicId": "w3.t5",
+          "kind": "simulation",
+          "difficulty": "hard",
+          "boss": true,
+          "scenario": "The Cron Whisperer's final trial. You must stand up a weekday 06:30 Europe/Luxembourg briefing that skips a national holiday on 2026-05-01, fires on exact time because downstream jobs depend on its ordering, and runs lean so it does not accumulate context across days. One call, no wasted fields.",
+          "prompt": "Build the single cron_add call that satisfies every constraint: a weekday 6:30am schedule, the Luxembourg timezone, the one skip date, exact firing, and no cross-run context accumulation.",
+          "toolPalette": [
+            { "id": "cron_add", "text": "cron_add" },
+            { "id": "cron_update", "text": "cron_update" },
+            { "id": "monitor_start", "text": "monitor_start" },
+            { "id": "task_run", "text": "task_run" },
+            { "id": "spawn_run", "text": "spawn_run" }
+          ],
+          "argSpecs": [
+            { "name": "message", "label": "message", "input": "text", "required": true },
+            { "name": "cron_expr", "label": "cron_expr", "input": "text", "placeholder": "min hour dom month dow", "required": true },
+            { "name": "timezone", "label": "timezone", "input": "text", "placeholder": "IANA zone", "required": true },
+            { "name": "skip_dates", "label": "skip_dates", "input": "text", "placeholder": "ISO date(s)", "required": true },
+            { "name": "strict_schedule", "label": "strict_schedule", "input": "boolean", "required": true },
+            { "name": "persistent_session", "label": "persistent_session", "input": "boolean", "required": true }
+          ],
+          "hints": [
+            { "tier": 1, "text": "It is one cron_add. Translate each constraint to its field: schedule, zone, skip, exactness, accumulation." },
+            { "tier": 2, "text": "6:30am weekdays is 30 6 * * 1-5, exact firing is strict_schedule true, no accumulation is persistent_session false." },
+            { "tier": 3, "text": "cron_add with cron_expr=\"30 6 * * 1-5\", timezone=\"Europe/Luxembourg\", skip_dates=[\"2026-05-01\"], strict_schedule=true, persistent_session=false." }
+          ],
+          "explanation": "The one correct call is cron_add with cron_expr=\"30 6 * * 1-5\" (weekdays 06:30, 0=Sun..6=Sat so 1-5 is Mon-Fri), timezone=\"Europe/Luxembourg\" governing both the hour and the skip evaluation, skip_dates=[\"2026-05-01\"], strict_schedule=true to disable the 0-to-59-minute daily jitter so ordering holds, and persistent_session=false so each run starts clean. monitor_start, task_run and spawn_run are not schedulers, and the two booleans are the ones most often set backwards: strict_schedule true (not false) for exact timing, persistent_session false (not true) for no accumulation.",
+          "docRef": "cron-and-scheduling.md",
+          "targetSeconds": 240,
+          "roleVariants": {
+            "devops-sre": {
+              "scenario": "A weekday 6:30 Luxembourg ops briefing feeds downstream jobs that depend on its exact ordering, must skip the May 1 holiday, and must not bloat context over time.",
+              "prompt": "Build the single cron_add call meeting all five constraints: schedule, timezone, skip date, exact firing, no accumulation."
+            },
+            "eng-manager": {
+              "scenario": "Your Luxembourg team's weekday 6:30 standup-prep must fire exactly on time ahead of dependent jobs, skip the May 1 holiday, and stay lean.",
+              "prompt": "Build the single cron_add call meeting all five constraints: schedule, timezone, skip date, exact firing, no accumulation."
+            },
+            "data": {
+              "scenario": "A weekday 6:30 Luxembourg data briefing precedes ordered downstream pipelines, skips May 1, and must not accumulate context across runs.",
+              "prompt": "Build the single cron_add call meeting all five constraints: schedule, timezone, skip date, exact firing, no accumulation."
+            }
+          },
+          "solution": { "toolId": "cron_add", "args": { "message": "Summarize what happened since your last run", "cron_expr": "30 6 * * 1-5", "timezone": "Europe/Luxembourg", "skip_dates": "2026-05-01", "strict_schedule": true, "persistent_session": false }, "lenientArgs": { "message": "text", "cron_expr": "cron", "skip_dates": "text" } }
+        }
+      ]
+    }
+  ]
+}

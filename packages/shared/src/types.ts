@@ -271,6 +271,21 @@ export interface ContentManifest {
   worlds: PublicWorld[];
 }
 
+/**
+ * Metadata-only views of the content tree. The world map, topic list, progress
+ * and landing screens need titles, lore and counts, never the challenges
+ * themselves, so they read the index and a world's challenges are fetched only
+ * when the player actually enters a topic.
+ */
+export type TopicSummary = Omit<Topic, 'challenges'> & { challengeCount: number };
+export type WorldSummary = Omit<World, 'topics'> & { topics: TopicSummary[] };
+
+export interface ContentIndex {
+  version: string;
+  generatedAt: string;
+  worlds: WorldSummary[];
+}
+
 // ---------------------------------------------------------------------------
 // Progress and profile
 // ---------------------------------------------------------------------------

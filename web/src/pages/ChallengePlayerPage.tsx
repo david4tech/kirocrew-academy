@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Link, Navigate, useNavigate, useParams } from 'react-router';
-import type { AnswerPayload, HintTier, SubmitAttemptResponse } from '@kirocrew-academy/shared';
+import type { AnswerPayload, HintTier, PublicTopic, SubmitAttemptResponse } from '@kirocrew-academy/shared';
 import { KiroGhost, type GhostMood } from '../components/KiroGhost';
 import { LoadingGhost } from '../components/LoadingGhost';
 import { Button } from '../components/Button';
@@ -10,7 +10,7 @@ import { ExplanationPanel } from '../components/ExplanationPanel';
 import { ChallengeKindRouter, emptyAnswerFor, isAnswerReady } from '../components/challenges/ChallengeKindRouter';
 import { useScorePreview } from '../lib/useScorePreview';
 import { api, ApiClientError } from '../lib/api';
-import { findTopic } from '../lib/content';
+import { loadTopic } from '../lib/content';
 import { useAcademyStore } from '../store/academyStore';
 
 export function ChallengePlayerPage() {
@@ -19,7 +19,10 @@ export function ChallengePlayerPage() {
   const profile = useAcademyStore((s) => s.profile);
   const setProfile = useAcademyStore((s) => s.setProfile);
 
-  const topic = worldId && topicId ? findTopic(worldId, topicId) : undefined;
+  // A world's challenges are a lazily imported chunk, so the topic arrives
+  // asynchronously and the page has a real loading state before the first render.
+  const [topic, setTopic] = useState<PublicTopic | null>(null);
+  const [topicState, setTopicState] = useState<'loading' | 'ready' | 'missing'>('loading');
 
   const [index, setIndex] = useState(0);
   const [answer, setAnswer] = useState<AnswerPayload | null>(null);
@@ -32,6 +35,29 @@ export function ChallengePlayerPage() {
   const [startError, setStartError] = useState<string | null>(null);
 
   const challenge = topic?.challenges[index];
+
+  useEffect(() => {
+    if (!worldId || !topicId) return;
+    let cancelled = false;
+    setTopicState('loading');
+    setIndex(0);
+    loadTopic(worldId, topicId)
+      .then((found) => {
+        if (cancelled) return;
+        if (!found) {
+          setTopicState('missing');
+          return;
+        }
+        setTopic(found.topic);
+        setTopicState('ready');
+      })
+      .catch(() => {
+        if (!cancelled) setTopicState('missing');
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [worldId, topicId]);
 
   useEffect(() => {
     setHintTokensLeft(profile?.hintTokens ?? 0);
@@ -75,7 +101,14 @@ export function ChallengePlayerPage() {
   });
 
   if (!worldId || !topicId) return <Navigate to="/map" replace />;
-  if (!topic) return <Navigate to={`/world/${worldId}`} replace />;
+  if (topicState === 'missing') return <Navigate to={`/world/${worldId}`} replace />;
+  if (topicState === 'loading' || !topic) {
+    return (
+      <div className="flex justify-center py-16">
+        <LoadingGhost label="Loading this world's challenges..." />
+      </div>
+    );
+  }
 
   if (!challenge) {
     return (

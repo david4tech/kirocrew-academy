@@ -1,0 +1,1422 @@
+{
+  "id": "w2",
+  "order": 2,
+  "title": "Memory and Learning",
+  "subtitle": "What the memory store holds, how lessons are taught, chat history, the knowledge library and restricted sessions",
+  "lore": "A ghost that forgets every haunting starts over each night. This world is where you learn what Kiro Crew keeps between visits: the memory it recalls, the lessons you teach it, the transcripts it can search, the library it reads, and the rooms where it is sworn to remember nothing.",
+  "accent": "#7C3AED",
+  "topics": [
+    {
+      "id": "w2.t1",
+      "title": "memory_recall and the Memory Store",
+      "summary": "What memory_recall searches (the store bound to the session), what that store actually holds (preferences, projects, daily history, lessons, vectors), that recall is on demand not automatic, and that the caller cannot choose another store.",
+      "challenges": [
+        {
+          "id": "w2.t1.c1",
+          "worldId": "w2",
+          "topicId": "w2.t1",
+          "kind": "single-choice",
+          "difficulty": "easy",
+          "prompt": "When you call memory_recall, which memory does it search?",
+          "options": [
+            { "id": "a", "text": "The memory store bound to this session: Global V1 for an unowned session, or the crew member's private V2 store" },
+            { "id": "b", "text": "Every memory store on the gateway, merged into one result" },
+            { "id": "c", "text": "A store you name in the call's arguments" },
+            { "id": "d", "text": "Only the current conversation's transcript" }
+          ],
+          "hints": [
+            { "tier": 1, "text": "Recall reads one store, and which one is decided by the session, not by you." },
+            { "tier": 2, "text": "An unowned session and a private crew member read different stores." },
+            { "tier": 3, "text": "It is the store bound to the session: Global V1 if unowned, the member's private V2 if owned." }
+          ],
+          "explanation": "memory_recall searches the memory bound to the calling session: Global V1 for an unowned session, or the crew member's private V2 store. The caller cannot choose another store, and a private member cannot reach Global V1 or a sibling's memory.",
+          "docRef": "memory-and-learning.md",
+          "targetSeconds": 30,
+          "solution": { "optionId": "a" }
+        },
+        {
+          "id": "w2.t1.c2",
+          "worldId": "w2",
+          "topicId": "w2.t1",
+          "kind": "true-false",
+          "difficulty": "easy",
+          "prompt": "Decide whether the statement holds.",
+          "statement": "memory_recall runs automatically on every message, so you never need to call it yourself.",
+          "hints": [
+            { "tier": 1, "text": "Think about whether recall is free on every turn or something you reach for." },
+            { "tier": 2, "text": "The tool is described as on demand, not run for every message." },
+            { "tier": 3, "text": "Recall is on demand: you ask a specific question when earlier context is needed." }
+          ],
+          "explanation": "False. Search is on demand, not run automatically for every message. You call memory_recall with a specific question when earlier decisions or events are needed, and skip it when the current conversation already suffices.",
+          "docRef": "memory-and-learning.md",
+          "targetSeconds": 25,
+          "solution": { "value": false }
+        },
+        {
+          "id": "w2.t1.c3",
+          "worldId": "w2",
+          "topicId": "w2.t1",
+          "kind": "tool-name",
+          "difficulty": "easy",
+          "prompt": "You need a fact from an earlier session: what the team decided about retries. You want the memory store to answer by meaning, not a keyword scan of transcripts. Which tool do you call?",
+          "hints": [
+            { "tier": 1, "text": "It reads the memory store bound to the session, by meaning." },
+            { "tier": 2, "text": "The verb is about recalling from memory, not searching chat history." },
+            { "tier": 3, "text": "It is memory_recall." }
+          ],
+          "explanation": "memory_recall is the right tool when you want decisions or events the memory store holds, retrieved by meaning. search_chat_history is for recovering the exact words of a past transcript, which is a different job.",
+          "docRef": "memory-and-learning.md",
+          "targetSeconds": 35,
+          "solution": { "accept": ["memory_recall"], "normalizer": "tool" }
+        },
+        {
+          "id": "w2.t1.c4",
+          "worldId": "w2",
+          "topicId": "w2.t1",
+          "kind": "multi-choice",
+          "difficulty": "medium",
+          "prompt": "Select every kind of thing the memory store actually holds.",
+          "options": [
+            { "id": "a", "text": "Preferences: your coding style, preferred tools and communication style" },
+            { "id": "b", "text": "Project context: what you are working on, key decisions and blockers" },
+            { "id": "c", "text": "Daily history: conversation summaries organized by date" },
+            { "id": "d", "text": "Lessons: corrections and rules you have taught" },
+            { "id": "e", "text": "Your AWS account root credentials" },
+            { "id": "f", "text": "The embedding model weights for other users' gateways" }
+          ],
+          "hints": [
+            { "tier": 1, "text": "Four of these are documented memory types; two are not stored in memory at all." },
+            { "tier": 2, "text": "Preferences, projects, daily history and lessons are the memory types." },
+            { "tier": 3, "text": "Credentials and other users' model weights are not part of your memory store." }
+          ],
+          "explanation": "The memory store holds preferences, project context, daily history and lessons. It does not hold credentials, and the embedding model is a local in-process runtime, not something that belongs to another user and lives in your memory.",
+          "docRef": "memory-and-learning.md",
+          "targetSeconds": 65,
+          "solution": { "optionIds": ["a", "b", "c", "d"] }
+        },
+        {
+          "id": "w2.t1.c5",
+          "worldId": "w2",
+          "topicId": "w2.t1",
+          "kind": "config-fill",
+          "difficulty": "medium",
+          "prompt": "A new session does not carry the bodies of your memory files. It carries a bounded index of the last how many days' headings? Write just the number.",
+          "starter": "",
+          "hints": [
+            { "tier": 1, "text": "It is a small number of recent days, not the full 14 day detail window." },
+            { "tier": 2, "text": "The body arrives only when memory_recall asks; the startup index is just headings." },
+            { "tier": 3, "text": "It is the last three days' headings." }
+          ],
+          "explanation": "A new session carries a bounded index of the last three days' headings, and the body of a history file arrives only when memory_recall asks for it. This is why recall is on demand: the full context is not injected up front.",
+          "docRef": "memory-and-learning.md",
+          "targetSeconds": 50,
+          "roleVariants": {
+            "eng-manager": {
+              "scenario": "You are explaining to the team why a fresh chat does not seem to remember yesterday's detail until it is asked.",
+              "prompt": "State how many recent days of headings a new session carries as its startup index."
+            },
+            "backend": {
+              "scenario": "You opened a clean session and want to know what memory it starts with before you call recall.",
+              "prompt": "State how many recent days of headings a new session carries as its startup index."
+            }
+          },
+          "solution": { "accept": ["3", "three"], "normalizer": "text" }
+        },
+        {
+          "id": "w2.t1.c6",
+          "worldId": "w2",
+          "topicId": "w2.t1",
+          "kind": "sequence",
+          "difficulty": "medium",
+          "prompt": "Order the age tiers of what a dated history READ returns, from the freshest full detail to the point where it is pruned.",
+          "items": [
+            { "id": "s1", "text": "Days 0 to 13: full detail" },
+            { "id": "s2", "text": "Days 14 to 60: first entry per day plus a count" },
+            { "id": "s3", "text": "Days 61 to 180: date and entry count only" },
+            { "id": "s4", "text": "Days 181 to 365: retained on disk, not returned by a read" },
+            { "id": "s5", "text": "365 days and older: pruned automatically" }
+          ],
+          "hints": [
+            { "tier": 1, "text": "The newest days give the most, and detail decays as days get older." },
+            { "tier": 2, "text": "Full detail, then per-day summary, then counts only, then on-disk-but-silent, then gone." },
+            { "tier": 3, "text": "0 to 13, then 14 to 60, then 61 to 180, then 181 to 365, then 365 plus." }
+          ],
+          "explanation": "A dated READ decays by age: full detail for days 0 to 13, first entry plus count for 14 to 60, date and count only for 61 to 180, retained but not returned for 181 to 365, and pruned at 365 plus. Search is different: the full-text index still holds every file's complete content, so memory_recall can surface a line a dated read would have collapsed.",
+          "docRef": "memory-and-learning.md",
+          "targetSeconds": 80,
+          "solution": { "orderedItemIds": ["s1", "s2", "s3", "s4", "s5"] }
+        },
+        {
+          "id": "w2.t1.c7",
+          "worldId": "w2",
+          "topicId": "w2.t1",
+          "kind": "matching",
+          "difficulty": "medium",
+          "prompt": "Match each memory file to what it stores.",
+          "left": [
+            { "id": "l1", "text": "preferences.md" },
+            { "id": "l2", "text": "projects.md" },
+            { "id": "l3", "text": "history/{date}.md" },
+            { "id": "l4", "text": "Lessons" }
+          ],
+          "right": [
+            { "id": "r1", "text": "Coding style, preferred tools and communication style" },
+            { "id": "r2", "text": "Active project context: what you are working on, decisions, blockers" },
+            { "id": "r3", "text": "Conversation summaries organized by date" },
+            { "id": "r4", "text": "Corrections and rules you have taught, with an optional repo scope" },
+            { "id": "r5", "text": "The HMAC key for signing remote dashboard links" }
+          ],
+          "hints": [
+            { "tier": 1, "text": "One right-hand entry is a security key and matches no memory file." },
+            { "tier": 2, "text": "Preferences is style, projects is work context, history is dated summaries." },
+            { "tier": 3, "text": "Lessons are the taught corrections; the HMAC key is the decoy." }
+          ],
+          "explanation": "preferences.md holds style and tool preferences, projects.md holds active project context, history/{date}.md holds dated conversation summaries, and lessons hold taught corrections. The HMAC signing key is a dashboard-access concept, not a memory file.",
+          "docRef": "memory-and-learning.md",
+          "targetSeconds": 80,
+          "solution": { "pairs": { "l1": "r1", "l2": "r2", "l3": "r3", "l4": "r4" } }
+        },
+        {
+          "id": "w2.t1.c8",
+          "worldId": "w2",
+          "topicId": "w2.t1",
+          "kind": "simulation",
+          "difficulty": "medium",
+          "scenario": "You are resuming work on a service and cannot remember what the team decided about its retry and backoff policy in an earlier session. You want the memory store to answer by meaning.",
+          "prompt": "Pick the tool and write a focused recall query for the retry decision.",
+          "toolPalette": [
+            { "id": "memory_recall", "text": "memory_recall" },
+            { "id": "search_chat_history", "text": "search_chat_history" },
+            { "id": "local_knowledge_search", "text": "local_knowledge_search" },
+            { "id": "learn_list", "text": "learn_list" }
+          ],
+          "argSpecs": [
+            { "name": "query", "label": "query", "input": "text", "placeholder": "what to recall", "required": true }
+          ],
+          "hints": [
+            { "tier": 1, "text": "You want what was decided, retrieved by meaning from the memory store." },
+            { "tier": 2, "text": "search_chat_history finds verbatim words; the knowledge library is your documents, not memory." },
+            { "tier": 3, "text": "memory_recall with a specific query about the retry and backoff decision." }
+          ],
+          "explanation": "memory_recall is for decisions and events the memory store holds, retrieved by meaning, so a specific query about the retry and backoff policy is the right move. search_chat_history recovers verbatim transcript words, and local_knowledge_search reads your document library, neither of which is the memory store.",
+          "docRef": "memory-and-learning.md",
+          "targetSeconds": 90,
+          "roleVariants": {
+            "devops-sre": {
+              "scenario": "You are back on an incident runbook and need the memory store to tell you what retry and backoff policy was agreed earlier.",
+              "prompt": "Pick the tool and write a focused recall query for the agreed retry policy."
+            },
+            "data": {
+              "scenario": "You are resuming a pipeline and need the earlier decision on retry and backoff for a flaky upstream, by meaning not keyword.",
+              "prompt": "Pick the tool and write a focused recall query for the agreed retry policy."
+            }
+          },
+          "solution": { "toolId": "memory_recall", "args": { "query": "what did the team decide about retry and backoff policy" }, "lenientArgs": { "query": "text" } }
+        },
+        {
+          "id": "w2.t1.c9",
+          "worldId": "w2",
+          "topicId": "w2.t1",
+          "kind": "debug-fix",
+          "difficulty": "hard",
+          "prompt": "A teammate wrote this note about recall. One field is wrong: recall does not merge every store, and it is not automatic. Fix only the two false values, leaving the correct one alone.",
+          "brokenCall": "{\n  \"recall_scope\": \"all-stores-merged\",\n  \"recall_runs\": \"automatically-every-message\",\n  \"caller_can_choose_store\": false\n}",
+          "language": "json",
+          "hints": [
+            { "tier": 1, "text": "Recall reads one store, the one bound to the session, and only when asked." },
+            { "tier": 2, "text": "The scope is the session's own store, and recall is on demand." },
+            { "tier": 3, "text": "recall_scope becomes session-bound-store and recall_runs becomes on-demand; leave caller_can_choose_store false." }
+          ],
+          "explanation": "Recall searches only the store bound to the session (not all stores merged) and runs on demand (not on every message). The caller genuinely cannot choose another store, so that field was already correct at false.",
+          "docRef": "memory-and-learning.md",
+          "targetSeconds": 120,
+          "roleVariants": {
+            "security": {
+              "scenario": "You are reviewing a wiki note that overstates how much memory recall can reach, which matters for data isolation between crew members.",
+              "prompt": "Correct the two false values so the note matches how recall scopes and triggers."
+            },
+            "platform": {
+              "scenario": "You are documenting memory isolation for the team and find this note with two wrong claims.",
+              "prompt": "Correct the two false values so the note matches how recall scopes and triggers."
+            }
+          },
+          "solution": {
+            "accept": [
+              "{\"recall_scope\":\"session-bound-store\",\"recall_runs\":\"on-demand\",\"caller_can_choose_store\":false}"
+            ],
+            "normalizer": "json"
+          }
+        },
+        {
+          "id": "w2.t1.c10",
+          "worldId": "w2",
+          "topicId": "w2.t1",
+          "kind": "single-choice",
+          "difficulty": "hard",
+          "prompt": "A dated history read for a day 90 days ago returns only the date and an entry count, but you know a specific detail was discussed that day. How can memory_recall still surface that detail?",
+          "options": [
+            { "id": "a", "text": "The full-text index holds each history file's complete content, so recall searches it even when a dated read collapses the day to a count" },
+            { "id": "b", "text": "It cannot: once a dated read collapses a day, the detail is gone from recall too" },
+            { "id": "c", "text": "Recall silently rewrites the history file to restore the full detail first" },
+            { "id": "d", "text": "Recall falls back to reading the live transcript of that day's session" }
+          ],
+          "hints": [
+            { "tier": 1, "text": "The decay tiers govern a dated read, not what the search index holds." },
+            { "tier": 2, "text": "Search and a dated read draw on different things." },
+            { "tier": 3, "text": "The full-text index keeps complete content regardless of the read decay tiers." }
+          ],
+          "explanation": "The age tiers decay a dated READ, but the full-text index holds each history file's complete content, so memory_recall can still surface a line from a day the dated read would have collapsed to a count. Recall does not rewrite files or read a live transcript to do this.",
+          "docRef": "memory-and-learning.md",
+          "targetSeconds": 90,
+          "solution": { "optionId": "a" }
+        }
+      ]
+    },
+    {
+      "id": "w2.t2",
+      "title": "learn_add: Teaching a Lesson",
+      "summary": "What belongs in a lesson, the rule versus negative split, the category and applies tiers, repo_scope, the 500 character hard limit, and what learn_add refuses to store.",
+      "challenges": [
+        {
+          "id": "w2.t2.c1",
+          "worldId": "w2",
+          "topicId": "w2.t2",
+          "kind": "single-choice",
+          "difficulty": "easy",
+          "prompt": "What is learn_add for?",
+          "options": [
+            { "id": "a", "text": "Saving a learned correction or preference that should change behavior in unrelated future sessions" },
+            { "id": "b", "text": "Storing a volatile fact about the current task that is irrelevant tomorrow" },
+            { "id": "c", "text": "Recording which concrete model id the assistant is running as" },
+            { "id": "d", "text": "Uploading a document into the knowledge library" }
+          ],
+          "hints": [
+            { "tier": 1, "text": "A lesson is a durable rule, not a note about today's task." },
+            { "tier": 2, "text": "It must change behavior in sessions that have nothing to do with the one you are in." },
+            { "tier": 3, "text": "It saves a learned correction or preference for unrelated future sessions." }
+          ],
+          "explanation": "learn_add saves a learned correction or preference that changes behavior in unrelated future sessions, such as always do X or never do Y. It is not for volatile session facts, not for runtime model identity, and not for documents (that is knowledge_add_document).",
+          "docRef": "memory-and-learning.md",
+          "targetSeconds": 30,
+          "solution": { "optionId": "a" }
+        },
+        {
+          "id": "w2.t2.c2",
+          "worldId": "w2",
+          "topicId": "w2.t2",
+          "kind": "true-false",
+          "difficulty": "easy",
+          "prompt": "Decide whether the statement holds.",
+          "statement": "A lesson should include both the rule (what to do) and the negative (what not to do).",
+          "hints": [
+            { "tier": 1, "text": "A good lesson teaches the right behavior and names the mistake it prevents." },
+            { "tier": 2, "text": "The tool has a separate field for what not to do." },
+            { "tier": 3, "text": "Yes: include both the rule and the negative." }
+          ],
+          "explanation": "True. A lesson should carry both the rule (what to do) and the negative (what not to do). The negative is its own field, so you state the mistake to avoid rather than inlining a long not clause in the rule.",
+          "docRef": "memory-and-learning.md",
+          "targetSeconds": 25,
+          "solution": { "value": true }
+        },
+        {
+          "id": "w2.t2.c3",
+          "worldId": "w2",
+          "topicId": "w2.t2",
+          "kind": "tool-name",
+          "difficulty": "easy",
+          "prompt": "You just told Kiro Crew: always use ruff over flake8 for linting. Which MCP tool saves that as a durable lesson?",
+          "hints": [
+            { "tier": 1, "text": "The verb is about adding something learned." },
+            { "tier": 2, "text": "It is the tool you call to persist a correction or preference." },
+            { "tier": 3, "text": "It is learn_add." }
+          ],
+          "explanation": "learn_add saves the preference as a lesson. You can then view it with learn_list or on the dashboard Overview Lessons tab, and remove it with learn_remove.",
+          "docRef": "memory-and-learning.md",
+          "targetSeconds": 35,
+          "solution": { "accept": ["learn_add"], "normalizer": "tool" }
+        },
+        {
+          "id": "w2.t2.c4",
+          "worldId": "w2",
+          "topicId": "w2.t2",
+          "kind": "multi-choice",
+          "difficulty": "medium",
+          "prompt": "Select every statement that is true about learn_add.",
+          "options": [
+            { "id": "a", "text": "category is required and is one of tool, preference or knowledge" },
+            { "id": "b", "text": "rule has a hard 500 character limit and is rejected, not truncated, if exceeded" },
+            { "id": "c", "text": "repo_scope restricts the lesson to sessions whose project is inside a given repository tree" },
+            { "id": "d", "text": "applies can be always (a standing rule) or on_topic (a finding surfaced only when relevant)" },
+            { "id": "e", "text": "A lesson is always deleted when you switch workspace" },
+            { "id": "f", "text": "learn_add is the right tool for recording the concrete model id the assistant runs as" }
+          ],
+          "hints": [
+            { "tier": 1, "text": "Four of these describe real fields and behavior; two are false." },
+            { "tier": 2, "text": "Lessons are global by default and survive a workspace switch, and runtime model identity is refused." },
+            { "tier": 3, "text": "category, the 500 char rejection, repo_scope and the applies tiers are the true four." }
+          ],
+          "explanation": "category is required (tool, preference, knowledge), rule is capped at 500 characters and rejected if longer, repo_scope narrows a lesson to one repository tree, and applies chooses always versus on_topic. Lessons are global by default so a workspace switch does not delete them, and learn_add refuses to store runtime model identity.",
+          "docRef": "memory-and-learning.md",
+          "targetSeconds": 75,
+          "solution": { "optionIds": ["a", "b", "c", "d"] }
+        },
+        {
+          "id": "w2.t2.c5",
+          "worldId": "w2",
+          "topicId": "w2.t2",
+          "kind": "config-fill",
+          "difficulty": "medium",
+          "prompt": "You want a lint rule to apply only inside one service repo, not across all your work. Which learn_add field do you set to the repository path fragment? Write just the field name.",
+          "starter": "",
+          "hints": [
+            { "tier": 1, "text": "It is the field that narrows a global lesson to one project tree." },
+            { "tier": 2, "text": "Its value is a path fragment the repository contains." },
+            { "tier": 3, "text": "It is repo_scope." }
+          ],
+          "explanation": "repo_scope restricts the lesson to sessions whose active project is inside that repository tree, given as a path fragment the repo contains (for example src/kiro_crew). Omit it for a durable preference that should apply everywhere.",
+          "docRef": "memory-and-learning.md",
+          "targetSeconds": 55,
+          "roleVariants": {
+            "backend": {
+              "scenario": "You want a formatting convention remembered only when you work in one service repository, not in every project.",
+              "prompt": "Name the learn_add field that scopes a lesson to a single repository tree."
+            },
+            "platform": {
+              "scenario": "You are standardizing a rule that must bind to one platform repo and stay out of unrelated work.",
+              "prompt": "Name the learn_add field that scopes a lesson to a single repository tree."
+            }
+          },
+          "solution": { "accept": ["repo_scope"], "normalizer": "text" }
+        },
+        {
+          "id": "w2.t2.c6",
+          "worldId": "w2",
+          "topicId": "w2.t2",
+          "kind": "sequence",
+          "difficulty": "medium",
+          "prompt": "Order the steps of teaching one durable correction with learn_add, from deciding it is worth saving to confirming it later.",
+          "items": [
+            { "id": "s1", "text": "Recognize the user correction defines reusable behavior for future sessions" },
+            { "id": "s2", "text": "Write the rule (what to do) and the negative (what not to do)" },
+            { "id": "s3", "text": "Set category and, if the rule is only true of one repo, repo_scope" },
+            { "id": "s4", "text": "Call learn_add to persist it" },
+            { "id": "s5", "text": "Confirm it later with learn_list or the dashboard Lessons tab" }
+          ],
+          "hints": [
+            { "tier": 1, "text": "First decide it is reusable, last verify it was stored." },
+            { "tier": 2, "text": "You compose the rule and negative before you set the metadata and call the tool." },
+            { "tier": 3, "text": "Recognize, compose rule and negative, set category and scope, call learn_add, then confirm with learn_list." }
+          ],
+          "explanation": "You save a lesson only when a correction defines reusable behavior, then write both the rule and the negative, set category (and repo_scope if it is repo specific), call learn_add, and later confirm with learn_list or the dashboard Lessons tab. The negative and the category are not afterthoughts; they are part of a well formed lesson.",
+          "docRef": "memory-and-learning.md",
+          "targetSeconds": 80,
+          "solution": { "orderedItemIds": ["s1", "s2", "s3", "s4", "s5"] }
+        },
+        {
+          "id": "w2.t2.c7",
+          "worldId": "w2",
+          "topicId": "w2.t2",
+          "kind": "matching",
+          "difficulty": "medium",
+          "prompt": "Match each learn_add field to what it carries.",
+          "left": [
+            { "id": "l1", "text": "rule" },
+            { "id": "l2", "text": "negative" },
+            { "id": "l3", "text": "category" },
+            { "id": "l4", "text": "applies" }
+          ],
+          "right": [
+            { "id": "r1", "text": "What to do, capped at 500 characters" },
+            { "id": "r2", "text": "What not to do, kept out of the rule field" },
+            { "id": "r3", "text": "tool, preference or knowledge" },
+            { "id": "r4", "text": "always (standing rule) or on_topic (surfaced only when relevant)" },
+            { "id": "r5", "text": "The IANA timezone the lesson is evaluated in" }
+          ],
+          "hints": [
+            { "tier": 1, "text": "One right-hand entry is a timezone and belongs to scheduling, not lessons." },
+            { "tier": 2, "text": "rule is the positive, negative is what to avoid, category is the kind." },
+            { "tier": 3, "text": "applies is the always versus on_topic tier; the timezone is the decoy." }
+          ],
+          "explanation": "rule is what to do (max 500 chars), negative is what not to do (its own field), category is tool, preference or knowledge, and applies is the always versus on_topic tier. A timezone is a cron concept and has nothing to do with a lesson.",
+          "docRef": "memory-and-learning.md",
+          "targetSeconds": 80,
+          "solution": { "pairs": { "l1": "r1", "l2": "r2", "l3": "r3", "l4": "r4" } }
+        },
+        {
+          "id": "w2.t2.c8",
+          "worldId": "w2",
+          "topicId": "w2.t2",
+          "kind": "simulation",
+          "difficulty": "hard",
+          "scenario": "You just corrected Kiro Crew: it must always confirm before running rm -rf, and the correction should hold in every future session regardless of topic. You want to persist it as a standing rule with the mistake it prevents.",
+          "prompt": "Pick the tool, set the rule, the negative and the category, and mark it a standing rule.",
+          "toolPalette": [
+            { "id": "learn_add", "text": "learn_add" },
+            { "id": "learn_list", "text": "learn_list" },
+            { "id": "memory_recall", "text": "memory_recall" },
+            { "id": "knowledge_add_document", "text": "knowledge_add_document" }
+          ],
+          "argSpecs": [
+            { "name": "rule", "label": "rule", "input": "text", "placeholder": "what to do", "required": true },
+            { "name": "negative", "label": "negative", "input": "text", "placeholder": "what not to do", "required": true },
+            { "name": "category", "label": "category", "input": "select", "required": true, "options": [
+              { "id": "tool", "text": "tool" },
+              { "id": "preference", "text": "preference" },
+              { "id": "knowledge", "text": "knowledge" }
+            ] },
+            { "name": "applies", "label": "applies", "input": "select", "required": true, "options": [
+              { "id": "always", "text": "always" },
+              { "id": "on_topic", "text": "on_topic" }
+            ] }
+          ],
+          "hints": [
+            { "tier": 1, "text": "This is a durable correction, so it is learn_add, not recall and not a document." },
+            { "tier": 2, "text": "It is a safety behavior wanted in every session, which is the always tier, and category tool fits a command habit." },
+            { "tier": 3, "text": "learn_add with category tool, applies always, a rule to confirm before rm -rf, and a negative naming running it without confirmation." }
+          ],
+          "explanation": "A durable safety correction wanted in every session is a learn_add standing rule: category tool, applies always, with both a rule (confirm before rm -rf) and a negative (never run rm -rf without confirmation). memory_recall only reads, and knowledge_add_document is for documents, not rules.",
+          "docRef": "memory-and-learning.md",
+          "targetSeconds": 150,
+          "boss": true,
+          "roleVariants": {
+            "devops-sre": {
+              "scenario": "After a near miss, you want Kiro Crew to always confirm before any destructive filesystem command in every session, and to record the mistake it prevents.",
+              "prompt": "Persist the standing rule: pick the tool and set rule, negative, category and the always tier."
+            },
+            "security": {
+              "scenario": "You are enforcing a guardrail that destructive deletes must be confirmed, as a correction that holds across all future sessions.",
+              "prompt": "Persist the standing rule: pick the tool and set rule, negative, category and the always tier."
+            },
+            "platform": {
+              "scenario": "You want a platform-wide habit that confirms before destructive commands, saved so it survives into unrelated sessions.",
+              "prompt": "Persist the standing rule: pick the tool and set rule, negative, category and the always tier."
+            }
+          },
+          "solution": {
+            "toolId": "learn_add",
+            "args": { "rule": "always confirm before running rm -rf", "negative": "never run rm -rf without explicit confirmation", "category": "tool", "applies": "always" },
+            "lenientArgs": { "rule": "text", "negative": "text" }
+          }
+        },
+        {
+          "id": "w2.t2.c9",
+          "worldId": "w2",
+          "topicId": "w2.t2",
+          "kind": "debug-fix",
+          "difficulty": "hard",
+          "prompt": "This learn_add call is missing the one field the tool requires alongside rule. Add it so the call is valid, choosing the category that fits a linting preference. Change only what is needed.",
+          "brokenCall": "{\n  \"rule\": \"prefer ruff over flake8 for linting\"\n}",
+          "language": "json",
+          "hints": [
+            { "tier": 1, "text": "rule alone is not enough; the tool needs the kind of lesson this is." },
+            { "tier": 2, "text": "The required companion field is one of tool, preference or knowledge." },
+            { "tier": 3, "text": "Add category set to preference." }
+          ],
+          "explanation": "learn_add requires category alongside rule. A linting choice is a preference, so adding category set to preference makes the call valid. tool and knowledge are the other allowed categories.",
+          "docRef": "memory-and-learning.md",
+          "targetSeconds": 110,
+          "roleVariants": {
+            "qa": {
+              "scenario": "You are codifying a team linting preference as a lesson and the call is rejected for a missing field.",
+              "prompt": "Add the one required field so the learn_add call is accepted."
+            },
+            "backend": {
+              "scenario": "You tried to save a linter preference but learn_add refused the call as incomplete.",
+              "prompt": "Add the one required field so the learn_add call is accepted."
+            }
+          },
+          "solution": {
+            "accept": [
+              "{\"rule\":\"prefer ruff over flake8 for linting\",\"category\":\"preference\"}"
+            ],
+            "normalizer": "json"
+          }
+        },
+        {
+          "id": "w2.t2.c10",
+          "worldId": "w2",
+          "topicId": "w2.t2",
+          "kind": "single-choice",
+          "difficulty": "hard",
+          "prompt": "You try to save the lesson: remember that this assistant is running as a specific model id. learn_add refuses it. Why?",
+          "options": [
+            { "id": "a", "text": "It is a volatile runtime identity assertion, which learn_add rejects; lessons are for durable behavior, not which model is active" },
+            { "id": "b", "text": "The rule exceeded 500 characters" },
+            { "id": "c", "text": "You forgot to set repo_scope, which is required for every lesson" },
+            { "id": "d", "text": "Model identity lessons must be saved with knowledge_add_document instead" }
+          ],
+          "hints": [
+            { "tier": 1, "text": "The refusal is about what kind of fact this is, not its length or scope." },
+            { "tier": 2, "text": "The tool must not save a volatile session fact like which model is active." },
+            { "tier": 3, "text": "It is a runtime identity assertion, which learn_add rejects by design." }
+          ],
+          "explanation": "learn_add must not save volatile runtime identity, including which concrete model id the assistant is running as. The tool rejects recognized runtime identity assertions and model-selection imperatives. repo_scope is optional and the limit is not the issue here.",
+          "docRef": "memory-and-learning.md",
+          "targetSeconds": 90,
+          "solution": { "optionId": "a" }
+        },
+        {
+          "id": "w2.t2.c11",
+          "worldId": "w2",
+          "topicId": "w2.t2",
+          "kind": "simulation",
+          "difficulty": "medium",
+          "scenario": "The user says: in this one service repo, always run the integration tests before pushing. The rule is only true of that repository, not your other work.",
+          "prompt": "Pick the tool and set the rule, the category and the repository scope so the lesson stays local to that repo.",
+          "toolPalette": [
+            { "id": "learn_add", "text": "learn_add" },
+            { "id": "learn_list", "text": "learn_list" },
+            { "id": "memory_recall", "text": "memory_recall" },
+            { "id": "knowledge_add_document", "text": "knowledge_add_document" }
+          ],
+          "argSpecs": [
+            { "name": "rule", "label": "rule", "input": "text", "placeholder": "what to do", "required": true },
+            { "name": "category", "label": "category", "input": "select", "required": true, "options": [
+              { "id": "tool", "text": "tool" },
+              { "id": "preference", "text": "preference" },
+              { "id": "knowledge", "text": "knowledge" }
+            ] },
+            { "name": "repo_scope", "label": "repo_scope", "input": "text", "placeholder": "a path fragment the repo contains", "required": true }
+          ],
+          "hints": [
+            { "tier": 1, "text": "It is a durable rule, so learn_add, and it must bind to one repo." },
+            { "tier": 2, "text": "A test-before-push habit is a preference, and repo_scope narrows it to the repository tree." },
+            { "tier": 3, "text": "learn_add with category preference and repo_scope set to the service repo's path fragment." }
+          ],
+          "explanation": "A rule true of only one repository is a learn_add lesson with repo_scope set to a path fragment that repository contains, so it applies only in sessions whose project is inside that tree. A test-before-push habit is a preference. Omitting repo_scope would make it global, which is not what you want here.",
+          "docRef": "memory-and-learning.md",
+          "targetSeconds": 110,
+          "roleVariants": {
+            "qa": {
+              "scenario": "You want integration tests enforced before pushing, but only in one service repository, not across every project you touch.",
+              "prompt": "Pick the tool and set rule, category and repository scope so the lesson stays local to that repo."
+            },
+            "backend": {
+              "scenario": "A pre-push test habit should apply only inside one microservice repo, not your other work.",
+              "prompt": "Pick the tool and set rule, category and repository scope so the lesson stays local to that repo."
+            }
+          },
+          "solution": {
+            "toolId": "learn_add",
+            "args": { "rule": "always run the integration tests before pushing", "category": "preference", "repo_scope": "services/payments" },
+            "lenientArgs": { "rule": "text", "repo_scope": "text" }
+          }
+        }
+      ]
+    },
+    {
+      "id": "w2.t3",
+      "title": "Chat History: search, read, and list",
+      "summary": "search_chat_history for keyword snippets, get_chat_session for a full transcript, list_sessions to browse, when each beats memory_recall, and that all three are reads scoped to the workspace.",
+      "challenges": [
+        {
+          "id": "w2.t3.c1",
+          "worldId": "w2",
+          "topicId": "w2.t3",
+          "kind": "single-choice",
+          "difficulty": "easy",
+          "prompt": "What does search_chat_history return?",
+          "options": [
+            { "id": "a", "text": "Ranked, snippet-level hits across past conversations, not full transcripts" },
+            { "id": "b", "text": "The complete transcript of every matching conversation" },
+            { "id": "c", "text": "A summary written fresh by the model for each hit" },
+            { "id": "d", "text": "Only the titles of matching sessions with no text" }
+          ],
+          "hints": [
+            { "tier": 1, "text": "It is a keyword search that gives you enough to decide which thread to open." },
+            { "tier": 2, "text": "It returns metadata plus a short snippet per session, not the whole thing." },
+            { "tier": 3, "text": "Ranked snippet-level hits; you then open a hit with get_chat_session." }
+          ],
+          "explanation": "search_chat_history returns ranked, snippet-level hits (metadata plus a short snippet per session), not full transcripts. Once a hit looks right you call get_chat_session with its session_key to read the full thread.",
+          "docRef": "memory-and-learning.md",
+          "targetSeconds": 30,
+          "solution": { "optionId": "a" }
+        },
+        {
+          "id": "w2.t3.c2",
+          "worldId": "w2",
+          "topicId": "w2.t3",
+          "kind": "true-false",
+          "difficulty": "easy",
+          "prompt": "Decide whether the statement holds.",
+          "statement": "search_chat_history, get_chat_session and list_sessions are reads that never modify memory or history.",
+          "hints": [
+            { "tier": 1, "text": "These three tools look at past conversations; ask whether looking changes anything." },
+            { "tier": 2, "text": "All three are described as read operations." },
+            { "tier": 3, "text": "Yes: they are reads and change nothing." }
+          ],
+          "explanation": "True. search_chat_history, get_chat_session and list_sessions are all reads: they never modify memory or history. They let you find, open and browse past conversations without altering them.",
+          "docRef": "memory-and-learning.md",
+          "targetSeconds": 25,
+          "solution": { "value": true }
+        },
+        {
+          "id": "w2.t3.c3",
+          "worldId": "w2",
+          "topicId": "w2.t3",
+          "kind": "tool-name",
+          "difficulty": "easy",
+          "prompt": "You want a bird's eye view of your recent sessions in this workspace: their titles, owning agent, message volume and last activity. Which tool do you call?",
+          "hints": [
+            { "tier": 1, "text": "It is the browse or overview tool, not the keyword search." },
+            { "tier": 2, "text": "The verb lists your recent sessions." },
+            { "tier": 3, "text": "It is list_sessions." }
+          ],
+          "explanation": "list_sessions lists your recent sessions in the workspace with titles, owning agent, message volume and last-activity time, newest first. It is the browse or overview, where search_chat_history is the keyword lookup.",
+          "docRef": "memory-and-learning.md",
+          "targetSeconds": 35,
+          "solution": { "accept": ["list_sessions"], "normalizer": "tool" }
+        },
+        {
+          "id": "w2.t3.c4",
+          "worldId": "w2",
+          "topicId": "w2.t3",
+          "kind": "multi-choice",
+          "difficulty": "medium",
+          "prompt": "Select every situation where search_chat_history is the right first tool.",
+          "options": [
+            { "id": "a", "text": "You need the exact error message from a past debugging session, verbatim" },
+            { "id": "b", "text": "You need a name, number or path mentioned in an earlier conversation" },
+            { "id": "c", "text": "You want the verbatim evidence behind a conclusion recall gave you" },
+            { "id": "d", "text": "You want to know what the team decided, by meaning, with no need for exact words" },
+            { "id": "e", "text": "You want to permanently delete an old conversation" }
+          ],
+          "hints": [
+            { "tier": 1, "text": "Search chat history is about recovering exact words, not meaning and not deletion." },
+            { "tier": 2, "text": "For meaning you reach for memory_recall; deletion is not what this tool does." },
+            { "tier": 3, "text": "The three verbatim-recovery cases are the matches." }
+          ],
+          "explanation": "search_chat_history is for recovering exact words: a verbatim error message, a specific name or path, or the evidence behind a recall conclusion. For what was decided by meaning you use memory_recall, and search_chat_history does not delete anything.",
+          "docRef": "memory-and-learning.md",
+          "targetSeconds": 70,
+          "solution": { "optionIds": ["a", "b", "c"] }
+        },
+        {
+          "id": "w2.t3.c5",
+          "worldId": "w2",
+          "topicId": "w2.t3",
+          "kind": "config-fill",
+          "difficulty": "medium",
+          "prompt": "A search_chat_history hit looks like the thread you need. Which field from that result do you pass to get_chat_session to read the full transcript? Write just the field name.",
+          "starter": "",
+          "hints": [
+            { "tier": 1, "text": "It is the stable handle each search hit carries that identifies the session." },
+            { "tier": 2, "text": "You pass it straight into get_chat_session." },
+            { "tier": 3, "text": "It is the session_key." }
+          ],
+          "explanation": "Each search_chat_history result carries a session_key, and you pass that to get_chat_session to read the full message transcript of that one conversation. get_chat_session refuses incognito and temporary sessions.",
+          "docRef": "memory-and-learning.md",
+          "targetSeconds": 55,
+          "roleVariants": {
+            "qa": {
+              "scenario": "You found the flaky-test thread with a snippet search and now want its whole transcript.",
+              "prompt": "Name the field from the search hit that get_chat_session needs to open the full thread."
+            },
+            "backend": {
+              "scenario": "A search hit matches the bug you are chasing and you want the complete conversation.",
+              "prompt": "Name the field from the search hit that get_chat_session needs to open the full thread."
+            }
+          },
+          "solution": { "accept": ["session_key"], "normalizer": "text" }
+        },
+        {
+          "id": "w2.t3.c6",
+          "worldId": "w2",
+          "topicId": "w2.t3",
+          "kind": "sequence",
+          "difficulty": "medium",
+          "prompt": "Order the human-like search loop for recovering an exact detail from a past conversation.",
+          "items": [
+            { "id": "s1", "text": "Run search_chat_history with a first query" },
+            { "id": "s2", "text": "Read the ranked snippets to see if a hit is right" },
+            { "id": "s3", "text": "Re-search with different keywords if the first hit is not it" },
+            { "id": "s4", "text": "Call get_chat_session on the promising hit's session_key" },
+            { "id": "s5", "text": "Read the full transcript to confirm the detail" }
+          ],
+          "hints": [
+            { "tier": 1, "text": "Search first, open the full thread only once a snippet looks right." },
+            { "tier": 2, "text": "You may re-query before you open anything." },
+            { "tier": 3, "text": "Query, read snippets, re-query if needed, then get_chat_session and read the transcript." }
+          ],
+          "explanation": "You search like a human: run a query, read the snippets, re-search with different keywords if the first hit is wrong, then call get_chat_session on the promising hit's session_key and read the full transcript. Snippets come before the full read because the full read is the expensive step.",
+          "docRef": "memory-and-learning.md",
+          "targetSeconds": 80,
+          "roleVariants": {
+            "eng-manager": {
+              "scenario": "You are reconstructing what was agreed in a past planning chat and need the exact wording.",
+              "prompt": "Order the search-then-open loop for recovering the exact detail."
+            },
+            "security": {
+              "scenario": "You are tracing the verbatim command a past session ran and need to confirm it in the transcript.",
+              "prompt": "Order the search-then-open loop for recovering the exact detail."
+            }
+          },
+          "solution": { "orderedItemIds": ["s1", "s2", "s3", "s4", "s5"] }
+        },
+        {
+          "id": "w2.t3.c7",
+          "worldId": "w2",
+          "topicId": "w2.t3",
+          "kind": "matching",
+          "difficulty": "medium",
+          "prompt": "Match each tool to the job it is best at.",
+          "left": [
+            { "id": "l1", "text": "memory_recall" },
+            { "id": "l2", "text": "search_chat_history" },
+            { "id": "l3", "text": "get_chat_session" },
+            { "id": "l4", "text": "list_sessions" }
+          ],
+          "right": [
+            { "id": "r1", "text": "What was decided or learned, retrieved by meaning from the memory store" },
+            { "id": "r2", "text": "Finding a past thread by keyword, as ranked snippets" },
+            { "id": "r3", "text": "Reading one past conversation's full transcript by its session_key" },
+            { "id": "r4", "text": "Browsing recent sessions: titles, owning agent, volume, last activity" },
+            { "id": "r5", "text": "Permanently deleting a conversation from history" }
+          ],
+          "hints": [
+            { "tier": 1, "text": "One right-hand entry is deletion and matches none of these read tools." },
+            { "tier": 2, "text": "Recall is meaning, search is keyword snippets, get is one full transcript." },
+            { "tier": 3, "text": "list_sessions is the browse; the deletion entry is the decoy." }
+          ],
+          "explanation": "memory_recall answers by meaning from the memory store, search_chat_history finds a thread by keyword as snippets, get_chat_session reads one full transcript by session_key, and list_sessions browses recent sessions. None of these deletes a conversation.",
+          "docRef": "memory-and-learning.md",
+          "targetSeconds": 80,
+          "solution": { "pairs": { "l1": "r1", "l2": "r2", "l3": "r3", "l4": "r4" } }
+        },
+        {
+          "id": "w2.t3.c8",
+          "worldId": "w2",
+          "topicId": "w2.t3",
+          "kind": "simulation",
+          "difficulty": "hard",
+          "scenario": "You remember a past session where a specific CloudTrail throttling error was quoted verbatim, and you need those exact words again. You are not sure which session it was.",
+          "prompt": "Pick the tool and write the keyword query to find that past thread.",
+          "toolPalette": [
+            { "id": "search_chat_history", "text": "search_chat_history" },
+            { "id": "memory_recall", "text": "memory_recall" },
+            { "id": "get_chat_session", "text": "get_chat_session" },
+            { "id": "list_sessions", "text": "list_sessions" }
+          ],
+          "argSpecs": [
+            { "name": "query", "label": "query", "input": "text", "placeholder": "keywords to search for", "required": true }
+          ],
+          "hints": [
+            { "tier": 1, "text": "You want the exact words, and you do not yet know which session, so you search by keyword." },
+            { "tier": 2, "text": "memory_recall gives meaning not verbatim text, and get_chat_session needs a session_key you do not have yet." },
+            { "tier": 3, "text": "search_chat_history with keywords like CloudTrail throttling error." }
+          ],
+          "explanation": "You want verbatim words and do not know the session, so search_chat_history with keywords (CloudTrail throttling error) is the right first step. memory_recall returns meaning not exact text, and get_chat_session needs a session_key you only get from the search hit.",
+          "docRef": "memory-and-learning.md",
+          "targetSeconds": 110,
+          "roleVariants": {
+            "devops-sre": {
+              "scenario": "You need the exact wording of a throttling error quoted in a past incident session but cannot recall which tab it was in.",
+              "prompt": "Pick the tool and write the keyword query to locate that past thread."
+            },
+            "data": {
+              "scenario": "A past pipeline session quoted a precise rate-limit error you now need verbatim, and you do not know which session it was.",
+              "prompt": "Pick the tool and write the keyword query to locate that past thread."
+            }
+          },
+          "solution": { "toolId": "search_chat_history", "args": { "query": "CloudTrail throttling error" }, "lenientArgs": { "query": "text" } }
+        },
+        {
+          "id": "w2.t3.c9",
+          "worldId": "w2",
+          "topicId": "w2.t3",
+          "kind": "debug-fix",
+          "difficulty": "hard",
+          "prompt": "A colleague wrote this note about the history tools. Two claims are wrong: search returns snippets not full transcripts, and these tools do not write anything. Fix only the two false values.",
+          "brokenCall": "{\n  \"search_chat_history_returns\": \"full-transcripts\",\n  \"history_tools_modify_memory\": true,\n  \"get_chat_session_reads_full_transcript\": true\n}",
+          "language": "json",
+          "hints": [
+            { "tier": 1, "text": "Search gives snippets; the read tools only read." },
+            { "tier": 2, "text": "search_chat_history returns ranked snippets, and the tools never modify memory or history." },
+            { "tier": 3, "text": "search_chat_history_returns becomes snippets and history_tools_modify_memory becomes false; leave the last one true." }
+          ],
+          "explanation": "search_chat_history returns ranked snippets, not full transcripts, and the history tools never modify memory or history. get_chat_session genuinely does read a full transcript, so that field was already correct at true.",
+          "docRef": "memory-and-learning.md",
+          "targetSeconds": 120,
+          "roleVariants": {
+            "security": {
+              "scenario": "You are reviewing a runbook that implies the history tools can alter stored data, which matters for an audit.",
+              "prompt": "Correct the two false values so the note matches how the history tools behave."
+            },
+            "eng-manager": {
+              "scenario": "You are fixing an onboarding page that misdescribes what the chat history tools return and change.",
+              "prompt": "Correct the two false values so the note matches how the history tools behave."
+            }
+          },
+          "solution": {
+            "accept": [
+              "{\"search_chat_history_returns\":\"snippets\",\"history_tools_modify_memory\":false,\"get_chat_session_reads_full_transcript\":true}"
+            ],
+            "normalizer": "json"
+          }
+        },
+        {
+          "id": "w2.t3.c10",
+          "worldId": "w2",
+          "topicId": "w2.t3",
+          "kind": "single-choice",
+          "difficulty": "hard",
+          "prompt": "You want to recover the verbatim text of a conversation held in an incognito session. You have its apparent session_key. What happens when you call get_chat_session?",
+          "options": [
+            { "id": "a", "text": "It refuses: get_chat_session will not read incognito or temporary sessions" },
+            { "id": "b", "text": "It returns the full transcript as it would for any session" },
+            { "id": "c", "text": "It returns only the first message to protect privacy" },
+            { "id": "d", "text": "It converts the session to persistent and then reads it" }
+          ],
+          "hints": [
+            { "tier": 1, "text": "Incognito and temporary sessions are the ones that do not persist bodies." },
+            { "tier": 2, "text": "A read tool cannot hand back what was never meant to be retained." },
+            { "tier": 3, "text": "get_chat_session refuses incognito and temporary sessions." }
+          ],
+          "explanation": "get_chat_session refuses incognito and temporary sessions, because those modes deliberately do not retain conversation bodies for later reading. It does not convert the mode or return a partial transcript.",
+          "docRef": "memory-and-learning.md",
+          "targetSeconds": 85,
+          "solution": { "optionId": "a" }
+        }
+      ]
+    },
+    {
+      "id": "w2.t4",
+      "title": "The Knowledge Library",
+      "summary": "local_knowledge_search over your own documents, knowledge_add_document and the source_uri identity, what must never be added, and how search degrades across its three quality legs.",
+      "challenges": [
+        {
+          "id": "w2.t4.c1",
+          "worldId": "w2",
+          "topicId": "w2.t4",
+          "kind": "single-choice",
+          "difficulty": "easy",
+          "prompt": "What is the knowledge library?",
+          "options": [
+            { "id": "a", "text": "Semantic search over your own documents, folders and saved artifacts, with every result citing its source" },
+            { "id": "b", "text": "A log of every MCP tool call the gateway has made" },
+            { "id": "c", "text": "The memory store of preferences and lessons" },
+            { "id": "d", "text": "A list of the agent templates installed on the gateway" }
+          ],
+          "hints": [
+            { "tier": 1, "text": "It is about searching your own documents by meaning." },
+            { "tier": 2, "text": "Text is chunked and indexed, and every hit names where it came from." },
+            { "tier": 3, "text": "It is semantic search over your documents, folders and artifacts, with citations." }
+          ],
+          "explanation": "The knowledge library is semantic search over your own documents, synced folders and saved artifacts: text is chunked and indexed, searchable by meaning, and every result cites its source. It is distinct from the memory store, which holds preferences, projects, history and lessons.",
+          "docRef": "knowledge-library-how-it-works.md",
+          "targetSeconds": 30,
+          "solution": { "optionId": "a" }
+        },
+        {
+          "id": "w2.t4.c2",
+          "worldId": "w2",
+          "topicId": "w2.t4",
+          "kind": "true-false",
+          "difficulty": "easy",
+          "prompt": "Decide whether the statement holds.",
+          "statement": "Uploading the same document twice, once directly and once through a folder sync, doubles every hit in search results.",
+          "hints": [
+            { "tier": 1, "text": "Think about whether the library tolerates the same text arriving by two paths." },
+            { "tier": 2, "text": "Near-identical passages from different sources are collapsed." },
+            { "tier": 3, "text": "No: duplicates are collapsed to one result." }
+          ],
+          "explanation": "False. Near-identical passages from different sources are collapsed to one result, so uploading the same document directly and through a folder sync does not double every hit. The dedup is by content similarity across sources.",
+          "docRef": "knowledge-library-how-it-works.md",
+          "targetSeconds": 25,
+          "solution": { "value": false }
+        },
+        {
+          "id": "w2.t4.c3",
+          "worldId": "w2",
+          "topicId": "w2.t4",
+          "kind": "tool-name",
+          "difficulty": "easy",
+          "prompt": "The user asks what do we know about X in our docs. You want to search the knowledge library for relevant passages. Which tool do you call?",
+          "hints": [
+            { "tier": 1, "text": "It is the search tool scoped to the local document library." },
+            { "tier": 2, "text": "The verb says it searches local knowledge." },
+            { "tier": 3, "text": "It is local_knowledge_search." }
+          ],
+          "explanation": "local_knowledge_search queries the knowledge library and returns relevant chunks with citations. You call it when the user asks what do we know about X, references a stored document by name, or says in my docs or according to our knowledge.",
+          "docRef": "knowledge-library-how-it-works.md",
+          "targetSeconds": 35,
+          "solution": { "accept": ["local_knowledge_search"], "normalizer": "tool" }
+        },
+        {
+          "id": "w2.t4.c4",
+          "worldId": "w2",
+          "topicId": "w2.t4",
+          "kind": "multi-choice",
+          "difficulty": "medium",
+          "prompt": "Select every item that must NEVER be added to the knowledge library.",
+          "options": [
+            { "id": "a", "text": "Source code" },
+            { "id": "b", "text": "Agent instruction files like AGENTS.md or SKILL.md" },
+            { "id": "c", "text": "Generated or machine-readable files" },
+            { "id": "d", "text": "Chat transcripts" },
+            { "id": "e", "text": "A load-bearing design doc or RFC you actually read" },
+            { "id": "f", "text": "A runbook that explains how a system works" }
+          ],
+          "hints": [
+            { "tier": 1, "text": "Load-bearing human-readable docs are exactly what the library is for." },
+            { "tier": 2, "text": "Code, agent instruction files, generated files and transcripts are the never-add set." },
+            { "tier": 3, "text": "A design doc and a runbook are good additions; the other four are not." }
+          ],
+          "explanation": "Do not add source code, agent instruction files (AGENTS.md, SKILL.md), generated or machine-readable files, chat transcripts, your own notes, or a page you only skimmed. A design doc, RFC or runbook you actually read and that explains intent is exactly what belongs there.",
+          "docRef": "knowledge-library-how-it-works.md",
+          "targetSeconds": 70,
+          "solution": { "optionIds": ["a", "b", "c", "d"] }
+        },
+        {
+          "id": "w2.t4.c5",
+          "worldId": "w2",
+          "topicId": "w2.t4",
+          "kind": "config-fill",
+          "difficulty": "medium",
+          "prompt": "You are adding a document with knowledge_add_document. Which field is the document's identity, so re-adding the same value replaces that document rather than duplicating it? Write just the field name.",
+          "starter": "",
+          "hints": [
+            { "tier": 1, "text": "It is where the document came from, used as a stable handle." },
+            { "tier": 2, "text": "Two documents with different values of it stay separate even if titles match." },
+            { "tier": 3, "text": "It is source_uri." }
+          ],
+          "explanation": "source_uri is the document's identity: re-adding the same source_uri replaces that document, and two documents with different URIs stay separate even when their titles match. It is required so two documents sharing a title do not overwrite each other, and nothing at that URI is opened or fetched.",
+          "docRef": "knowledge-library-how-it-works.md",
+          "targetSeconds": 60,
+          "roleVariants": {
+            "data": {
+              "scenario": "You are ingesting versioned spec documents and want a re-add to replace the prior version, not create a second copy.",
+              "prompt": "Name the knowledge_add_document field that serves as the document's identity."
+            },
+            "platform": {
+              "scenario": "You maintain a set of runbooks in the library and need re-adds to update in place rather than pile up.",
+              "prompt": "Name the knowledge_add_document field that serves as the document's identity."
+            }
+          },
+          "solution": { "accept": ["source_uri"], "normalizer": "text" }
+        },
+        {
+          "id": "w2.t4.c6",
+          "worldId": "w2",
+          "topicId": "w2.t4",
+          "kind": "sequence",
+          "difficulty": "medium",
+          "prompt": "Order the three quality legs of knowledge search from the richest ranking to the leanest, as it degrades.",
+          "items": [
+            { "id": "s1", "text": "Full: embedding model loaded, so meaning, keyword and graph matching all contribute" },
+            { "id": "s2", "text": "Keyword and graph: no embedding model, so full-text and graph matching answer" },
+            { "id": "s3", "text": "Keyword only: the graph leg finds no entity match, so full-text matching answers alone" }
+          ],
+          "hints": [
+            { "tier": 1, "text": "The most legs contributing is the richest; keyword alone is the floor." },
+            { "tier": 2, "text": "Lose the model first, then lose the graph contribution." },
+            { "tier": 3, "text": "Full, then keyword and graph, then keyword only." }
+          ],
+          "explanation": "Search runs three legs and fuses them, degrading in a defined order: Full (model loaded, all three contribute), Keyword and graph (no model), then Keyword only (graph finds no match). Keyword search is a local index with no model behind it, so it is always available as the floor.",
+          "docRef": "knowledge-library-how-it-works.md",
+          "targetSeconds": 70,
+          "solution": { "orderedItemIds": ["s1", "s2", "s3"] }
+        },
+        {
+          "id": "w2.t4.c7",
+          "worldId": "w2",
+          "topicId": "w2.t4",
+          "kind": "matching",
+          "difficulty": "medium",
+          "prompt": "Match each result citation prefix to what it names.",
+          "left": [
+            { "id": "l1", "text": "Source:" },
+            { "id": "l2", "text": "File:" },
+            { "id": "l3", "text": "Artifact:" },
+            { "id": "l4", "text": "Link:" }
+          ],
+          "right": [
+            { "id": "r1", "text": "A document you added" },
+            { "id": "r2", "text": "A file inside a synced folder" },
+            { "id": "r3", "text": "Something you saved as an artifact" },
+            { "id": "r4", "text": "A URL" },
+            { "id": "r5", "text": "A lesson you taught with learn_add" }
+          ],
+          "hints": [
+            { "tier": 1, "text": "One right-hand entry is a lesson and is not a knowledge citation at all." },
+            { "tier": 2, "text": "Source is a document, File is inside a synced folder, Artifact is a saved artifact." },
+            { "tier": 3, "text": "Link is a URL; the lesson entry is the decoy." }
+          ],
+          "explanation": "A knowledge result cites its origin: Source for a document, File for a file inside a synced folder, Artifact for something you saved, and Link for a URL. A lesson lives in memory, not the knowledge library, so it is never a citation prefix.",
+          "docRef": "knowledge-library-how-it-works.md",
+          "targetSeconds": 80,
+          "solution": { "pairs": { "l1": "r1", "l2": "r2", "l3": "r3", "l4": "r4" } }
+        },
+        {
+          "id": "w2.t4.c8",
+          "worldId": "w2",
+          "topicId": "w2.t4",
+          "kind": "simulation",
+          "difficulty": "hard",
+          "scenario": "You just read a load-bearing architecture RFC from a wiki page while working, and it explains a decision you will want to find again later. You want it searchable in the knowledge library.",
+          "prompt": "Pick the tool and set the title, the document identity and the content.",
+          "toolPalette": [
+            { "id": "knowledge_add_document", "text": "knowledge_add_document" },
+            { "id": "local_knowledge_search", "text": "local_knowledge_search" },
+            { "id": "learn_add", "text": "learn_add" },
+            { "id": "knowledge_dedup", "text": "knowledge_dedup" }
+          ],
+          "argSpecs": [
+            { "name": "title", "label": "title", "input": "text", "placeholder": "document title", "required": true },
+            { "name": "source_uri", "label": "source_uri", "input": "text", "placeholder": "where you read it from", "required": true },
+            { "name": "content", "label": "content", "input": "text", "placeholder": "the document text", "required": true }
+          ],
+          "hints": [
+            { "tier": 1, "text": "You are keeping a document you read, not teaching a rule and not searching." },
+            { "tier": 2, "text": "The tool needs a title, the document text as content, and a source_uri that is its identity." },
+            { "tier": 3, "text": "knowledge_add_document with a title, the RFC URL as source_uri, and the RFC text as content." }
+          ],
+          "explanation": "A load-bearing document you read and want to find again is knowledge_add_document: pass the title, the document text as content, and the URL you read it from as source_uri (its identity). learn_add is for rules, local_knowledge_search is a read, and knowledge_dedup only collapses existing duplicates.",
+          "docRef": "knowledge-library-how-it-works.md",
+          "targetSeconds": 140,
+          "roleVariants": {
+            "cloud-architect": {
+              "scenario": "You read an RFC that justifies a key architecture decision and want it in the library for future design sessions.",
+              "prompt": "Pick the tool and set the title, the document identity and the content."
+            },
+            "eng-manager": {
+              "scenario": "You read a decision record you will reference in future planning and want it searchable by meaning.",
+              "prompt": "Pick the tool and set the title, the document identity and the content."
+            },
+            "security": {
+              "scenario": "You read a threat-model document that explains a security decision and want it retrievable later.",
+              "prompt": "Pick the tool and set the title, the document identity and the content."
+            }
+          },
+          "solution": {
+            "toolId": "knowledge_add_document",
+            "args": { "title": "Architecture RFC", "source_uri": "https://wiki.example.com/rfc/architecture", "content": "the full text of the RFC you read" },
+            "lenientArgs": { "title": "text", "source_uri": "text", "content": "text" }
+          }
+        },
+        {
+          "id": "w2.t4.c9",
+          "worldId": "w2",
+          "topicId": "w2.t4",
+          "kind": "debug-fix",
+          "difficulty": "hard",
+          "prompt": "This knowledge_add_document call is missing the field that gives the document its identity, so two documents sharing a title would overwrite each other. Add it, pointing at where the doc was read from. Change only what is needed.",
+          "brokenCall": "{\n  \"title\": \"Retry Policy RFC\",\n  \"content\": \"the full text of the RFC\"\n}",
+          "language": "json",
+          "hints": [
+            { "tier": 1, "text": "title and content are not enough; the tool needs the document's stable handle." },
+            { "tier": 2, "text": "The missing field is where you read the document from." },
+            { "tier": 3, "text": "Add source_uri pointing at the document's location." }
+          ],
+          "explanation": "knowledge_add_document requires source_uri, which is the document's identity. Without it, two documents sharing a title would overwrite each other. Adding source_uri set to where the doc was read from makes the call valid; the value is only a label, nothing is fetched from it.",
+          "docRef": "knowledge-library-how-it-works.md",
+          "targetSeconds": 120,
+          "roleVariants": {
+            "data": {
+              "scenario": "You tried to add a spec to the library but the call is incomplete, risking a title collision overwriting another doc.",
+              "prompt": "Add the missing identity field so the document is stored distinctly."
+            },
+            "platform": {
+              "scenario": "Your library ingest call omits the field that keeps same-titled docs separate.",
+              "prompt": "Add the missing identity field so the document is stored distinctly."
+            }
+          },
+          "solution": {
+            "accept": [
+              "{\"title\":\"Retry Policy RFC\",\"content\":\"the full text of the RFC\",\"source_uri\":\"https://wiki.example.com/rfc/retry-policy\"}"
+            ],
+            "normalizer": "json"
+          }
+        },
+        {
+          "id": "w2.t4.c10",
+          "worldId": "w2",
+          "topicId": "w2.t4",
+          "kind": "single-choice",
+          "difficulty": "hard",
+          "prompt": "The embedding model is still downloading on a fresh gateway and a user runs a knowledge search for an exact phrase they know is in a document. What happens?",
+          "options": [
+            { "id": "a", "text": "Keyword matching still answers, because it is a local index with no model behind it and is always available" },
+            { "id": "b", "text": "The search fails until the model finishes downloading" },
+            { "id": "c", "text": "The search returns nothing and silently reports success" },
+            { "id": "d", "text": "The search blocks and waits for the model to load" }
+          ],
+          "hints": [
+            { "tier": 1, "text": "Search degrades in a defined order rather than failing." },
+            { "tier": 2, "text": "One of the three legs needs no model at all." },
+            { "tier": 3, "text": "Keyword matching is always available, so an exact phrase still works." }
+          ],
+          "explanation": "With no model loaded, search degrades to keyword and graph (or keyword only), and keyword matching is a local index with no model behind it, so it is always available. An exact phrase still finds the passage; the search does not fail, block or silently return empty.",
+          "docRef": "knowledge-library-how-it-works.md",
+          "targetSeconds": 85,
+          "solution": { "optionId": "a" }
+        }
+      ]
+    },
+    {
+      "id": "w2.t5",
+      "title": "Restricted Sessions: Incognito and Temporary",
+      "summary": "The three memory modes, what incognito blocks (writes, learn_add, consolidation, lesson deletion), what temporary additionally blocks (reads), how to set a mode, and the fail-closed default.",
+      "challenges": [
+        {
+          "id": "w2.t5.c1",
+          "worldId": "w2",
+          "topicId": "w2.t5",
+          "kind": "single-choice",
+          "difficulty": "easy",
+          "prompt": "Which is the factory default memory mode for a session?",
+          "options": [
+            { "id": "a", "text": "Persistent: reads, writes and consolidates memory" },
+            { "id": "b", "text": "Incognito: reads but does not write" },
+            { "id": "c", "text": "Temporary: no memory interaction at all" },
+            { "id": "d", "text": "There is no default; every session must choose a mode" }
+          ],
+          "hints": [
+            { "tier": 1, "text": "The default is the mode used for normal work." },
+            { "tier": 2, "text": "It is the one that both reads and writes memory." },
+            { "tier": 3, "text": "Persistent is the factory default." }
+          ],
+          "explanation": "Persistent is the factory default: it reads memory, writes memory and consolidates. Incognito reads but blocks writes, and Temporary blocks all memory interaction.",
+          "docRef": "memory-and-learning.md",
+          "targetSeconds": 30,
+          "solution": { "optionId": "a" }
+        },
+        {
+          "id": "w2.t5.c2",
+          "worldId": "w2",
+          "topicId": "w2.t5",
+          "kind": "true-false",
+          "difficulty": "easy",
+          "prompt": "Decide whether the statement holds.",
+          "statement": "A temporary session reads memory but does not write it.",
+          "hints": [
+            { "tier": 1, "text": "Temporary is the most isolated mode of the three." },
+            { "tier": 2, "text": "It is the one meant for isolated experiments with no memory interaction." },
+            { "tier": 3, "text": "No: temporary blocks reads as well as writes." }
+          ],
+          "explanation": "False. Temporary blocks all memory interaction: no reads, no writes, no consolidation. The mode that reads but does not write is Incognito.",
+          "docRef": "memory-and-learning.md",
+          "targetSeconds": 25,
+          "solution": { "value": false }
+        },
+        {
+          "id": "w2.t5.c3",
+          "worldId": "w2",
+          "topicId": "w2.t5",
+          "kind": "tool-name",
+          "difficulty": "medium",
+          "prompt": "In Slack you want to mark the current thread as sensitive so it reads context but writes no memory. What prefix do you type?",
+          "hints": [
+            { "tier": 1, "text": "It is a Slack prefix, one word, matching the mode name." },
+            { "tier": 2, "text": "The mode that reads but does not write is incognito." },
+            { "tier": 3, "text": "It is !incognito." }
+          ],
+          "explanation": "In Slack, the !incognito prefix sets the session to incognito, which reads context but blocks learn_add and consolidation. Telegram spells it as the command /incognito; the mode and its guarantees are the same on both.",
+          "docRef": "memory-and-learning.md",
+          "targetSeconds": 45,
+          "solution": { "accept": ["!incognito", "incognito"], "normalizer": "tool" }
+        },
+        {
+          "id": "w2.t5.c4",
+          "worldId": "w2",
+          "topicId": "w2.t5",
+          "kind": "multi-choice",
+          "difficulty": "medium",
+          "prompt": "Select everything an incognito session blocks.",
+          "options": [
+            { "id": "a", "text": "learn_add writes" },
+            { "id": "b", "text": "Consolidation into memory" },
+            { "id": "c", "text": "Lesson deletion" },
+            { "id": "d", "text": "Reading existing memory context" },
+            { "id": "e", "text": "Running any MCP tool at all" }
+          ],
+          "hints": [
+            { "tier": 1, "text": "Incognito blocks writes to learned memory but still lets you read." },
+            { "tier": 2, "text": "It blocks learn_add, consolidation and even lesson deletion, which is a write." },
+            { "tier": 3, "text": "Reading context is allowed, and tools in general are not blocked." }
+          ],
+          "explanation": "Incognito blocks learned-memory writes: learn_add, consolidation and lesson deletion (a deletion is still a write). It still reads memory context, and it does not block MCP tools in general. Blocking reads is what Temporary adds on top.",
+          "docRef": "memory-and-learning.md",
+          "targetSeconds": 70,
+          "solution": { "optionIds": ["a", "b", "c"] }
+        },
+        {
+          "id": "w2.t5.c5",
+          "worldId": "w2",
+          "topicId": "w2.t5",
+          "kind": "config-fill",
+          "difficulty": "medium",
+          "prompt": "If config.json or its dashboard section cannot be read, new dashboard chats fail closed to which memory mode? Write just the mode name.",
+          "starter": "",
+          "hints": [
+            { "tier": 1, "text": "Failing closed means the safest, most isolated mode." },
+            { "tier": 2, "text": "It is the mode with no memory interaction at all." },
+            { "tier": 3, "text": "It is Temporary." }
+          ],
+          "explanation": "If config.json or its dashboard section cannot be read, new chats fail closed to Temporary until the file is fixed and the gateway restarts. Failing closed to the no-interaction mode is the safe default when the configured preference cannot be read.",
+          "docRef": "memory-and-learning.md",
+          "targetSeconds": 55,
+          "roleVariants": {
+            "security": {
+              "scenario": "You are reviewing what happens to memory isolation when the gateway config is unreadable, for a resilience assessment.",
+              "prompt": "State the memory mode new chats fall back to when the config cannot be read."
+            },
+            "devops-sre": {
+              "scenario": "You are hardening the gateway and need to know the fail-closed behavior if config.json is corrupt.",
+              "prompt": "State the memory mode new chats fall back to when the config cannot be read."
+            }
+          },
+          "solution": { "accept": ["Temporary", "temporary"], "normalizer": "text" }
+        },
+        {
+          "id": "w2.t5.c6",
+          "worldId": "w2",
+          "topicId": "w2.t5",
+          "kind": "sequence",
+          "difficulty": "medium",
+          "prompt": "Order the three memory modes from the most memory interaction to the least.",
+          "items": [
+            { "id": "s1", "text": "Persistent: reads, writes and consolidates" },
+            { "id": "s2", "text": "Incognito: reads, but blocks writes and consolidation" },
+            { "id": "s3", "text": "Temporary: no reads, no writes, no consolidation" }
+          ],
+          "hints": [
+            { "tier": 1, "text": "Full interaction at one end, none at the other." },
+            { "tier": 2, "text": "Incognito sits between the two: it still reads." },
+            { "tier": 3, "text": "Persistent, then Incognito, then Temporary." }
+          ],
+          "explanation": "Persistent reads and writes and consolidates, Incognito still reads but blocks writes and consolidation, and Temporary blocks everything including reads. The ordering is the amount of memory interaction each mode allows.",
+          "docRef": "memory-and-learning.md",
+          "targetSeconds": 65,
+          "solution": { "orderedItemIds": ["s1", "s2", "s3"] }
+        },
+        {
+          "id": "w2.t5.c7",
+          "worldId": "w2",
+          "topicId": "w2.t5",
+          "kind": "matching",
+          "difficulty": "medium",
+          "prompt": "Match each memory mode to its documented use case.",
+          "left": [
+            { "id": "l1", "text": "Persistent" },
+            { "id": "l2", "text": "Incognito" },
+            { "id": "l3", "text": "Temporary" }
+          ],
+          "right": [
+            { "id": "r1", "text": "Normal work: reads, writes and consolidates" },
+            { "id": "r2", "text": "Sensitive tasks: reads context but blocks learn_add and consolidation" },
+            { "id": "r3", "text": "Isolated experiments: no memory interaction at all" },
+            { "id": "r4", "text": "A session that can never call any MCP tool" }
+          ],
+          "hints": [
+            { "tier": 1, "text": "One right-hand entry (no tools at all) is not a real mode behavior." },
+            { "tier": 2, "text": "Persistent is normal work, incognito is sensitive tasks, temporary is isolated experiments." },
+            { "tier": 3, "text": "The no-tools entry is the decoy; map the other three." }
+          ],
+          "explanation": "Persistent is for normal work, Incognito is for sensitive tasks (reads but no learned writes), and Temporary is for isolated experiments (no memory interaction). No mode disables MCP tools wholesale; that is the decoy.",
+          "docRef": "memory-and-learning.md",
+          "targetSeconds": 75,
+          "solution": { "pairs": { "l1": "r1", "l2": "r2", "l3": "r3" } }
+        },
+        {
+          "id": "w2.t5.c8",
+          "worldId": "w2",
+          "topicId": "w2.t5",
+          "kind": "simulation",
+          "difficulty": "hard",
+          "scenario": "You are about to paste a customer's sensitive credentials into a dashboard chat to debug an integration. You want the session to read your existing context so it can help, but write nothing to memory and never learn from this conversation.",
+          "prompt": "Pick the mode icon action that reads context but blocks all learned-memory writes.",
+          "toolPalette": [
+            { "id": "incognito", "text": "Set mode: Incognito" },
+            { "id": "temporary", "text": "Set mode: Temporary" },
+            { "id": "persistent", "text": "Set mode: Persistent" },
+            { "id": "reset_conversation", "text": "reset_conversation" }
+          ],
+          "argSpecs": [
+            { "name": "reads_context", "label": "Should it still read your existing memory context?", "input": "boolean", "required": true }
+          ],
+          "hints": [
+            { "tier": 1, "text": "You want reads kept but writes blocked, which is one specific mode." },
+            { "tier": 2, "text": "Temporary would block reads too, and persistent would write; you want the middle one." },
+            { "tier": 3, "text": "Incognito, with reads still on." }
+          ],
+          "explanation": "Incognito is the mode that reads your existing context but blocks learn_add, consolidation and lesson deletion, which is exactly right for a sensitive task where you still want help from context. Temporary would also block reads, and Persistent would write the sensitive conversation to memory.",
+          "docRef": "memory-and-learning.md",
+          "targetSeconds": 130,
+          "roleVariants": {
+            "security": {
+              "scenario": "You must paste a secret into a chat to reproduce a bug, and policy says this conversation must never be learned from, though reading prior context is fine.",
+              "prompt": "Pick the mode that reads context but blocks all learned-memory writes."
+            },
+            "data": {
+              "scenario": "You are debugging with a sample of regulated data in the chat and must not let any of it be consolidated into memory, while keeping access to prior context.",
+              "prompt": "Pick the mode that reads context but blocks all learned-memory writes."
+            },
+            "backend": {
+              "scenario": "You are troubleshooting with a live API key in the conversation and want no memory written, but still want the session to use what it already knows.",
+              "prompt": "Pick the mode that reads context but blocks all learned-memory writes."
+            }
+          },
+          "solution": { "toolId": "incognito", "args": { "reads_context": true } }
+        },
+        {
+          "id": "w2.t5.c9",
+          "worldId": "w2",
+          "topicId": "w2.t5",
+          "kind": "debug-fix",
+          "difficulty": "hard",
+          "prompt": "This note about the modes gets two things wrong: temporary does not read memory, and incognito does block learn_add. Fix only the two false values, leaving the correct one.",
+          "brokenCall": "{\n  \"temporary_reads_memory\": true,\n  \"incognito_blocks_learn_add\": false,\n  \"persistent_writes_memory\": true\n}",
+          "language": "json",
+          "hints": [
+            { "tier": 1, "text": "Temporary blocks reads, and incognito blocks writes like learn_add." },
+            { "tier": 2, "text": "temporary_reads_memory should be false and incognito_blocks_learn_add should be true." },
+            { "tier": 3, "text": "Flip the first two; persistent_writes_memory stays true." }
+          ],
+          "explanation": "Temporary blocks reads, so temporary_reads_memory is false, and incognito blocks learned-memory writes including learn_add, so incognito_blocks_learn_add is true. Persistent does write memory, so that field was already correct.",
+          "docRef": "memory-and-learning.md",
+          "targetSeconds": 120,
+          "roleVariants": {
+            "security": {
+              "scenario": "You are correcting a policy page that misstates what the restricted modes allow, which matters for a data-handling review.",
+              "prompt": "Correct the two false values so the note matches how the modes behave."
+            },
+            "eng-manager": {
+              "scenario": "You are fixing onboarding docs that describe the memory modes incorrectly in two places.",
+              "prompt": "Correct the two false values so the note matches how the modes behave."
+            }
+          },
+          "solution": {
+            "accept": [
+              "{\"temporary_reads_memory\":false,\"incognito_blocks_learn_add\":true,\"persistent_writes_memory\":true}"
+            ],
+            "normalizer": "json"
+          }
+        },
+        {
+          "id": "w2.t5.c10",
+          "worldId": "w2",
+          "topicId": "w2.t5",
+          "kind": "single-choice",
+          "difficulty": "hard",
+          "prompt": "You set the dashboard default memory mode to Persistent, but a cron job runs in a mode you did not expect. Why does the dashboard default not apply to it?",
+          "options": [
+            { "id": "a", "text": "App-owned chats, messaging channels, cron jobs and direct API callers keep their own mode selection and do not inherit the dashboard preference" },
+            { "id": "b", "text": "Cron jobs always run in Temporary regardless of any setting" },
+            { "id": "c", "text": "The dashboard default only applies after a gateway restart" },
+            { "id": "d", "text": "Cron jobs copy the mode of the last dashboard chat you used" }
+          ],
+          "hints": [
+            { "tier": 1, "text": "The dashboard default is scoped to new dashboard chats." },
+            { "tier": 2, "text": "Non-dashboard callers manage their own mode." },
+            { "tier": 3, "text": "Cron jobs, app chats, channels and API callers keep their own selection." }
+          ],
+          "explanation": "The dashboard default_memory_mode governs new dashboard chats. App-owned chats, messaging channels, cron jobs and direct API callers keep their own mode selection and do not inherit that dashboard preference, so a cron job's mode is set by the job, not the dashboard default.",
+          "docRef": "memory-and-learning.md",
+          "targetSeconds": 90,
+          "solution": { "optionId": "a" }
+        }
+      ]
+    }
+  ]
+}

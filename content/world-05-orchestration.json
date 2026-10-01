@@ -1,0 +1,1434 @@
+{
+  "id": "w5",
+  "order": 5,
+  "title": "Orchestration and Watching",
+  "subtitle": "Dynamic workflows, pull-request monitors, budgets, the session ledger, and webhook handoffs",
+  "lore": "A ghost that has learned to haunt a street now learns to haunt it while asleep. This world is about work that runs without you in the room: a workflow with phases you can replay, a monitor that wakes you only when a pull request moves, a ledger that remembers what you were doing after your own memory is compacted away, and a webhook that calls you back when the outside world is finally ready.",
+  "accent": "#5B21B6",
+  "topics": [
+    {
+      "id": "w5.t1",
+      "title": "Dynamic Workflows",
+      "summary": "Turning an intent into a multi-phase run with workflow_run, watching it with workflow_status and workflow_result, replaying part of it with workflow_rerun_subtree, reusing one from workflow_library_list, and when a workflow beats a hand rolled fan out.",
+      "challenges": [
+        {
+          "id": "w5.t1.c1",
+          "worldId": "w5",
+          "topicId": "w5.t1",
+          "kind": "single-choice",
+          "difficulty": "easy",
+          "prompt": "You ask Kiro Crew to run a dynamic workflow for a goal. What comes back to you right away, and where does the final result land?",
+          "options": [
+            { "id": "a", "text": "A run id immediately, and the result is injected back into the chat when the run finishes" },
+            { "id": "b", "text": "The full result synchronously, blocking the chat until the run completes" },
+            { "id": "c", "text": "Nothing until you poll workflow_status, which returns the result" },
+            { "id": "d", "text": "A downloadable file you must open to read the result" }
+          ],
+          "hints": [
+            { "tier": 1, "text": "A workflow runs in the background, so the first thing you get is a handle, not the answer." },
+            { "tier": 2, "text": "You do not have to poll it: the panel streams it and the result arrives on its own." },
+            { "tier": 3, "text": "You get a run id at once, and the result is injected into the chat on completion." }
+          ],
+          "explanation": "workflow_run returns a run id immediately and the run streams to the Workflows panel while it executes, then injects its result into the chat on completion. You do not have to poll it yourself, though workflow_status and workflow_result are there when you want to look.",
+          "docRef": "workflows.md",
+          "targetSeconds": 30,
+          "solution": { "optionId": "a" }
+        },
+        {
+          "id": "w5.t1.c2",
+          "worldId": "w5",
+          "topicId": "w5.t1",
+          "kind": "true-false",
+          "difficulty": "easy",
+          "prompt": "Decide whether the statement holds.",
+          "statement": "Restarting a workflow with workflow_rerun_subtree overwrites the original run's record.",
+          "hints": [
+            { "tier": 1, "text": "Think about whether you could still inspect the first run afterward." },
+            { "tier": 2, "text": "A restart is meant to preserve history, not erase it." },
+            { "tier": 3, "text": "Each restart produces a new run id, so the original run is preserved." }
+          ],
+          "explanation": "False. Each restart produces a new run id, so the original run's record is preserved rather than overwritten. That is part of why a workflow beats a one-shot fan-out: you can replay part of it and still have the earlier run to compare against.",
+          "docRef": "workflows.md",
+          "targetSeconds": 25,
+          "solution": { "value": false }
+        },
+        {
+          "id": "w5.t1.c3",
+          "worldId": "w5",
+          "topicId": "w5.t1",
+          "kind": "tool-name",
+          "difficulty": "easy",
+          "prompt": "A run finished and you want every phase, each agent's outcome, the logs, and the final return value. Which tool do you call?",
+          "hints": [
+            { "tier": 1, "text": "You want the full result, not just whether it is running." },
+            { "tier": 2, "text": "The name is two words joined by an underscore and ends in the word for the outcome." },
+            { "tier": 3, "text": "It is workflow_result." }
+          ],
+          "explanation": "workflow_result returns the full result and event stream for a run: every phase, each agent's outcome, the logs, and the final return value. workflow_status only reports whether it is running, finished, failed or cancelled plus counts.",
+          "docRef": "workflows.md",
+          "targetSeconds": 35,
+          "solution": { "accept": ["workflow_result", "@kirocrew-core/workflow_result"], "normalizer": "tool" }
+        },
+        {
+          "id": "w5.t1.c4",
+          "worldId": "w5",
+          "topicId": "w5.t1",
+          "kind": "multi-choice",
+          "difficulty": "medium",
+          "prompt": "Select every situation where a dynamic workflow is a better fit than a plain subagent fan-out.",
+          "options": [
+            { "id": "a", "text": "The work has distinct phases you want to see progress through" },
+            { "id": "b", "text": "You expect to change your mind about one step and re-run from there" },
+            { "id": "c", "text": "You want a monitorable, restartable run that streams to a panel" },
+            { "id": "d", "text": "A handful of independent lookups that all finish inside one turn and need no supervision" },
+            { "id": "e", "text": "You want the orchestration saved so it can be run again by name later" }
+          ],
+          "hints": [
+            { "tier": 1, "text": "Four of these are the stated reasons to reach for a workflow; one is the case subagents are for." },
+            { "tier": 2, "text": "Phases, restartability, visibility and reuse point to a workflow." },
+            { "tier": 3, "text": "A quick independent fan-out with no phases or restarts is the subagent case, not a workflow." }
+          ],
+          "explanation": "Reach for a workflow when the work has distinct phases, when you want to watch it progress, when you expect to re-run part of it, or when you want to save the orchestration for reuse. A simple independent fan-out that finishes in one turn with no supervision is exactly what subagents are for instead.",
+          "docRef": "workflows.md",
+          "targetSeconds": 65,
+          "solution": { "optionIds": ["a", "b", "c", "e"] }
+        },
+        {
+          "id": "w5.t1.c5",
+          "worldId": "w5",
+          "topicId": "w5.t1",
+          "kind": "config-fill",
+          "difficulty": "medium",
+          "prompt": "You are restarting a workflow and want to re-run everything completely fresh, re-executing from the very first agent call. Write the value you set for the from_index argument of workflow_rerun_subtree.",
+          "starter": "from_index=",
+          "hints": [
+            { "tier": 1, "text": "The index is the agent call to restart at, counted from the start." },
+            { "tier": 2, "text": "A full re-run restarts at the earliest possible call." },
+            { "tier": 3, "text": "It is 0, which re-runs everything." }
+          ],
+          "explanation": "from_index=0 restarts at the very first agent call, so the whole workflow re-runs fresh with no cached results reused. A higher index replays the unchanged prefix from cache and re-executes only from that call onward.",
+          "docRef": "workflows.md",
+          "targetSeconds": 55,
+          "roleVariants": {
+            "data": {
+              "scenario": "A multi-phase data pipeline workflow produced a wrong early transform and you want the whole thing recomputed from scratch.",
+              "prompt": "Write the from_index value for a complete re-run of workflow_rerun_subtree."
+            },
+            "qa": {
+              "scenario": "A test-generation workflow drifted from the first step and you want a clean full re-run rather than reusing any cached step.",
+              "prompt": "Write the from_index value for a complete re-run of workflow_rerun_subtree."
+            }
+          },
+          "solution": { "accept": ["0"], "normalizer": "text" }
+        },
+        {
+          "id": "w5.t1.c6",
+          "worldId": "w5",
+          "topicId": "w5.t1",
+          "kind": "sequence",
+          "difficulty": "medium",
+          "prompt": "Order the lifecycle of a dynamic workflow from a plain-language goal to its result, the sanctioned path.",
+          "items": [
+            { "id": "s1", "text": "Pass the goal as the intent to workflow_run" },
+            { "id": "s2", "text": "Receive a run id immediately while the run streams to the Workflows panel" },
+            { "id": "s3", "text": "Check progress with workflow_status if you want to look" },
+            { "id": "s4", "text": "The result is injected into the chat on completion" }
+          ],
+          "hints": [
+            { "tier": 1, "text": "It starts with handing over the intent, not with writing a script." },
+            { "tier": 2, "text": "The run id comes back before anything finishes." },
+            { "tier": 3, "text": "Intent, then run id and streaming, then optional status check, then the injected result." }
+          ],
+          "explanation": "You pass the goal as the intent to workflow_run (authoring and launching happen in one step), get a run id immediately while the run streams to the panel, optionally check workflow_status, and the result is injected into the chat on completion. You never hand-write the orchestration script.",
+          "docRef": "workflows.md",
+          "targetSeconds": 70,
+          "roleVariants": {
+            "eng-manager": {
+              "scenario": "You are explaining to the team how a workflow runs end to end so they stop polling it manually.",
+              "prompt": "Order the workflow lifecycle from the intent to the injected result."
+            },
+            "cloud-architect": {
+              "scenario": "You are documenting the workflow run model for a design review.",
+              "prompt": "Order the workflow lifecycle from the intent to the injected result."
+            }
+          },
+          "solution": { "orderedItemIds": ["s1", "s2", "s3", "s4"] }
+        },
+        {
+          "id": "w5.t1.c7",
+          "worldId": "w5",
+          "topicId": "w5.t1",
+          "kind": "matching",
+          "difficulty": "medium",
+          "prompt": "Match each workflow tool to what it does.",
+          "left": [
+            { "id": "l1", "text": "workflow_run" },
+            { "id": "l2", "text": "workflow_status" },
+            { "id": "l3", "text": "workflow_rerun_subtree" },
+            { "id": "l4", "text": "workflow_library_list" }
+          ],
+          "right": [
+            { "id": "r1", "text": "Author from an intent and launch the run in the background" },
+            { "id": "r2", "text": "Report running, finished, failed or cancelled plus agent and event counts" },
+            { "id": "r3", "text": "Replay the unchanged prefix from cache and re-execute from a chosen step" },
+            { "id": "r4", "text": "List workflows saved in the library so one can be run by name" },
+            { "id": "r5", "text": "Cancel a running workflow by run id" }
+          ],
+          "hints": [
+            { "tier": 1, "text": "One right-hand option describes workflow_cancel and has no match here." },
+            { "tier": 2, "text": "status reports state and counts; rerun_subtree replays a prefix from cache." },
+            { "tier": 3, "text": "run authors and launches, library_list lists saved workflows." }
+          ],
+          "explanation": "workflow_run authors from an intent and launches in the background, workflow_status reports state and counts, workflow_rerun_subtree replays the cached prefix and re-executes from a step, and workflow_library_list lists saved workflows for reuse by name. Cancelling by run id is workflow_cancel, the distractor.",
+          "docRef": "workflows.md",
+          "targetSeconds": 80,
+          "solution": { "pairs": { "l1": "r1", "l2": "r2", "l3": "r3", "l4": "r4" } }
+        },
+        {
+          "id": "w5.t1.c8",
+          "worldId": "w5",
+          "topicId": "w5.t1",
+          "kind": "simulation",
+          "difficulty": "medium",
+          "scenario": "A stakeholder wants three candidate architectures compared across cost, operability and blast radius, in distinct phases, with a final recommendation. You expect to re-run just the cost phase after the pricing inputs change, so a one-shot fan-out is the wrong shape.",
+          "prompt": "Pick the tool and set its argument so the goal is authored and launched as a background workflow in one step.",
+          "toolPalette": [
+            { "id": "workflow_run", "text": "workflow_run" },
+            { "id": "spawn_sub_agents", "text": "spawn_sub_agents" },
+            { "id": "workflow_status", "text": "workflow_status" },
+            { "id": "workflow_result", "text": "workflow_result" }
+          ],
+          "argSpecs": [
+            { "name": "intent", "label": "intent", "input": "text", "placeholder": "the goal in plain language", "required": true }
+          ],
+          "hints": [
+            { "tier": 1, "text": "You want phases and the ability to re-run one step, which a plain fan-out cannot give you." },
+            { "tier": 2, "text": "Passing the goal as intent authors and launches the workflow in one call." },
+            { "tier": 3, "text": "workflow_run with intent set to the comparison goal." }
+          ],
+          "explanation": "workflow_run with intent authors the orchestration and launches it in one step, giving you phases, a streaming panel, and the ability to re-run only the cost phase later with workflow_rerun_subtree. spawn_sub_agents is a one-shot fan-out with no phases or restarts, and status and result only observe a run that already exists.",
+          "docRef": "workflows.md",
+          "targetSeconds": 120,
+          "roleVariants": {
+            "cloud-architect": {
+              "scenario": "You must compare three landing-zone designs across cost, operability and blast radius in phases, and expect to re-run only the cost phase when pricing changes.",
+              "prompt": "Author and launch the comparison as a background workflow in one step."
+            },
+            "eng-manager": {
+              "scenario": "You want three delivery plans compared in distinct phases with a recommendation, and expect to redo one phase after new estimates arrive.",
+              "prompt": "Author and launch the comparison as a background workflow in one step."
+            }
+          },
+          "solution": { "toolId": "workflow_run", "args": { "intent": "compare three candidate architectures across cost, operability and blast radius in phases and recommend one" }, "lenientArgs": { "intent": "text" } }
+        },
+        {
+          "id": "w5.t1.c9",
+          "worldId": "w5",
+          "topicId": "w5.t1",
+          "kind": "debug-fix",
+          "difficulty": "hard",
+          "prompt": "A teammate wants to re-run only the cost phase of a prior workflow, reusing the cheaper earlier phases from cache. They wrote this call but set from_index to 0, which re-runs everything. The cost phase is agent call index 3. Fix the JSON, changing only the from_index value.",
+          "brokenCall": "{\n  \"run_id\": \"wf_7fe12a\",\n  \"from_index\": 0\n}",
+          "language": "json",
+          "hints": [
+            { "tier": 1, "text": "from_index names the first call to re-execute, and everything before it is reused from cache." },
+            { "tier": 2, "text": "They do not want call 0 onward re-run, they want to start at the cost phase." },
+            { "tier": 3, "text": "Set from_index to 3 so calls 0 through 2 are replayed from cache." }
+          ],
+          "explanation": "workflow_rerun_subtree reuses every agent call before from_index from cache and re-executes from that index onward. With from_index=0 the whole run re-executes, defeating the point. Setting it to 3 replays phases 0 through 2 from cache and re-runs only the cost phase and anything after it.",
+          "docRef": "workflows.md",
+          "targetSeconds": 120,
+          "roleVariants": {
+            "data": {
+              "scenario": "A pipeline workflow's only stale step is the cost rollup at call index 3, and you must avoid recomputing the expensive earlier transforms.",
+              "prompt": "Correct the from_index so only the stale step and after re-run."
+            },
+            "devops-sre": {
+              "scenario": "Only the cost-estimation phase at index 3 changed; re-running from zero would waste the cached infra-scan phases.",
+              "prompt": "Correct the from_index so only the stale step and after re-run."
+            }
+          },
+          "solution": {
+            "accept": [
+              "{\"run_id\":\"wf_7fe12a\",\"from_index\":3}"
+            ],
+            "normalizer": "json"
+          }
+        },
+        {
+          "id": "w5.t1.c10",
+          "worldId": "w5",
+          "topicId": "w5.t1",
+          "kind": "single-choice",
+          "difficulty": "medium",
+          "prompt": "Before describing a brand new workflow from scratch, what is the recommended first move?",
+          "options": [
+            { "id": "a", "text": "Ask what is already saved with workflow_library_list; an existing one that fits skips authoring entirely" },
+            { "id": "b", "text": "Immediately author a fresh workflow from intent to avoid stale definitions" },
+            { "id": "c", "text": "Spawn a subagent to write the orchestration script by hand" },
+            { "id": "d", "text": "Run workflow_status to see whether a workflow is already running" }
+          ],
+          "hints": [
+            { "tier": 1, "text": "Authoring from intent is work you can sometimes skip." },
+            { "tier": 2, "text": "The library holds reusable workflows that can be run by name." },
+            { "tier": 3, "text": "Check the saved library first; a fit there skips the authoring step." }
+          ],
+          "explanation": "Ask what is already saved with workflow_library_list before describing a new workflow: a saved workflow that fits can be run by name instead of re-authored from intent, which skips the authoring step entirely. You never hand-write the script yourself.",
+          "docRef": "workflows.md",
+          "targetSeconds": 45,
+          "solution": { "optionId": "a" }
+        }
+      ]
+    },
+    {
+      "id": "w5.t2",
+      "title": "monitor_watch versus monitor_start",
+      "summary": "The cheap structured pull-request probe versus the general same-session loop, which objective and providers the structured watch supports, why evidence a probe cannot see needs a loop, and why monitor_stop is not autonudge_stop.",
+      "challenges": [
+        {
+          "id": "w5.t2.c1",
+          "worldId": "w5",
+          "topicId": "w5.t2",
+          "kind": "single-choice",
+          "difficulty": "easy",
+          "prompt": "What is the point of a structured pull-request monitor compared to a general loop?",
+          "options": [
+            { "id": "a", "text": "It probes the provider directly and wakes the session only when a new revision needs action, costing no agent turn on an unchanged poll" },
+            { "id": "b", "text": "It runs a full agent turn on every interval regardless of whether anything changed" },
+            { "id": "c", "text": "It merges the pull request automatically once checks pass" },
+            { "id": "d", "text": "It opens a brand new conversation for every poll" }
+          ],
+          "hints": [
+            { "tier": 1, "text": "The whole value is avoiding a model turn when nothing moved." },
+            { "tier": 2, "text": "It compares provider facts before invoking the conversation." },
+            { "tier": 3, "text": "It wakes the session only on a new actionable revision; unchanged, pending or finished probes cost no turn." }
+          ],
+          "explanation": "A structured monitor probes the provider and compares facts before invoking the conversation, so an unchanged, pending, retrying or finished probe costs no agent turn, and the session wakes at most once per new actionable fingerprint. It does not act on the pull request itself.",
+          "docRef": "monitoring.md",
+          "targetSeconds": 35,
+          "solution": { "optionId": "a" }
+        },
+        {
+          "id": "w5.t2.c2",
+          "worldId": "w5",
+          "topicId": "w5.t2",
+          "kind": "true-false",
+          "difficulty": "easy",
+          "prompt": "Decide whether the statement holds.",
+          "statement": "monitor_stop and autonudge_stop are two names for the same action.",
+          "hints": [
+            { "tier": 1, "text": "One is about a structured monitor, the other about a nudge loop." },
+            { "tier": 2, "text": "They durably stop different mechanisms on the session." },
+            { "tier": 3, "text": "They are distinct: monitor_stop stops the monitor, autonudge_stop stops the auto-nudge loop." }
+          ],
+          "explanation": "False. monitor_stop durably stops the monitor on the current session, retaining a structured monitor's terminal outcome for inspection. autonudge_stop stops the auto-nudge loop driving the session. They are different mechanisms, so stopping one does not stop the other.",
+          "docRef": "monitor-loops.md",
+          "targetSeconds": 30,
+          "solution": { "value": false }
+        },
+        {
+          "id": "w5.t2.c3",
+          "worldId": "w5",
+          "topicId": "w5.t2",
+          "kind": "tool-name",
+          "difficulty": "medium",
+          "prompt": "On a later turn you want to read a structured monitor's authoritative retained state: its target, objective, next probe, limits, latest classification and final outcome. Which tool do you call?",
+          "hints": [
+            { "tier": 1, "text": "It inspects the monitor bound to your current session." },
+            { "tier": 2, "text": "The verb is inspect, prefixed by what it reads." },
+            { "tier": 3, "text": "It is monitor_inspect." }
+          ],
+          "explanation": "monitor_inspect reads the authoritative retained state of the monitor bound to your current session: target, objective, next probe, limits, latest classification, usage and final outcome. The tool reply from arming is only an application request, so monitor_inspect is how you confirm what actually took effect.",
+          "docRef": "monitoring.md",
+          "targetSeconds": 45,
+          "solution": { "accept": ["monitor_inspect", "@kirocrew-core/monitor_inspect"], "normalizer": "tool" }
+        },
+        {
+          "id": "w5.t2.c4",
+          "worldId": "w5",
+          "topicId": "w5.t2",
+          "kind": "multi-choice",
+          "difficulty": "medium",
+          "prompt": "You need a general same-session loop (monitor_start) rather than the structured watch (monitor_watch) in which of these cases?",
+          "options": [
+            { "id": "a", "text": "The decision depends on generic comments or advisory findings a typed probe cannot see" },
+            { "id": "b", "text": "You are watching a deployment, a ticket, or another forge the structured watch does not support" },
+            { "id": "c", "text": "You require a final conversational report even when the pull request needs no action" },
+            { "id": "d", "text": "You want the cheapest possible poll of a public GitHub pull request for review_ready" },
+            { "id": "e", "text": "The objective is review_ready on a supported GitHub pull request and typed facts fully determine it" }
+          ],
+          "hints": [
+            { "tier": 1, "text": "The loop is for evidence or targets the structured probe cannot handle." },
+            { "tier": 2, "text": "Comments, advisory findings, deployments, tickets and other forges all need the loop." },
+            { "tier": 3, "text": "A cheap review_ready poll of a supported PR is exactly the structured watch's job, not the loop's." }
+          ],
+          "explanation": "Use a general loop when the decision depends on generic comments or advisory findings, when the target is a deployment, ticket or unsupported forge, or when you need a conversational report even on no action. A cheap review_ready poll of a supported pull request is precisely what the structured monitor_watch is for.",
+          "docRef": "monitoring.md",
+          "targetSeconds": 70,
+          "solution": { "optionIds": ["a", "b", "c"] }
+        },
+        {
+          "id": "w5.t2.c5",
+          "worldId": "w5",
+          "topicId": "w5.t2",
+          "kind": "config-fill",
+          "difficulty": "medium",
+          "prompt": "You are arming a structured pull-request watch. The only objective the structured monitor supports is review-readiness. Write the exact objective value you pass to monitor_watch.",
+          "starter": "objective=",
+          "hints": [
+            { "tier": 1, "text": "It is a single enum value, two words joined by an underscore." },
+            { "tier": 2, "text": "It names the readiness of a pull request for review." },
+            { "tier": 3, "text": "It is review_ready." }
+          ],
+          "explanation": "review_ready is the one objective the structured monitor supports across GitHub, GitLab, Azure DevOps and Bitbucket Cloud. Any other objective, or evidence a typed probe cannot see, needs a general loop instead.",
+          "docRef": "monitoring.md",
+          "targetSeconds": 50,
+          "roleVariants": {
+            "backend": {
+              "scenario": "You open a monitor_watch on a service pull request and must set the one supported objective.",
+              "prompt": "Write the objective value for a structured review-readiness watch."
+            },
+            "qa": {
+              "scenario": "You are watching a test-fix pull request with the cheap structured probe and must set its objective.",
+              "prompt": "Write the objective value for a structured review-readiness watch."
+            }
+          },
+          "solution": { "accept": ["review_ready"], "normalizer": "text" }
+        },
+        {
+          "id": "w5.t2.c6",
+          "worldId": "w5",
+          "topicId": "w5.t2",
+          "kind": "sequence",
+          "difficulty": "medium",
+          "prompt": "Order the steps for correctly arming a structured pull-request monitor from a dashboard conversation.",
+          "items": [
+            { "id": "s1", "text": "Open the conversation that should own the watch" },
+            { "id": "s2", "text": "Ask Kiro Crew to monitor the full pull-request URL until it is review-ready" },
+            { "id": "s3", "text": "End the turn after the tool reports that application is pending" },
+            { "id": "s4", "text": "Confirm the active monitor in the dashboard" }
+          ],
+          "hints": [
+            { "tier": 1, "text": "The owning conversation has to exist before you arm the watch in it." },
+            { "tier": 2, "text": "The tool reply is only an application request, so the turn must end for it to take effect." },
+            { "tier": 3, "text": "Open, ask, end the turn, then confirm it is active." }
+          ],
+          "explanation": "You open the owning conversation, ask to monitor the full URL until review-ready, end the turn (the tool reply is an application request, not proof the monitor started, and it applies only after the turn ends), then confirm the active monitor in the dashboard.",
+          "docRef": "monitoring.md",
+          "targetSeconds": 70,
+          "roleVariants": {
+            "devops-sre": {
+              "scenario": "You are setting up a watch on a release pull request and want to be sure it actually armed.",
+              "prompt": "Order the steps to arm a structured review-readiness monitor correctly."
+            },
+            "platform": {
+              "scenario": "You are standardizing how the team arms PR monitors so none of them assume the tool reply means it started.",
+              "prompt": "Order the steps to arm a structured review-readiness monitor correctly."
+            }
+          },
+          "solution": { "orderedItemIds": ["s1", "s2", "s3", "s4"] }
+        },
+        {
+          "id": "w5.t2.c7",
+          "worldId": "w5",
+          "topicId": "w5.t2",
+          "kind": "matching",
+          "difficulty": "medium",
+          "prompt": "Match each structured-monitor probe observation to how many agent turns it costs.",
+          "left": [
+            { "id": "l1", "text": "No material change" },
+            { "id": "l2", "text": "Checks still pending" },
+            { "id": "l3", "text": "A new actionable fingerprint" },
+            { "id": "l4", "text": "Review-ready success or terminal blocker" }
+          ],
+          "right": [
+            { "id": "r1", "text": "0 turns" },
+            { "id": "r2", "text": "0 turns (still waiting)" },
+            { "id": "r3", "text": "At most 1 turn" },
+            { "id": "r4", "text": "0 turns (the dashboard reports it, the session is not woken)" },
+            { "id": "r5", "text": "3 turns, one per retry" }
+          ],
+          "hints": [
+            { "tier": 1, "text": "One right-hand option (three turns per retry) is invented and matches nothing." },
+            { "tier": 2, "text": "Only a new actionable change wakes the session, and even then at most once." },
+            { "tier": 3, "text": "Terminal success does not wake the conversation; the dashboard reports it." }
+          ],
+          "explanation": "No material change and checks pending both cost 0 turns, a new actionable fingerprint costs at most 1 turn, and terminal success or a terminal blocker does not wake the conversation (the dashboard reports it). A fixed three turns per retry is invented; a provider retry costs 0 turns.",
+          "docRef": "monitoring.md",
+          "targetSeconds": 85,
+          "solution": { "pairs": { "l1": "r1", "l2": "r2", "l3": "r3", "l4": "r4" } }
+        },
+        {
+          "id": "w5.t2.c8",
+          "worldId": "w5",
+          "topicId": "w5.t2",
+          "kind": "simulation",
+          "difficulty": "hard",
+          "scenario": "You want to watch a public GitHub pull request until it is ready for review, as cheaply as possible, from this dashboard conversation. You do not need a conversational report when nothing happens, only a wake when a new revision needs action.",
+          "prompt": "Pick the tool and set its arguments to arm the cheap structured watch.",
+          "toolPalette": [
+            { "id": "monitor_watch", "text": "monitor_watch" },
+            { "id": "monitor_start", "text": "monitor_start" },
+            { "id": "monitor_inspect", "text": "monitor_inspect" },
+            { "id": "cron_add", "text": "cron_add" }
+          ],
+          "argSpecs": [
+            { "name": "kind", "label": "kind", "input": "select", "required": true, "options": [
+              { "id": "github_pull_request", "text": "github_pull_request" },
+              { "id": "gitlab_merge_request", "text": "gitlab_merge_request" }
+            ] },
+            { "name": "objective", "label": "objective", "input": "select", "required": true, "options": [
+              { "id": "review_ready", "text": "review_ready" },
+              { "id": "merged", "text": "merged" }
+            ] },
+            { "name": "target", "label": "target", "input": "text", "placeholder": "full PR URL", "required": true }
+          ],
+          "hints": [
+            { "tier": 1, "text": "A general loop would spend a turn every interval; you want the probe that does not." },
+            { "tier": 2, "text": "The structured watch takes a provider kind, a target URL and the review_ready objective." },
+            { "tier": 3, "text": "monitor_watch with kind github_pull_request, objective review_ready and the full URL." }
+          ],
+          "explanation": "monitor_watch arms the cheap structured probe: it takes the provider kind, the canonical PR URL as target, and the review_ready objective, and wakes the session only on a new actionable revision. monitor_start would spend a model turn every interval, which is exactly what you are avoiding here.",
+          "docRef": "monitoring.md",
+          "targetSeconds": 150,
+          "roleVariants": {
+            "backend": {
+              "scenario": "You opened a fix on a public GitHub repo and want the cheapest possible watch until it is review-ready, with no turn burned on quiet polls.",
+              "prompt": "Arm the structured review-readiness watch on the pull request."
+            },
+            "devops-sre": {
+              "scenario": "You want a release pull request watched for review-readiness without a model turn on every unchanged poll.",
+              "prompt": "Arm the structured review-readiness watch on the pull request."
+            }
+          },
+          "solution": { "toolId": "monitor_watch", "args": { "kind": "github_pull_request", "objective": "review_ready", "target": "https://github.com/kirodotdev/KiroCrew/pull/123" }, "lenientArgs": { "target": "text" } }
+        },
+        {
+          "id": "w5.t2.c9",
+          "worldId": "w5",
+          "topicId": "w5.t2",
+          "kind": "debug-fix",
+          "difficulty": "hard",
+          "prompt": "A teammate wants to watch a pull request where the readiness decision depends on human review comments and advisory findings, which a structured probe cannot classify. They armed a structured monitor_watch for review_ready and it never fires on the comment-based signal they care about. The fix is to choose the right mechanism, not a parameter. Correct the JSON note so the recorded mechanism matches the evidence, changing only the tool value.",
+          "brokenCall": "{\n  \"evidence\": \"human review comments and advisory findings\",\n  \"mechanism\": \"monitor_watch\"\n}",
+          "language": "json",
+          "hints": [
+            { "tier": 1, "text": "The structured probe only reads typed provider facts, not free-form comments." },
+            { "tier": 2, "text": "Evidence a probe cannot see needs the general same-session loop." },
+            { "tier": 3, "text": "Set mechanism to monitor_start, the general loop that can read and interpret comments." }
+          ],
+          "explanation": "A structured monitor_watch classifies typed provider facts and cannot interpret free-form comments or advisory findings. Evidence a probe cannot see needs a general same-session loop, armed with monitor_start, which runs a full agent turn each cycle and can read and reason about the comments. The fix is the mechanism, not any parameter of the watch.",
+          "docRef": "monitoring.md",
+          "targetSeconds": 130,
+          "roleVariants": {
+            "security": {
+              "scenario": "You need to wake only when a reviewer leaves a blocking security comment, which the typed probe cannot detect.",
+              "prompt": "Correct the mechanism so comment-based evidence is actually watched."
+            },
+            "eng-manager": {
+              "scenario": "Readiness here is a human sign-off left as a comment, not a typed check, and the structured watch never fires.",
+              "prompt": "Correct the mechanism so comment-based evidence is actually watched."
+            }
+          },
+          "solution": {
+            "accept": [
+              "{\"evidence\":\"human review comments and advisory findings\",\"mechanism\":\"monitor_start\"}"
+            ],
+            "normalizer": "json"
+          }
+        },
+        {
+          "id": "w5.t2.c10",
+          "worldId": "w5",
+          "topicId": "w5.t2",
+          "kind": "single-choice",
+          "difficulty": "medium",
+          "prompt": "You ask for a structured pull-request watch from a Webex session. What do you actually get?",
+          "options": [
+            { "id": "a", "text": "A general loop, because the structured watch needs typed wake delivery that exists only for dashboard, Slack and Discord" },
+            { "id": "b", "text": "The structured probe, which works identically on every channel" },
+            { "id": "c", "text": "A refusal, because monitoring is not allowed from Webex at all" },
+            { "id": "d", "text": "A cron job scheduled to poll the pull request" }
+          ],
+          "hints": [
+            { "tier": 1, "text": "The cheap probe depends on where typed wakes can be delivered." },
+            { "tier": 2, "text": "Typed wake delivery exists for dashboard, Slack and Discord only." },
+            { "tier": 3, "text": "From Webex you get the general loop, not the cheap probe." }
+          ],
+          "explanation": "The structured pull-request watch needs typed wake delivery, which exists for dashboard, Slack and Discord only. Ask for it from Webex and you get the general loop instead, which spends a turn each interval rather than probing cheaply.",
+          "docRef": "monitor-loops.md",
+          "targetSeconds": 50,
+          "solution": { "optionId": "a" }
+        }
+      ]
+    },
+    {
+      "id": "w5.t3",
+      "title": "Gating, Budgets and Cadence",
+      "summary": "The interval_secs cadence that is deadline-preserving, the max_cycles and max_runtime_secs backstops, the banner line, why gate=false is required for a loop that must act while its subject is quiet, and why reaching max_cycles is a backstop and not success.",
+      "challenges": [
+        {
+          "id": "w5.t3.c1",
+          "worldId": "w5",
+          "topicId": "w5.t3",
+          "kind": "single-choice",
+          "difficulty": "easy",
+          "prompt": "A monitor loop reaches its max_cycles cap. What does that mean?",
+          "options": [
+            { "id": "a", "text": "The loop ran out of rope: the cap is a runaway backstop, not a finish line, so it did not necessarily complete" },
+            { "id": "b", "text": "The objective was met and the loop finished successfully" },
+            { "id": "c", "text": "The loop is paused and will resume on the next user message" },
+            { "id": "d", "text": "The cap was exceeded and the loop raised an error" }
+          ],
+          "hints": [
+            { "tier": 1, "text": "A cap exists to stop a loop that never ends, not to mark a goal reached." },
+            { "tier": 2, "text": "Hitting the cap and meeting the exit condition are different outcomes." },
+            { "tier": 3, "text": "Reaching the cap means it ran out of cycles, not that it succeeded." }
+          ],
+          "explanation": "max_cycles is a runaway backstop, not a finish line. A loop that reaches its cap ran out of rope rather than completing. Success is calling autonudge_stop when the exit condition is actually met, not exhausting the cap.",
+          "docRef": "monitor-loops.md",
+          "targetSeconds": 35,
+          "solution": { "optionId": "a" }
+        },
+        {
+          "id": "w5.t3.c2",
+          "worldId": "w5",
+          "topicId": "w5.t3",
+          "kind": "true-false",
+          "difficulty": "easy",
+          "prompt": "Decide whether the statement holds.",
+          "statement": "The interval between loop wakes is deadline-preserving: your own messages defer a due wake until your turn finishes but do not restart the clock.",
+          "hints": [
+            { "tier": 1, "text": "Think about whether chatting in the tab pushes the next wake further out." },
+            { "tier": 2, "text": "A message defers a due fire to the end of your turn without resetting the interval." },
+            { "tier": 3, "text": "The clock is preserved, so the loop stays on schedule in an active tab." }
+          ],
+          "explanation": "True. The interval is deadline-preserving: a user message defers a due wake until the turn ends but does not restart the countdown, so the loop stays on schedule even in an actively used conversation.",
+          "docRef": "monitor-loops.md",
+          "targetSeconds": 30,
+          "solution": { "value": true }
+        },
+        {
+          "id": "w5.t3.c3",
+          "worldId": "w5",
+          "topicId": "w5.t3",
+          "kind": "tool-name",
+          "difficulty": "easy",
+          "prompt": "Your loop's exit condition is finally met. Which tool do you call to stop the auto-nudge loop cleanly instead of letting it burn to its cap?",
+          "hints": [
+            { "tier": 1, "text": "It is not monitor_stop; this one targets the nudge loop driving the session." },
+            { "tier": 2, "text": "The name joins the word for the loop mechanism with the verb stop." },
+            { "tier": 3, "text": "It is autonudge_stop." }
+          ],
+          "explanation": "autonudge_stop halts the auto-nudge loop driving the current session, which is what you call when the goal is complete or you are blocked. Letting the loop reach max_cycles is the backstop, not a clean finish.",
+          "docRef": "monitor-loops.md",
+          "targetSeconds": 40,
+          "solution": { "accept": ["autonudge_stop", "@kirocrew-core/autonudge_stop"], "normalizer": "tool" }
+        },
+        {
+          "id": "w5.t3.c4",
+          "worldId": "w5",
+          "topicId": "w5.t3",
+          "kind": "multi-choice",
+          "difficulty": "medium",
+          "prompt": "Select every true statement about monitor loop cadence and budgets.",
+          "options": [
+            { "id": "a", "text": "interval_secs is the gap between wakes, measured toward a fixed deadline" },
+            { "id": "b", "text": "A loop the agent arms caps at 24 cycles by default" },
+            { "id": "c", "text": "max_runtime_secs bounds elapsed wall-clock time instead of cycle count" },
+            { "id": "d", "text": "A cap of 0 in the goal control means the loop is unlimited" },
+            { "id": "e", "text": "Reaching max_cycles is the normal way a loop signals success" }
+          ],
+          "hints": [
+            { "tier": 1, "text": "Four of these are documented; one confuses the backstop with success." },
+            { "tier": 2, "text": "A cap of 0 is unlimited, and runtime bounds time rather than cycles." },
+            { "tier": 3, "text": "The cap is a backstop, never the success signal." }
+          ],
+          "explanation": "interval_secs is the gap between wakes toward a fixed deadline, an agent-armed loop defaults to 24 cycles, max_runtime_secs bounds elapsed time instead of cycles, and a cap of 0 is unlimited. Reaching max_cycles is a runaway backstop, not a success signal.",
+          "docRef": "monitor-loops.md",
+          "targetSeconds": 70,
+          "solution": { "optionIds": ["a", "b", "c", "d"] }
+        },
+        {
+          "id": "w5.t3.c5",
+          "worldId": "w5",
+          "topicId": "w5.t3",
+          "kind": "config-fill",
+          "difficulty": "hard",
+          "prompt": "You are arming monitor_start on a loop that names a single GitHub pull request but must act every interval regardless of whether the PR changed, because its job is to refresh a heartbeat file while the PR is quiet. Write the gate value you must pass so the loop is not observation-gated.",
+          "starter": "gate=",
+          "hints": [
+            { "tier": 1, "text": "By default a loop naming one PR only re-injects when the PR changes." },
+            { "tier": 2, "text": "A loop that must run while the subject is quiet has to opt out of gating." },
+            { "tier": 3, "text": "Set gate to false." }
+          ],
+          "explanation": "gate defaults to true, so a loop naming a single pull request only re-injects your message when the PR actually changes. A loop whose duty is to act while the subject is quiet (a heartbeat refresh, chasing a silent reviewer, keeping a branch rebased) must pass gate=false so it is re-injected every interval regardless of change.",
+          "docRef": "monitor-loops.md",
+          "targetSeconds": 90,
+          "roleVariants": {
+            "devops-sre": {
+              "scenario": "Your loop watches a release PR but must also touch a liveness marker every interval even while the PR sits unchanged.",
+              "prompt": "Set the gate value so the loop fires every interval, not only on PR change."
+            },
+            "platform": {
+              "scenario": "A loop names one PR but its real duty is a periodic heartbeat that must run during the PR's quiet stretches.",
+              "prompt": "Set the gate value so the loop fires every interval, not only on PR change."
+            }
+          },
+          "solution": { "accept": ["false"], "normalizer": "text" }
+        },
+        {
+          "id": "w5.t3.c6",
+          "worldId": "w5",
+          "topicId": "w5.t3",
+          "kind": "sequence",
+          "difficulty": "medium",
+          "prompt": "Order the lifecycle of an agent-armed monitor loop from arming it to stopping it cleanly on success.",
+          "items": [
+            { "id": "s1", "text": "Arm the loop with monitor_start: the message, interval_secs and an exit condition" },
+            { "id": "s2", "text": "End the turn so the loop wakes you on the interval" },
+            { "id": "s3", "text": "Each cycle, run the check and report only a real signal" },
+            { "id": "s4", "text": "When the exit condition is met, call autonudge_stop" }
+          ],
+          "hints": [
+            { "tier": 1, "text": "You arm it before anything can wake you." },
+            { "tier": 2, "text": "Ending the turn is what lets the interval loop run." },
+            { "tier": 3, "text": "Arm, end the turn, check each cycle, then stop cleanly when done." }
+          ],
+          "explanation": "You arm the loop with monitor_start carrying the check instructions and exit condition, end your turn so it wakes on the interval, run the check each cycle reporting only real signals, and call autonudge_stop when the exit condition is met. Reaching max_cycles instead would mean it ran out of rope.",
+          "docRef": "monitor-loops.md",
+          "targetSeconds": 70,
+          "roleVariants": {
+            "qa": {
+              "scenario": "You are babysitting a flaky CI run until it goes green and want the loop to stop cleanly, not burn to its cap.",
+              "prompt": "Order the loop lifecycle from arming to a clean stop."
+            },
+            "eng-manager": {
+              "scenario": "You are documenting how a watch loop should start and end so the team stops leaving loops to exhaust their caps.",
+              "prompt": "Order the loop lifecycle from arming to a clean stop."
+            }
+          },
+          "solution": { "orderedItemIds": ["s1", "s2", "s3", "s4"] }
+        },
+        {
+          "id": "w5.t3.c7",
+          "worldId": "w5",
+          "topicId": "w5.t3",
+          "kind": "matching",
+          "difficulty": "medium",
+          "prompt": "Match each monitor_start parameter to what it controls.",
+          "left": [
+            { "id": "l1", "text": "interval_secs" },
+            { "id": "l2", "text": "max_cycles" },
+            { "id": "l3", "text": "max_runtime_secs" },
+            { "id": "l4", "text": "banner" }
+          ],
+          "right": [
+            { "id": "r1", "text": "Seconds between cycles, counted toward a fixed deadline" },
+            { "id": "r2", "text": "A safety cap on delivered cycles, a runaway backstop" },
+            { "id": "r3", "text": "A wall-clock budget in seconds measured from when the loop is armed" },
+            { "id": "r4", "text": "A short transcript row shown instead of the full message" },
+            { "id": "r5", "text": "The provider credentials the loop authenticates with" }
+          ],
+          "hints": [
+            { "tier": 1, "text": "One right-hand option about credentials is a distractor." },
+            { "tier": 2, "text": "max_cycles bounds cycles, max_runtime_secs bounds time." },
+            { "tier": 3, "text": "banner is the short transcript line standing in for a long message." }
+          ],
+          "explanation": "interval_secs is the gap between cycles toward a fixed deadline, max_cycles is the runaway backstop on delivered cycles, max_runtime_secs is the wall-clock budget from arming, and banner is the short transcript row shown instead of a long message. Credentials are not a monitor_start parameter.",
+          "docRef": "monitor-loops.md",
+          "targetSeconds": 85,
+          "solution": { "pairs": { "l1": "r1", "l2": "r2", "l3": "r3", "l4": "r4" } }
+        },
+        {
+          "id": "w5.t3.c8",
+          "worldId": "w5",
+          "topicId": "w5.t3",
+          "kind": "simulation",
+          "difficulty": "hard",
+          "scenario": "You want to babysit one GitHub pull request from this dashboard chat with a general loop, checking every five minutes for up to twelve cycles, and because the loop names a single PR you want it re-injected only when the PR actually changes so quiet polls cost nothing.",
+          "prompt": "Pick the tool and set its arguments to arm an observation-gated five minute loop capped at twelve cycles.",
+          "toolPalette": [
+            { "id": "monitor_start", "text": "monitor_start" },
+            { "id": "monitor_watch", "text": "monitor_watch" },
+            { "id": "wait", "text": "wait" },
+            { "id": "cron_add", "text": "cron_add" }
+          ],
+          "argSpecs": [
+            { "name": "message", "label": "message", "input": "text", "placeholder": "the recurring instruction and exit condition", "required": true },
+            { "name": "interval_secs", "label": "interval_secs", "input": "text", "placeholder": "seconds between cycles", "required": true },
+            { "name": "max_cycles", "label": "max_cycles", "input": "text", "placeholder": "cycle cap", "required": true },
+            { "name": "gate", "label": "gate", "input": "boolean", "required": true }
+          ],
+          "hints": [
+            { "tier": 1, "text": "Five minutes is 300 seconds, and twelve cycles is the cap." },
+            { "tier": 2, "text": "Leaving gate on means a cycle where the named PR did not change costs no model turn." },
+            { "tier": 3, "text": "monitor_start with interval_secs 300, max_cycles 12 and gate true." }
+          ],
+          "explanation": "monitor_start arms the general loop. interval_secs 300 is the five minute cadence, max_cycles 12 is the backstop, and gate true (the default) means the loop only re-injects when the single named PR changes, so quiet polls cost no model turn. gate false would be for a loop that must act while the PR is quiet.",
+          "docRef": "monitor-loops.md",
+          "targetSeconds": 160,
+          "roleVariants": {
+            "devops-sre": {
+              "scenario": "You are babysitting a release PR with a five minute general loop, capped at twelve cycles, and want quiet polls to cost nothing.",
+              "prompt": "Arm an observation-gated five minute loop capped at twelve cycles."
+            },
+            "backend": {
+              "scenario": "You want a general loop checking your PR every five minutes, up to twelve times, with no model turn spent when the PR has not moved.",
+              "prompt": "Arm an observation-gated five minute loop capped at twelve cycles."
+            }
+          },
+          "solution": { "toolId": "monitor_start", "args": { "message": "check the PR for review-readiness; stop when it is review-ready or terminally blocked", "interval_secs": "300", "max_cycles": "12", "gate": true }, "lenientArgs": { "message": "text", "interval_secs": "text", "max_cycles": "text" } }
+        },
+        {
+          "id": "w5.t3.c9",
+          "worldId": "w5",
+          "topicId": "w5.t3",
+          "kind": "debug-fix",
+          "difficulty": "hard",
+          "boss": true,
+          "scenario": "Boss trial. A colleague armed a loop to keep a feature branch rebased on a moving main branch every ten minutes. The loop names the branch's single pull request. They left gate at its default of true, and now the loop almost never fires, because the PR itself is not changing even though main keeps advancing. The rebase work must happen while the PR is quiet.",
+          "prompt": "This monitor_start config does the wrong thing. Fix it so the loop fires every interval regardless of PR change, changing only the one value that is wrong. Keep interval_secs and max_cycles as they are.",
+          "brokenCall": "{\n  \"message\": \"rebase the feature branch onto the latest main and push with lease; stop when main stops advancing for a day\",\n  \"interval_secs\": 600,\n  \"max_cycles\": 48,\n  \"gate\": true\n}",
+          "language": "json",
+          "hints": [
+            { "tier": 1, "text": "An observation-gated loop watches the named PR and treats continued silence as nothing to do." },
+            { "tier": 2, "text": "A loop whose duty is to act while the subject is quiet is starved by gating." },
+            { "tier": 3, "text": "Set gate to false so the loop is re-injected every interval even when the PR has not changed." }
+          ],
+          "explanation": "gate defaults to true, which opts the loop into observation-gating: it only re-injects when the named pull request changes, and continued silence from the PR is invisible to the probe. A rebase-on-moving-main loop must act precisely while the PR is quiet, so it must pass gate=false to be re-injected every interval. interval_secs and max_cycles are already correct; only gate is wrong. A gated loop is never fully starved because it is delivered anyway after enough quiet intervals, but relying on that is the wrong tool for genuine every-interval work.",
+          "docRef": "monitor-loops.md",
+          "targetSeconds": 190,
+          "roleVariants": {
+            "devops-sre": {
+              "scenario": "Your auto-rebase loop barely runs because it is gated on a PR that is not the thing changing; main is.",
+              "prompt": "Correct the one wrong value so the rebase loop fires every interval."
+            },
+            "platform": {
+              "scenario": "A loop meant to keep many branches current is starved because gating hides the quiet-PR intervals where the work actually is.",
+              "prompt": "Correct the one wrong value so the rebase loop fires every interval."
+            }
+          },
+          "solution": {
+            "accept": [
+              "{\"message\":\"rebase the feature branch onto the latest main and push with lease; stop when main stops advancing for a day\",\"interval_secs\":600,\"max_cycles\":48,\"gate\":false}"
+            ],
+            "normalizer": "json"
+          }
+        },
+        {
+          "id": "w5.t3.c10",
+          "worldId": "w5",
+          "topicId": "w5.t3",
+          "kind": "single-choice",
+          "difficulty": "medium",
+          "prompt": "You arm a loop with a long multi-paragraph instruction. Why set a short banner on monitor_start?",
+          "options": [
+            { "id": "a", "text": "The model still receives the full message every cycle, but the banner is what is stored and shown in the transcript row, avoiding re-storing the long message each cycle" },
+            { "id": "b", "text": "The banner replaces the message the model sees, shrinking the instruction" },
+            { "id": "c", "text": "The banner is required or monitor_start refuses the call" },
+            { "id": "d", "text": "The banner authenticates the loop against the provider" }
+          ],
+          "hints": [
+            { "tier": 1, "text": "banner changes what is displayed and stored, not what the model receives." },
+            { "tier": 2, "text": "A long message re-stored as a transcript row every cycle bloats the session file." },
+            { "tier": 3, "text": "The model gets the whole message; the banner is the short row shown instead." }
+          ],
+          "explanation": "The model still receives the full message every cycle; banner only changes what is stored and displayed in the transcript row. Setting it on a long instruction avoids re-storing and re-broadcasting multi-KB text as a transcript row every single cycle. It is optional, not required, and has nothing to do with authentication.",
+          "docRef": "monitor-loops.md",
+          "targetSeconds": 55,
+          "solution": { "optionId": "a" }
+        },
+        {
+          "id": "w5.t3.c11",
+          "worldId": "w5",
+          "topicId": "w5.t3",
+          "kind": "debug-fix",
+          "difficulty": "medium",
+          "prompt": "A teammate armed a loop and set max_cycles to 0 expecting it to stop after zero cycles as a dry run. In fact a cap of 0 is unlimited, which is a runaway. They want a short bounded run of six cycles instead. Fix the JSON, changing only the max_cycles value.",
+          "brokenCall": "{\n  \"message\": \"check CI status and report only when it turns red or green\",\n  \"interval_secs\": 300,\n  \"max_cycles\": 0\n}",
+          "language": "json",
+          "hints": [
+            { "tier": 1, "text": "A cap of 0 does not mean zero cycles." },
+            { "tier": 2, "text": "0 is the unlimited value, which is the opposite of a bounded dry run." },
+            { "tier": 3, "text": "Set max_cycles to 6 for a short bounded run." }
+          ],
+          "explanation": "A cap of 0 is unlimited, not zero cycles, so setting it as a dry run arms a runaway loop. The cap is a runaway backstop, and a bounded run names a positive number, here 6. Only the max_cycles value needed to change.",
+          "docRef": "monitor-loops.md",
+          "targetSeconds": 110,
+          "roleVariants": {
+            "devops-sre": {
+              "scenario": "You wanted a short bounded CI watch but set the cap to 0, which is unlimited, arming a runaway.",
+              "prompt": "Correct the cap so the loop runs a short bounded six cycles."
+            },
+            "qa": {
+              "scenario": "A test-watch loop was armed with a cap of 0 by mistake and will never bound itself.",
+              "prompt": "Correct the cap so the loop runs a short bounded six cycles."
+            }
+          },
+          "solution": {
+            "accept": [
+              "{\"message\":\"check CI status and report only when it turns red or green\",\"interval_secs\":300,\"max_cycles\":6}"
+            ],
+            "normalizer": "json"
+          }
+        }
+      ]
+    },
+    {
+      "id": "w5.t4",
+      "title": "The Session Ledger",
+      "summary": "What a cold resume needs from session_ledger_record and session_ledger_read, why next is written as an intent and not a status word, why a phase change requires an event, why the ledger outranks recollection after compaction, and how it differs from the work ledger.",
+      "challenges": [
+        {
+          "id": "w5.t4.c1",
+          "worldId": "w5",
+          "topicId": "w5.t4",
+          "kind": "single-choice",
+          "difficulty": "easy",
+          "prompt": "What is the session ledger for?",
+          "options": [
+            { "id": "a", "text": "A small durable on-disk record of one session's goal, phase, next step and tried approaches that outlasts the conversation's own memory" },
+            { "id": "b", "text": "A dashboard page you browse to see every session's progress" },
+            { "id": "c", "text": "The shared record between a conductor and its worker sessions" },
+            { "id": "d", "text": "A cross-session memory store of user preferences" }
+          ],
+          "hints": [
+            { "tier": 1, "text": "It is this session's own state, written to disk." },
+            { "tier": 2, "text": "It exists so a long session can re-establish where it was after compaction." },
+            { "tier": 3, "text": "It holds the goal, phase, next step and tried approaches of one session." }
+          ],
+          "explanation": "The session ledger is a small durable on-disk record of one session's goal, phase, concrete next step, tried-and-rejected approaches, and pointers to what it produced. It outlasts the conversation's own memory, which is the point: a long session reads it to re-establish where it was. It is not a dashboard page, not the work ledger, and not cross-session memory.",
+          "docRef": "session-ledger.md",
+          "targetSeconds": 35,
+          "solution": { "optionId": "a" }
+        },
+        {
+          "id": "w5.t4.c2",
+          "worldId": "w5",
+          "topicId": "w5.t4",
+          "kind": "true-false",
+          "difficulty": "easy",
+          "prompt": "Decide whether the statement holds.",
+          "statement": "The session ledger has a dashboard page you can browse to read it.",
+          "hints": [
+            { "tier": 1, "text": "Think about whether it is a view or storage." },
+            { "tier": 2, "text": "To see it, you ask the session about it." },
+            { "tier": 3, "text": "It has no dashboard page; it is storage the agent reads and writes." }
+          ],
+          "explanation": "False. The session ledger has no dashboard page. It is storage the agent reads and writes, not a view you browse, so to see it you ask the session about it.",
+          "docRef": "session-ledger.md",
+          "targetSeconds": 25,
+          "solution": { "value": false }
+        },
+        {
+          "id": "w5.t4.c3",
+          "worldId": "w5",
+          "topicId": "w5.t4",
+          "kind": "tool-name",
+          "difficulty": "easy",
+          "prompt": "Resuming a monitor-loop cycle hours later, you want to re-establish the session's goal, phase and next step from the durable record rather than scrolling the transcript. Which tool reads it?",
+          "hints": [
+            { "tier": 1, "text": "It is the read half of the ledger pair." },
+            { "tier": 2, "text": "The name is the ledger plus the verb read." },
+            { "tier": 3, "text": "It is session_ledger_read." }
+          ],
+          "explanation": "session_ledger_read returns the session's durable state (goal, phase, next step, tried-and-rejected approaches, artifact pointers) plus the recent event tail. It is authoritative over recollection after compaction, so you read it before re-deriving state from the conversation.",
+          "docRef": "session-ledger.md",
+          "targetSeconds": 40,
+          "solution": { "accept": ["session_ledger_read", "@kirocrew-core/session_ledger_read"], "normalizer": "tool" }
+        },
+        {
+          "id": "w5.t4.c4",
+          "worldId": "w5",
+          "topicId": "w5.t4",
+          "kind": "multi-choice",
+          "difficulty": "medium",
+          "prompt": "Select every true statement about the session ledger.",
+          "options": [
+            { "id": "a", "text": "Entries should be written as intent, such as what to do next, not as a bare status word" },
+            { "id": "b", "text": "It survives context compaction and a gateway restart" },
+            { "id": "c", "text": "It is marked finished when the work is done or abandoned, which stops it being re-injected" },
+            { "id": "d", "text": "It is meant for genuinely long-horizon work, not a single-turn request" },
+            { "id": "e", "text": "It is the shared record keyed by work item between a conductor and its workers" }
+          ],
+          "hints": [
+            { "tier": 1, "text": "Four of these describe the session ledger; one describes the work ledger." },
+            { "tier": 2, "text": "A record keyed by work item shared across two sessions is the other ledger." },
+            { "tier": 3, "text": "The conductor-worker shared record is the work ledger, not this one." }
+          ],
+          "explanation": "The session ledger is written as intent, survives compaction and restart, is marked finished when done or abandoned so it stops being re-injected, and is only for long-horizon work. The record keyed by work item and shared between a conductor and its workers is the separate work ledger.",
+          "docRef": "session-ledger.md",
+          "targetSeconds": 70,
+          "solution": { "optionIds": ["a", "b", "c", "d"] }
+        },
+        {
+          "id": "w5.t4.c5",
+          "worldId": "w5",
+          "topicId": "w5.t4",
+          "kind": "config-fill",
+          "difficulty": "medium",
+          "prompt": "You are moving a session's ledger phase and must log a classified reason in the same call. The step you are recording is ordinary forward progress. Write the event_kind value that classifies it.",
+          "starter": "event_kind=",
+          "hints": [
+            { "tier": 1, "text": "A phase change requires an event and a recognized event_kind in the same call." },
+            { "tier": 2, "text": "The step is neither a decision, a block, nor a tried approach: it is plain forward movement." },
+            { "tier": 3, "text": "It is progress." }
+          ],
+          "explanation": "A phase change requires an event and a recognized event_kind in the same call, so a phase never moves without a logged, classified reason. For ordinary forward movement the kind is progress. Other kinds include decision, blocked, unblocked, tried, note and phase.",
+          "docRef": "session-ledger.md",
+          "targetSeconds": 55,
+          "roleVariants": {
+            "backend": {
+              "scenario": "You finished the API layer and are advancing the ledger phase while logging that it was plain forward progress.",
+              "prompt": "Write the event_kind value for ordinary forward progress."
+            },
+            "data": {
+              "scenario": "You advanced from extraction to transformation and must classify the step as normal progress in the ledger.",
+              "prompt": "Write the event_kind value for ordinary forward progress."
+            }
+          },
+          "solution": { "accept": ["progress"], "normalizer": "text" }
+        },
+        {
+          "id": "w5.t4.c6",
+          "worldId": "w5",
+          "topicId": "w5.t4",
+          "kind": "sequence",
+          "difficulty": "medium",
+          "prompt": "Order what a resumed long-running session should do on waking, so it steers from durable state rather than guesswork.",
+          "items": [
+            { "id": "s1", "text": "Call session_ledger_read to get the authoritative goal, phase and next step" },
+            { "id": "s2", "text": "Treat the ledger snapshot as outranking any recollection from the transcript" },
+            { "id": "s3", "text": "Do the concrete next step the ledger names" },
+            { "id": "s4", "text": "Record the result with session_ledger_record, updating next as a fresh intent" }
+          ],
+          "hints": [
+            { "tier": 1, "text": "You read before you act." },
+            { "tier": 2, "text": "The on-disk record is authoritative over what you think you remember." },
+            { "tier": 3, "text": "Read, trust the snapshot, do the step, then record the new intent." }
+          ],
+          "explanation": "On resume you read the ledger, treat it as authoritative over recollection (it survives the compaction your memory did not), do the concrete next step it names, and record the outcome with a fresh next written as an intent. That cycle is why a work-ledger snapshot outranks recollection.",
+          "docRef": "session-ledger.md",
+          "targetSeconds": 70,
+          "roleVariants": {
+            "devops-sre": {
+              "scenario": "A multi-wake migration loop just woke you hours after the last cycle and the transcript is compacted.",
+              "prompt": "Order how to resume from durable state rather than guesswork."
+            },
+            "cloud-architect": {
+              "scenario": "A long landing-zone build resumes after a gateway restart and you must re-establish state reliably.",
+              "prompt": "Order how to resume from durable state rather than guesswork."
+            }
+          },
+          "solution": { "orderedItemIds": ["s1", "s2", "s3", "s4"] }
+        },
+        {
+          "id": "w5.t4.c7",
+          "worldId": "w5",
+          "topicId": "w5.t4",
+          "kind": "matching",
+          "difficulty": "medium",
+          "prompt": "Match each record or mechanism to how it differs from the others.",
+          "left": [
+            { "id": "l1", "text": "Session ledger" },
+            { "id": "l2", "text": "Work ledger" },
+            { "id": "l3", "text": "Subagents" },
+            { "id": "l4", "text": "Memory" }
+          ],
+          "right": [
+            { "id": "r1", "text": "One session's own goal, phase and next step, written by that session" },
+            { "id": "r2", "text": "Work items shared by a conductor and its workers, keyed by item" },
+            { "id": "r3", "text": "Nothing durable; only the delivered result survives a short grace window" },
+            { "id": "r4", "text": "What persists across different sessions, like preferences and corrections" },
+            { "id": "r5", "text": "A browsable dashboard page listing every active loop" }
+          ],
+          "hints": [
+            { "tier": 1, "text": "One right-hand option (a browsable page) matches nothing here." },
+            { "tier": 2, "text": "The session ledger is one session's own state; the work ledger is shared and keyed by item." },
+            { "tier": 3, "text": "Subagents hold nothing durable; memory is cross-session." }
+          ],
+          "explanation": "The session ledger holds one session's own goal and next step, the work ledger holds items shared by a conductor and its workers keyed by item, subagents hold nothing durable beyond a brief grace window on the result, and memory is what persists across different sessions. None of these is a browsable dashboard page.",
+          "docRef": "work-ledger.md",
+          "targetSeconds": 85,
+          "solution": { "pairs": { "l1": "r1", "l2": "r2", "l3": "r3", "l4": "r4" } }
+        },
+        {
+          "id": "w5.t4.c8",
+          "worldId": "w5",
+          "topicId": "w5.t4",
+          "kind": "simulation",
+          "difficulty": "hard",
+          "scenario": "You are two hours into a multi-wake database migration and the context will compact before you finish. A cold resume must know the phase you reached and the concrete next step, and this step is plain forward progress.",
+          "prompt": "Pick the tool and set its fields so the workstream survives compaction with a resumable next step.",
+          "toolPalette": [
+            { "id": "session_ledger_record", "text": "session_ledger_record" },
+            { "id": "session_ledger_read", "text": "session_ledger_read" },
+            { "id": "memory_recall", "text": "memory_recall" },
+            { "id": "reset_conversation", "text": "reset_conversation" }
+          ],
+          "argSpecs": [
+            { "name": "phase", "label": "phase", "input": "text", "placeholder": "e.g. implementing", "required": true },
+            { "name": "next", "label": "next", "input": "text", "placeholder": "concrete next step, as intent", "required": true },
+            { "name": "event_kind", "label": "event_kind", "input": "select", "required": true, "options": [
+              { "id": "progress", "text": "progress" },
+              { "id": "decision", "text": "decision" },
+              { "id": "blocked", "text": "blocked" }
+            ] }
+          ],
+          "hints": [
+            { "tier": 1, "text": "You are writing state, not reading it, and not resetting the conversation." },
+            { "tier": 2, "text": "next must read as an intent, like what to do, not the word in-progress." },
+            { "tier": 3, "text": "session_ledger_record with a phase, an intent-shaped next, and event_kind progress." }
+          ],
+          "explanation": "session_ledger_record writes the phase, a concrete intent-shaped next step, and a classified event so the work survives compaction and later cycles. session_ledger_read only reads, memory_recall is cross-session recall, and reset_conversation would discard the context you are preserving. Write next as what to do next, not a status word like in-progress.",
+          "docRef": "session-ledger.md",
+          "targetSeconds": 160,
+          "roleVariants": {
+            "devops-sre": {
+              "scenario": "A long production migration may compact mid-run and a cold resume must know exactly which step comes next.",
+              "prompt": "Record durable state with a resumable, intent-shaped next step."
+            },
+            "data": {
+              "scenario": "A multi-hour backfill job will outlive its own context window and must be resumable from the ledger.",
+              "prompt": "Record durable state with a resumable, intent-shaped next step."
+            }
+          },
+          "solution": { "toolId": "session_ledger_record", "args": { "phase": "implementing", "next": "apply the migration to the staging replica and verify row counts against the source", "event_kind": "progress" }, "lenientArgs": { "phase": "text", "next": "text" } }
+        },
+        {
+          "id": "w5.t4.c9",
+          "worldId": "w5",
+          "topicId": "w5.t4",
+          "kind": "debug-fix",
+          "difficulty": "hard",
+          "prompt": "A teammate wrote next as a bare status word, which tells a cold resume nothing to do. The ledger should carry an intent. Fix the JSON so next reads as a concrete resumable instruction, changing only the next value.",
+          "brokenCall": "{\n  \"phase\": \"implementing\",\n  \"next\": \"in progress\",\n  \"event_kind\": \"progress\"\n}",
+          "language": "json",
+          "hints": [
+            { "tier": 1, "text": "A cold resume cannot act on the words in progress." },
+            { "tier": 2, "text": "next should say what to do, where, so a stranger could pick it up." },
+            { "tier": 3, "text": "Replace in progress with a concrete next step, like add the Windows branch to the permission helper, the test already fails." }
+          ],
+          "explanation": "The ledger's useful entries are written as intent, not status: in progress tells a cold resume nothing to do. A concrete next step such as add the Windows branch to the permission helper, the test already fails tells the resumed session exactly what to pick up. Only the next value needed to change.",
+          "docRef": "session-ledger.md",
+          "targetSeconds": 130,
+          "roleVariants": {
+            "qa": {
+              "scenario": "You find a ledger whose next just says in progress and a resumed cycle would not know what to run.",
+              "prompt": "Rewrite next as a concrete resumable instruction."
+            },
+            "eng-manager": {
+              "scenario": "You are reviewing how a long task records state and the next field is a useless status word.",
+              "prompt": "Rewrite next as a concrete resumable instruction."
+            }
+          },
+          "solution": {
+            "accept": [
+              "{\"phase\":\"implementing\",\"next\":\"add the Windows branch to the permission helper, the test already fails\",\"event_kind\":\"progress\"}"
+            ],
+            "normalizer": "json"
+          }
+        },
+        {
+          "id": "w5.t4.c10",
+          "worldId": "w5",
+          "topicId": "w5.t4",
+          "kind": "single-choice",
+          "difficulty": "medium",
+          "prompt": "After a context compaction, your recollection of the task and the session ledger snapshot disagree. Which do you trust?",
+          "options": [
+            { "id": "a", "text": "The ledger: it is durable on-disk state and survives the compaction your memory did not" },
+            { "id": "b", "text": "Your recollection, since the model's context is always more current than the ledger" },
+            { "id": "c", "text": "Neither; re-derive everything from the raw transcript" },
+            { "id": "d", "text": "Whichever names more detail, regardless of source" }
+          ],
+          "hints": [
+            { "tier": 1, "text": "Compaction is exactly what the ledger exists to survive." },
+            { "tier": 2, "text": "The transcript may no longer contain the answer after compaction." },
+            { "tier": 3, "text": "The durable ledger outranks recollection." }
+          ],
+          "explanation": "The ledger is durable on-disk state written precisely so a session can re-establish where it was after compaction, when the transcript may no longer contain the answer. Treat the ledger snapshot as authoritative over recollection and re-establish from it rather than guessing.",
+          "docRef": "session-ledger.md",
+          "targetSeconds": 50,
+          "solution": { "optionId": "a" }
+        }
+      ]
+    },
+    {
+      "id": "w5.t5",
+      "title": "wait and register_hook",
+      "summary": "The bounded poll with wait and reading its end reason instead of assuming the full duration, and webhook-triggered sessions with register_hook: the hook id, the context_summary written for a stranger, the ephemeral session, and the freshness horizons.",
+      "challenges": [
+        {
+          "id": "w5.t5.c1",
+          "worldId": "w5",
+          "topicId": "w5.t5",
+          "kind": "single-choice",
+          "difficulty": "easy",
+          "prompt": "What does the wait tool do, and what is its range?",
+          "options": [
+            { "id": "a", "text": "Pauses execution for a specified duration while preserving session context, 60 to 1800 seconds" },
+            { "id": "b", "text": "Blocks forever until an external event wakes the session" },
+            { "id": "c", "text": "Schedules a future cron job to resume the session" },
+            { "id": "d", "text": "Ends the turn and closes the session" }
+          ],
+          "hints": [
+            { "tier": 1, "text": "It is a bounded pause, not an open-ended block." },
+            { "tier": 2, "text": "The maximum is half an hour." },
+            { "tier": 3, "text": "It pauses 60 to 1800 seconds and preserves context." }
+          ],
+          "explanation": "wait pauses execution for a specified duration while preserving full session context, bounded to 60 to 1800 seconds (max 30 minutes). It takes seconds and a reason, and is for waiting on external systems like CI or a deployment.",
+          "docRef": "inbound-webhooks.md",
+          "targetSeconds": 30,
+          "solution": { "optionId": "a" }
+        },
+        {
+          "id": "w5.t5.c2",
+          "worldId": "w5",
+          "topicId": "w5.t5",
+          "kind": "true-false",
+          "difficulty": "easy",
+          "prompt": "Decide whether the statement holds.",
+          "statement": "A webhook session is ephemeral: it is created for the turn, then released and reset when the turn ends, so there is no conversation to come back to.",
+          "hints": [
+            { "tier": 1, "text": "Think about whether a second call with the same sessionKey is a thread." },
+            { "tier": 2, "text": "The session is destroyed on success, timeout and error alike." },
+            { "tier": 3, "text": "It is ephemeral, so continuity must be written down with register_hook." }
+          ],
+          "explanation": "True. Webhook sessions are ephemeral: created for the turn, then released and reset when the turn ends, on success, timeout and error alike. The sessionKey is a routing key, not a handle, so two calls with the same key are unrelated turns, which is why continuity is explicit via register_hook.",
+          "docRef": "inbound-webhooks.md",
+          "targetSeconds": 30,
+          "solution": { "value": true }
+        },
+        {
+          "id": "w5.t5.c3",
+          "worldId": "w5",
+          "topicId": "w5.t5",
+          "kind": "tool-name",
+          "difficulty": "easy",
+          "prompt": "You are about to hand work to an external review bot that will call back later. You want to write a summary keyed by hook id so the next webhook turn is not cold. Which tool do you call?",
+          "hints": [
+            { "tier": 1, "text": "It registers a hook so context carries across webhook calls." },
+            { "tier": 2, "text": "The name is the verb register plus the word hook." },
+            { "tier": 3, "text": "It is register_hook." }
+          ],
+          "explanation": "register_hook takes hook_id and context_summary, returns the session key hook:<hook_id> and the webhook URL, and causes the next webhook call for that hook id to get the summary prepended. It is how an ephemeral webhook turn carries context forward.",
+          "docRef": "inbound-webhooks.md",
+          "targetSeconds": 40,
+          "solution": { "accept": ["register_hook", "@kirocrew-core/register_hook"], "normalizer": "tool" }
+        },
+        {
+          "id": "w5.t5.c4",
+          "worldId": "w5",
+          "topicId": "w5.t5",
+          "kind": "multi-choice",
+          "difficulty": "medium",
+          "prompt": "Select every true statement about register_hook and webhook context.",
+          "options": [
+            { "id": "a", "text": "The context_summary should be written for a stranger: name the repository, branch, directory and the pending decision" },
+            { "id": "b", "text": "Registering the same hook id again overwrites the previous summary" },
+            { "id": "c", "text": "A registration is not consumed by a call; it keeps being injected until overwritten or aged out" },
+            { "id": "d", "text": "Context over 24 hours old is dropped silently and the turn starts cold" },
+            { "id": "e", "text": "The HTTP webhook response carries the agent's full answer back to the caller" }
+          ],
+          "hints": [
+            { "tier": 1, "text": "Four of these are true; one contradicts the fire-and-forget contract." },
+            { "tier": 2, "text": "The HTTP response only means the turn was accepted, not the outcome." },
+            { "tier": 3, "text": "The response never carries the answer; the result goes to notifications." }
+          ],
+          "explanation": "Write the summary for a stranger, re-registering the same hook id overwrites the prior summary, a registration keeps being injected until overwritten or aged out, and context over 24 hours is dropped silently. The HTTP response never carries the answer: a 200 means accepted, and the outcome arrives as a dashboard notification and Slack DM.",
+          "docRef": "inbound-webhooks.md",
+          "targetSeconds": 70,
+          "solution": { "optionIds": ["a", "b", "c", "d"] }
+        },
+        {
+          "id": "w5.t5.c5",
+          "worldId": "w5",
+          "topicId": "w5.t5",
+          "kind": "config-fill",
+          "difficulty": "medium",
+          "prompt": "An external system will POST a callback to /api/hooks/agent. Every sessionKey must start with a required prefix that is a namespace guard. Write that exact prefix, including its punctuation.",
+          "starter": "sessionKey prefix: ",
+          "hints": [
+            { "tier": 1, "text": "It is a short word followed by a colon." },
+            { "tier": 2, "text": "It keeps a webhook caller from steering into your dashboard or Slack sessions." },
+            { "tier": 3, "text": "It is hook:" }
+          ],
+          "explanation": "Every sessionKey must start with hook: and the part after the prefix is the hook id used to look up registered context. The prefix is a namespace guard: it keeps a webhook caller from steering its turn into one of your dashboard or Slack sessions by naming that session's key.",
+          "docRef": "inbound-webhooks.md",
+          "targetSeconds": 55,
+          "roleVariants": {
+            "security": {
+              "scenario": "You are reviewing a callback payload and must confirm its sessionKey carries the required namespace guard.",
+              "prompt": "Write the required sessionKey prefix, with its punctuation."
+            },
+            "devops-sre": {
+              "scenario": "Your CI job builds the callback body and must prefix the sessionKey correctly or get a 400.",
+              "prompt": "Write the required sessionKey prefix, with its punctuation."
+            }
+          },
+          "solution": { "accept": ["hook:"], "normalizer": "text" }
+        },
+        {
+          "id": "w5.t5.c6",
+          "worldId": "w5",
+          "topicId": "w5.t5",
+          "kind": "sequence",
+          "difficulty": "medium",
+          "prompt": "Order the webhook handoff pattern, from submitting work to resuming it on the callback.",
+          "items": [
+            { "id": "s1", "text": "The agent pushes a branch, opens a pull request, and calls register_hook with a context_summary" },
+            { "id": "s2", "text": "The agent hands the returned session key to the external system and ends its turn" },
+            { "id": "s3", "text": "The external system POSTs its findings to /api/hooks/agent quoting that session key" },
+            { "id": "s4", "text": "A fresh ephemeral session opens with the restored-context block prepended and resumes the work" }
+          ],
+          "hints": [
+            { "tier": 1, "text": "You register the hook before anything can call back." },
+            { "tier": 2, "text": "The session key is the routing key the caller must quote." },
+            { "tier": 3, "text": "Register, hand off and end the turn, caller POSTs, fresh session resumes with restored context." }
+          ],
+          "explanation": "The agent submits work and registers the hook, hands the session key to the external system and ends its turn (nothing is held open), the system POSTs its findings quoting the key, and a fresh ephemeral session opens with the restored-context block prepended and resumes. Re-register on every turn that expects another callback.",
+          "docRef": "inbound-webhooks.md",
+          "targetSeconds": 75,
+          "roleVariants": {
+            "devops-sre": {
+              "scenario": "You submit a build to an external pipeline and need it to wake you back up with the result.",
+              "prompt": "Order the webhook handoff from submitting work to resuming on callback."
+            },
+            "backend": {
+              "scenario": "You open a PR and want a review bot to call back with findings into a fresh session.",
+              "prompt": "Order the webhook handoff from submitting work to resuming on callback."
+            }
+          },
+          "solution": { "orderedItemIds": ["s1", "s2", "s3", "s4"] }
+        },
+        {
+          "id": "w5.t5.c7",
+          "worldId": "w5",
+          "topicId": "w5.t5",
+          "kind": "matching",
+          "difficulty": "medium",
+          "prompt": "Match each registered-context age to what the next webhook turn receives.",
+          "left": [
+            { "id": "l1", "text": "Up to 1 hour old" },
+            { "id": "l2", "text": "Over 1 hour through 24 hours old" },
+            { "id": "l3", "text": "Over 24 hours old" },
+            { "id": "l4", "text": "No recorded registration time" }
+          ],
+          "right": [
+            { "id": "r1", "text": "The summary verbatim" },
+            { "id": "r2", "text": "The summary with a may-be-outdated banner, to be verified before acting" },
+            { "id": "r3", "text": "Nothing; the context is dropped and the turn starts cold" },
+            { "id": "r4", "text": "Treated as expired, so nothing is injected" },
+            { "id": "r5", "text": "The summary plus the full prior transcript" }
+          ],
+          "hints": [
+            { "tier": 1, "text": "One right-hand option (summary plus full transcript) is invented." },
+            { "tier": 2, "text": "Within the hour it is verbatim; past a day it is dropped." },
+            { "tier": 3, "text": "A missing registration time is treated as expired." }
+          ],
+          "explanation": "Up to 1 hour the summary is injected verbatim, over 1 through 24 hours it comes with a may-be-outdated banner to verify before acting, over 24 hours nothing is injected and the turn starts cold, and a missing registration time is treated as expired. A webhook turn never receives the full prior transcript, only the summary.",
+          "docRef": "inbound-webhooks.md",
+          "targetSeconds": 85,
+          "solution": { "pairs": { "l1": "r1", "l2": "r2", "l3": "r3", "l4": "r4" } }
+        },
+        {
+          "id": "w5.t5.c8",
+          "worldId": "w5",
+          "topicId": "w5.t5",
+          "kind": "simulation",
+          "difficulty": "hard",
+          "scenario": "You have pushed a branch and opened a pull request, and a static-analysis bot will finish in its own time and call back. You want the next webhook turn to resume in the right worktree without re-briefing, so you register a hook before ending your turn.",
+          "prompt": "Pick the tool and set its arguments to register the handoff context keyed by a hook id.",
+          "toolPalette": [
+            { "id": "register_hook", "text": "register_hook" },
+            { "id": "wait", "text": "wait" },
+            { "id": "session_ledger_record", "text": "session_ledger_record" },
+            { "id": "cron_add", "text": "cron_add" }
+          ],
+          "argSpecs": [
+            { "name": "hook_id", "label": "hook_id", "input": "text", "placeholder": "e.g. review:pr-123", "required": true },
+            { "name": "context_summary", "label": "context_summary", "input": "text", "placeholder": "write for a stranger: repo, branch, worktree, pending decision", "required": true }
+          ],
+          "hints": [
+            { "tier": 1, "text": "wait would just pause; you want the next ephemeral session to know the context." },
+            { "tier": 2, "text": "register_hook keys the summary by hook id and returns the session key to hand off." },
+            { "tier": 3, "text": "register_hook with a hook_id and a stranger-readable context_summary naming repo, branch and worktree." }
+          ],
+          "explanation": "register_hook writes the handoff summary keyed by hook id and returns the session key hook:<hook_id> to pass to the external system, so the next ephemeral webhook turn resumes with the restored-context block. wait only pauses the current turn and would strand the agent across a long external round-trip, and session_ledger_record is for the same session's own durable state, not a cross-session webhook handoff.",
+          "docRef": "inbound-webhooks.md",
+          "targetSeconds": 160,
+          "roleVariants": {
+            "backend": {
+              "scenario": "You opened a PR and a review bot will call back with findings; the next session must know the worktree and branch.",
+              "prompt": "Register the handoff context keyed by a hook id before ending the turn."
+            },
+            "devops-sre": {
+              "scenario": "You triggered an external security scan on a branch and need the callback session to resume in the right worktree.",
+              "prompt": "Register the handoff context keyed by a hook id before ending the turn."
+            }
+          },
+          "solution": { "toolId": "register_hook", "args": { "hook_id": "review:pr-123", "context_summary": "Opened PR #123 (fix/upload-limit) on kirodotdev/KiroCrew. Worktree /home/me/wt-upload-limit, branch fix/upload-limit. Pending static analysis; when findings arrive, fix Critical and High, amend the commit, push with lease." }, "lenientArgs": { "hook_id": "text", "context_summary": "text" } }
+        },
+        {
+          "id": "w5.t5.c9",
+          "worldId": "w5",
+          "topicId": "w5.t5",
+          "kind": "debug-fix",
+          "difficulty": "hard",
+          "prompt": "A teammate's callback payload is rejected with a 400 before the turn ever runs. The sessionKey is missing the required namespace prefix. Fix the JSON so the key is accepted, changing only the sessionKey value and keeping the same hook id.",
+          "brokenCall": "{\n  \"message\": \"Analysis complete on PR 123. 2 highs, 1 medium.\",\n  \"sessionKey\": \"review:pr-123\"\n}",
+          "language": "json",
+          "hints": [
+            { "tier": 1, "text": "The endpoint rejects a sessionKey that does not start with the required prefix." },
+            { "tier": 2, "text": "The part after the prefix is the hook id, which here is review:pr-123." },
+            { "tier": 3, "text": "Prepend hook: so the key is hook:review:pr-123." }
+          ],
+          "explanation": "A sessionKey without the hook: prefix is a 400, because the prefix is a namespace guard that keeps a webhook caller out of dashboard and Slack sessions. The part after the prefix is the hook id, so the correct key is hook:review:pr-123.",
+          "docRef": "inbound-webhooks.md",
+          "targetSeconds": 120,
+          "roleVariants": {
+            "devops-sre": {
+              "scenario": "Your CI callback keeps getting a 400 and you trace it to a sessionKey without the namespace prefix.",
+              "prompt": "Fix the sessionKey so the callback is accepted, keeping the hook id."
+            },
+            "security": {
+              "scenario": "You are reviewing why a webhook call is rejected and spot a sessionKey missing its required guard prefix.",
+              "prompt": "Fix the sessionKey so the callback is accepted, keeping the hook id."
+            }
+          },
+          "solution": {
+            "accept": [
+              "{\"message\":\"Analysis complete on PR 123. 2 highs, 1 medium.\",\"sessionKey\":\"hook:review:pr-123\"}"
+            ],
+            "normalizer": "json"
+          }
+        },
+        {
+          "id": "w5.t5.c10",
+          "worldId": "w5",
+          "topicId": "w5.t5",
+          "kind": "single-choice",
+          "difficulty": "medium",
+          "prompt": "A wait call you issued returns before the full duration you asked for, because the thing you were waiting on finished early. What should you do?",
+          "options": [
+            { "id": "a", "text": "Read the end reason and act on it, rather than assuming the full duration elapsed" },
+            { "id": "b", "text": "Immediately issue another wait for the remaining time to honor the original duration" },
+            { "id": "c", "text": "Treat the early return as an error and abort the task" },
+            { "id": "d", "text": "Ignore the return and keep waiting until the original deadline" }
+          ],
+          "hints": [
+            { "tier": 1, "text": "An early return carries information about why it ended." },
+            { "tier": 2, "text": "The duration is a bound, not a guarantee that the whole time passed." },
+            { "tier": 3, "text": "Read why it ended and proceed on that, do not re-wait the remainder." }
+          ],
+          "explanation": "wait is a bounded pause, not a fixed sleep: when it returns early you read the end reason and act on it rather than assuming the full duration elapsed or re-waiting the remainder. Treating the bound as a guaranteed sleep defeats the point of a poll loop that can finish as soon as the external system is done.",
+          "docRef": "inbound-webhooks.md",
+          "targetSeconds": 55,
+          "solution": { "optionId": "a" }
+        }
+      ]
+    }
+  ]
+}
